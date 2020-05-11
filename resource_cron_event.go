@@ -94,7 +94,7 @@ func resourceCronEvent() *schema.Resource {
 
 func resourceCronEventCreate(d *schema.ResourceData, _ interface{}) error {
 	return createCodefreshObject(
-		fmt.Sprintf("%v/hermes/events", codefreshURL),
+		fmt.Sprintf("%v/hermes/events", getCfUrl()),
 		"POST",
 		d,
 		mapResourceToCronEvent,
@@ -112,7 +112,7 @@ func resourceCronEventRead(d *schema.ResourceData, _ interface{}) error {
 // TODO: I don't think this is actually deleting anything, I have an open ticket with Codefresh
 // https://support.codefresh.io/hc/en-us/requests/3167?page=1
 func resourceCronEventDelete(d *schema.ResourceData, _ interface{}) error {
-	cfURL := fmt.Sprintf("%v/hermes/events/%v", codefreshURL, urlEncode(d.Id()))
+	cfURL := fmt.Sprintf("%v/hermes/events/%v", getCfUrl(), urlEncode(d.Id()))
 	return deleteCodefreshObject(cfURL)
 }
 
@@ -167,7 +167,7 @@ func readCronEvent(_ *schema.ResourceData, b []byte) (codefreshObject, error) {
 func getCronEventFromCodefresh(d *schema.ResourceData) (codefreshObject, error) {
 	// get the event
 	event := d.Id()
-	cfURL := fmt.Sprintf("%v/hermes/events/%v", codefreshURL, urlEncode(event))
+	cfURL := fmt.Sprintf("%v/hermes/events/%v", getCfUrl(), urlEncode(event))
 	return getFromCodefresh(d, cfURL, readCronEvent)
 }
 

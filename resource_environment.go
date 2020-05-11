@@ -75,7 +75,7 @@ func resourceEnvironment() *schema.Resource {
 
 func resourceEnvironmentCreate(d *schema.ResourceData, _ interface{}) error {
 	return createCodefreshObject(
-		fmt.Sprintf("%v/environments-v2", codefreshURL),
+		fmt.Sprintf("%v/environments-v2", getCfUrl()),
 		"POST",
 		d,
 		mapResourceToEnvironment,
@@ -91,7 +91,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, _ interface{}) error {
 }
 
 func resourceEnvironmentUpdate(d *schema.ResourceData, _ interface{}) error {
-	url := fmt.Sprintf("%v/environments-v2/%v", codefreshURL, d.Id())
+	url := fmt.Sprintf("%v/environments-v2/%v", getCfUrl(), d.Id())
 	return updateCodefreshObject(
 		d,
 		url,
@@ -102,7 +102,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, _ interface{}) error {
 }
 
 func resourceEnvironmentDelete(d *schema.ResourceData, _ interface{}) error {
-	url := fmt.Sprintf("%v/environments-v2/%v", codefreshURL, d.Id())
+	url := fmt.Sprintf("%v/environments-v2/%v", getCfUrl(), d.Id())
 	return deleteCodefreshObject(url)
 }
 
@@ -124,7 +124,7 @@ func readEnvironment(_ *schema.ResourceData, b []byte) (codefreshObject, error) 
 
 func getEnvironmentFromCodefresh(d *schema.ResourceData) (codefreshObject, error) {
 	id := d.Id()
-	url := fmt.Sprintf("%v/environments-v2/%v", codefreshURL, id)
+	url := fmt.Sprintf("%v/environments-v2/%v", getCfUrl(), id)
 	return getFromCodefresh(d, url, readEnvironment)
 }
 

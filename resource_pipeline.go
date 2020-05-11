@@ -210,7 +210,7 @@ func resourcePipeline() *schema.Resource {
 
 func resourcePipelineCreate(d *schema.ResourceData, _ interface{}) error {
 	return createCodefreshObject(
-		fmt.Sprintf("%v/pipelines", codefreshURL),
+		fmt.Sprintf("%v/pipelines", getCfUrl()),
 		"POST",
 		d,
 		mapResourceToPipeline,
@@ -223,7 +223,7 @@ func resourcePipelineRead(d *schema.ResourceData, _ interface{}) error {
 }
 
 func resourcePipelineUpdate(d *schema.ResourceData, _ interface{}) error {
-	url := fmt.Sprintf("%v/pipelines/%v?disableRevisionCheck=true", codefreshURL, d.Id())
+	url := fmt.Sprintf("%v/pipelines/%v?disableRevisionCheck=true", getCfUrl(), d.Id())
 	return updateCodefreshObject(
 		d,
 		url,
@@ -234,7 +234,7 @@ func resourcePipelineUpdate(d *schema.ResourceData, _ interface{}) error {
 }
 
 func resourcePipelineDelete(d *schema.ResourceData, _ interface{}) error {
-	url := fmt.Sprintf("%v/pipelines/%v", codefreshURL, d.Id())
+	url := fmt.Sprintf("%v/pipelines/%v", getCfUrl(), d.Id())
 	return deleteCodefreshObject(url)
 }
 
@@ -256,7 +256,7 @@ func readPipeline(_ *schema.ResourceData, b []byte) (codefreshObject, error) {
 
 func getPipelineFromCodefresh(d *schema.ResourceData) (codefreshObject, error) {
 	pipelineName := d.Id()
-	url := fmt.Sprintf("%v/pipelines/%v", codefreshURL, pipelineName)
+	url := fmt.Sprintf("%v/pipelines/%v", getCfUrl(), pipelineName)
 	return getFromCodefresh(d, url, readPipeline)
 }
 

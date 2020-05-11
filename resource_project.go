@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -57,7 +58,7 @@ func resourceProject() *schema.Resource {
 
 func resourceProjectCreate(d *schema.ResourceData, _ interface{}) error {
 	return createCodefreshObject(
-		fmt.Sprintf("%v/projects", codefreshURL),
+		fmt.Sprintf("%v/projects", getCfUrl()),
 		"POST",
 		d,
 		mapResourceToProject,
@@ -73,7 +74,7 @@ func resourceProjectRead(d *schema.ResourceData, _ interface{}) error {
 }
 
 func resourceProjectUpdate(d *schema.ResourceData, _ interface{}) error {
-	url := fmt.Sprintf("%v/projects/%v", codefreshURL, d.Id())
+	url := fmt.Sprintf("%v/projects/%v", getCfUrl(), d.Id())
 	return updateCodefreshObject(
 		d,
 		url,
@@ -84,7 +85,7 @@ func resourceProjectUpdate(d *schema.ResourceData, _ interface{}) error {
 }
 
 func resourceProjectDelete(d *schema.ResourceData, _ interface{}) error {
-	url := fmt.Sprintf("%v/projects/%v", codefreshURL, d.Id())
+	url := fmt.Sprintf("%v/projects/%v", getCfUrl(), d.Id())
 	return deleteCodefreshObject(url)
 }
 
@@ -106,7 +107,7 @@ func readProject(_ *schema.ResourceData, b []byte) (codefreshObject, error) {
 
 func getProjectFromCodefresh(d *schema.ResourceData) (codefreshObject, error) {
 	projectName := d.Id()
-	url := fmt.Sprintf("%v/projects/name/%v", codefreshURL, projectName)
+	url := fmt.Sprintf("%v/projects/name/%v", getCfUrl(), projectName)
 	return getFromCodefresh(d, url, readProject)
 }
 

@@ -11,9 +11,14 @@ import (
 	"strings"
 )
 
-const (
-	codefreshURL = "https://g.codefresh.io/api"
-)
+func getCfUrl() string {
+	if cfUrl := os.Getenv("CODEFRESH_API_URL"); cfUrl != "" {
+		return cfUrl
+	} else {
+		return "https://g.codefresh.io/api"
+	}
+
+}
 
 type codefreshObject interface {
 	getID() string

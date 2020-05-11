@@ -47,7 +47,7 @@ func resourceUser() *schema.Resource {
 
 func resourceUserCreate(d *schema.ResourceData, _ interface{}) error {
 	return createCodefreshObject(
-		fmt.Sprintf("%v/accounts/%s/adduser", codefreshURL, codefreshAccountID),
+		fmt.Sprintf("%v/accounts/%s/adduser", getCfUrl(), codefreshAccountID),
 		"POST",
 		d,
 		mapResourceToUser,
@@ -63,7 +63,7 @@ func resourceUserRead(d *schema.ResourceData, _ interface{}) error {
 }
 
 func resourceUserDelete(d *schema.ResourceData, _ interface{}) error {
-	url := fmt.Sprintf("%v/accounts/%v/%v", codefreshURL, codefreshAccountID, d.Id())
+	url := fmt.Sprintf("%v/accounts/%v/%v", getCfUrl(), codefreshAccountID, d.Id())
 	return deleteCodefreshObject(url)
 }
 
@@ -85,7 +85,7 @@ func readUserCreate(_ *schema.ResourceData, b []byte) (codefreshObject, error) {
 }
 
 func getUserFromCodefresh(d *schema.ResourceData) (codefreshObject, error) {
-	url := fmt.Sprintf("%v/accounts/%v/users", codefreshURL, codefreshAccountID)
+	url := fmt.Sprintf("%v/accounts/%v/users", getCfUrl(), codefreshAccountID)
 	return getFromCodefresh(d, url, readUserFromAll)
 }
 

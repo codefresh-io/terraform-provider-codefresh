@@ -40,7 +40,7 @@ func resourceCronTrigger() *schema.Resource {
 
 func resourceCronTriggerCreate(d *schema.ResourceData, _ interface{}) error {
 	return createCodefreshObject(
-		fmt.Sprintf("%v/hermes/triggers/%v/%v", codefreshURL, urlEncode(d.Get("event").(string)), d.Get("pipeline")),
+		fmt.Sprintf("%v/hermes/triggers/%v/%v", getCfUrl(), urlEncode(d.Get("event").(string)), d.Get("pipeline")),
 		"POST",
 		d,
 		mapResourceToCronTrigger,
@@ -58,7 +58,7 @@ func resourceCronTriggerRead(d *schema.ResourceData, _ interface{}) error {
 // TODO: I don't think this is actually deleting anything, I have an open ticket with Codefresh
 // https://support.codefresh.io/hc/en-us/requests/3167?page=1
 func resourceCronTriggerDelete(d *schema.ResourceData, _ interface{}) error {
-	cfURL := fmt.Sprintf("%v/hermes/triggers/%v/%v", codefreshURL, urlEncode(d.Get("event").(string)), d.Get("pipeline"))
+	cfURL := fmt.Sprintf("%v/hermes/triggers/%v/%v", getCfUrl(), urlEncode(d.Get("event").(string)), d.Get("pipeline"))
 	return deleteCodefreshObject(cfURL)
 }
 
@@ -103,7 +103,7 @@ func readCronTrigger(_ *schema.ResourceData, b []byte) (codefreshObject, error) 
 func getCronTriggerFromCodefresh(d *schema.ResourceData) (codefreshObject, error) {
 	pipeline := d.Id()
 	// get the trigger
-	cfURL := fmt.Sprintf("%v/hermes/triggers/pipeline/%v", codefreshURL, pipeline)
+	cfURL := fmt.Sprintf("%v/hermes/triggers/pipeline/%v", getCfUrl(), pipeline)
 	return getFromCodefresh(d, cfURL, readCronTrigger)
 }
 
