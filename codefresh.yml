@@ -1,7 +1,7 @@
 version: '1.0'
 stages:
   - clone
-  - prepare
+  - test
   - release
 steps:
   main_clone:
@@ -12,6 +12,13 @@ steps:
     revision: "${{CF_REVISION}}"
     git: github
 
+  go_fmt:
+    title: 'Formatting'
+    stage: test
+    image:  goreleaser/goreleaser:v0.133
+    commands:
+      - go fmt
+
   prepare_env_vars:
     title: 'Preparing environment variables...'
     stage: prepare
@@ -19,13 +26,10 @@ steps:
     commands:
       - source /get-token/get-gh-token.sh
       - cf_export GITHUB_TOKEN
-
-  go_fmt:
-    title: 'Formatting'
-    stage: prepare
-    image:  goreleaser/goreleaser:v0.133
-    commands:
-      - go fmt
+    when:
+      condition:
+        all:
+          release: "'${{RELEASE}}' == 'true'"
 
   release_binaries:
     title: Create release in Github
