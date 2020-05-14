@@ -1,103 +1,50 @@
-# Setup
+# Terraform provider for Codefresh
+
+This provider was initialized by [LightStep](https://lightstep.com/) and will be maintained as the official Terraform provider for Codefresh.  
+
+The provider is still under development, and can be used as a terraform [third-party plugin](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) only.
+
+## Requirements
+
+- [Terraform](https://www.terraform.io/downloads.html) 0.11+ ;
+- [Go](https://golang.org/doc/install) 1.12+ (to build the provider plugin).
+
+## Build
+
+```sh
+go build
+```
+
+## Usage
+
+Compile or take from the [Releases](https://github.com/codefresh-contrib/terraform-provider-codefresh/releases) `terraform-provider-codefresh` binary and place it locally according the Terraform plugins [documentation](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins).
+
+For Linux OS it can be:
+
+- _~/.terraform.d/plugins/linux\_amd64_
+- _./terraform.d/plugins/linux\_amd64_. The relative path in your Terraform project.
+
+## Configuration
+
+There are two environment variables to configure Codefresh provider:
+
+- `CODEFRESH_API_URL`. Default value - https://g.codefresh.io/api ;
+- `CODEFRESH_API_KEY`.
 
 Get an API key from [Codefresh](https://g.codefresh.io/user/settings) and set the following scopes:
-* Environments-V2
-* Pipeline
-* Project
-* Repos
-* Step-Type
-* Step-Types
-* View
 
-Add the key to your `.zshrc` file:
+- Environments-V2
+- Pipeline
+- Project
+- Repos
+- Step-Type
+- Step-Types
+- View
 
 ```bash
 export CODEFRESH_API_KEY='xyz'
 ```
 
-# Building
+## Examples
 
-```bash
-make build
-```
-
-# Testing
-
-Create a `main.tf` file in the root directory. Add or import resources there.
-
-## Example
-
-```yaml
-resource "codefresh_project" "test" {
-    name = "test"
-}
-```
-
-Run `terraform plan` or `terraform apply` as usual. Note this will modify the actual Codefresh configuration.
-
-# Syntax Examples
-
-## Project
-
-```yaml
-resource "codefresh_project" "docker" {
-  name = "docker"
-}
-```
-
-## Pipeline
-
-```yaml
-resource "codefresh_pipeline" "docker_monorepo" {
-  name    = "docker/docker-monorepo"
-  project = "docker"
-
-  spec = {
-    repo        = "abcinc/monorepo"
-    path        = "./codefresh/docker/docker-monorepo.yaml"
-    revision    = "master"
-    concurrency = 1
-    priority    = 5
-  }
-
-  tags = [
-    "docker",
-  ]
-
-  variables {
-    TAG = "master"
-  }
-}
-```
-
-## Cron Trigger
-
-```yaml
-resource "codefresh_cron_event" "docker_monorepo_cron" {
-  expression = "40 0 * * *"
-  message    = "build monorepo docker"
-}
-
-resource "codefresh_cron_trigger" "docker_monorepo_cron" {
-  pipeline = "${codefresh_pipeline.docker_monorepo.id}"
-  event    = "${codefresh_cron_event.docker_monorepo_cron.id}"
-}
-```
-
-## Environment
-
-```yaml
-resource "codefresh_environment" "staging" {
-  account_id = "<redacted>"
-  name       = "staging"
-  namespace  = "staging"
-  cluster    = "abcinc-staging"
-}
-```
-
-## User
-```yaml
-resource "codefresh_user" "john_doe" {
-  email = "jdoe@abcinc.com"
-}
-```
+See the [examples](examples/).
