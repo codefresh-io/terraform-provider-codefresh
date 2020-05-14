@@ -21,7 +21,7 @@ steps:
 
   prepare_env_vars:
     title: 'Preparing environment variables...'
-    stage: prepare
+    stage: release
     image: codefreshio/ci-helpers
     commands:
       - source /get-token/get-gh-token.sh
