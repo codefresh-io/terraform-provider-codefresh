@@ -10,7 +10,7 @@ steps:
     type: git-clone
     repo: "${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}"
     revision: "${{CF_REVISION}}"
-    git: "${{GIT_CONTEXT}}"
+    git: github
 
   prepare_env_vars:
     title: 'Preparing environment variables...'
