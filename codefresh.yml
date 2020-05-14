@@ -23,13 +23,13 @@ steps:
   go_fmt:
     title: 'Formatting'
     stage: prepare
-    image: codefresh/goreleaser:${{GOLANG_VERSION}}
+    image:  goreleaser/goreleaser:v0.133
     commands:
       - go fmt
 
   release_binaries:
     title: Create release in Github
-    image: codefresh/goreleaser:${{GOLANG_VERSION}}
+    image:  goreleaser/goreleaser:v0.133
     stage: release
     commands:
       - goreleaser release --rm-dist
