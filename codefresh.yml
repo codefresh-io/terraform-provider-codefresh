@@ -33,3 +33,7 @@ steps:
     stage: release
     commands:
       - goreleaser release --rm-dist
+    when:
+      condition:
+        all:
+          release: "'${{RELEASE}}' == 'true'"
