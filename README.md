@@ -26,7 +26,7 @@ For Linux OS it can be:
 
 ## Configuration
 
-To c    onfigure codefresh provider:
+To configure codefresh provider:
 
 ```tf
 provider "codefresh" {
