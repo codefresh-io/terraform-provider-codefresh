@@ -15,7 +15,7 @@ type project struct {
 }
 
 func (p *project) getID() string {
-	return p.ProjectName
+	return p.ID
 }
 
 func (p *project) setVariables(variables map[string]interface{}) {
@@ -56,9 +56,10 @@ func resourceProject() *schema.Resource {
 	}
 }
 
-func resourceProjectCreate(d *schema.ResourceData, _ interface{}) error {
+func resourceProjectCreate(d *schema.ResourceData, m interface{}) error {
 	return createCodefreshObject(
-		fmt.Sprintf("%v/projects", getCfUrl()),
+		m.(*Config),
+		"/projects",
 		"POST",
 		d,
 		mapResourceToProject,
@@ -66,32 +67,35 @@ func resourceProjectCreate(d *schema.ResourceData, _ interface{}) error {
 	)
 }
 
-func resourceProjectRead(d *schema.ResourceData, _ interface{}) error {
+func resourceProjectRead(d *schema.ResourceData, m interface{}) error {
 	return readCodefreshObject(
 		d,
+		m.(*Config),
 		getProjectFromCodefresh,
 		mapProjectToResource)
 }
 
-func resourceProjectUpdate(d *schema.ResourceData, _ interface{}) error {
-	url := fmt.Sprintf("%v/projects/%v", getCfUrl(), d.Id())
+func resourceProjectUpdate(d *schema.ResourceData, m interface{}) error {
+	path := fmt.Sprintf("/projects/%v", d.Id())
 	return updateCodefreshObject(
 		d,
-		url,
+		m.(*Config),
+		path,
 		"PATCH",
 		mapResourceToProject,
 		readProject,
 		resourceProjectRead)
 }
 
-func resourceProjectDelete(d *schema.ResourceData, _ interface{}) error {
-	url := fmt.Sprintf("%v/projects/%v", getCfUrl(), d.Id())
-	return deleteCodefreshObject(url)
+func resourceProjectDelete(d *schema.ResourceData, m interface{}) error {
+	path := fmt.Sprintf("/projects/%v", d.Id())
+	return deleteCodefreshObject(m.(*Config), path)
 }
 
-func resourceProjectImport(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+func resourceProjectImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	return importCodefreshObject(
 		d,
+		m.(*Config),
 		getProjectFromCodefresh,
 		mapProjectToResource)
 }
@@ -105,15 +109,15 @@ func readProject(_ *schema.ResourceData, b []byte) (codefreshObject, error) {
 	return project, nil
 }
 
-func getProjectFromCodefresh(d *schema.ResourceData) (codefreshObject, error) {
+func getProjectFromCodefresh(d *schema.ResourceData, c *Config) (codefreshObject, error) {
 	projectName := d.Id()
-	url := fmt.Sprintf("%v/projects/name/%v", getCfUrl(), projectName)
-	return getFromCodefresh(d, url, readProject)
+	path := fmt.Sprintf("/projects/%v", projectName)
+	return getFromCodefresh(d, c, path, readProject)
 }
 
 func mapProjectToResource(cfObject codefreshObject, d *schema.ResourceData) error {
 	project := cfObject.(*project)
-	d.SetId(project.ProjectName)
+	d.SetId(project.ID)
 
 	err := d.Set("name", project.ProjectName)
 	if err != nil {

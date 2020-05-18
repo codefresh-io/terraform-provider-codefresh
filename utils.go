@@ -7,18 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 )
-
-func getCfUrl() string {
-	if cfUrl := os.Getenv("CODEFRESH_API_URL"); cfUrl != "" {
-		return cfUrl
-	} else {
-		return "https://g.codefresh.io/api"
-	}
-
-}
 
 type codefreshObject interface {
 	getID() string
@@ -33,10 +23,6 @@ type errorResponse struct {
 	Status  int    `json:"status,omitempty"`
 	Message string `json:"message,omitempty"`
 	Error   string `json:"error,omitempty"`
-}
-
-func getAPIKey() string {
-	return os.Getenv("CODEFRESH_API_KEY")
 }
 
 func convertStringArr(ifaceArr []interface{}) []string {
@@ -63,7 +49,8 @@ func convertVariables(vars []variable) map[string]string {
 }
 
 func createCodefreshObject(
-	url string,
+	c *Config,
+	path string,
 	httpMethod string,
 	d *schema.ResourceData,
 	mapFunc func(data *schema.ResourceData) codefreshObject,
@@ -74,11 +61,14 @@ func createCodefreshObject(
 		return err
 	}
 
+	url := c.APIServer + path
+	apiKey := c.Token
+
 	req, err := http.NewRequest(httpMethod, url, body)
 	if err != nil {
 		return err
 	}
-	req.Header.Add("Authorization", getAPIKey())
+	req.Header.Add("Authorization", apiKey)
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
 
 	client := http.DefaultClient
@@ -134,9 +124,10 @@ func getBody(d *schema.ResourceData, mapFunc func(data *schema.ResourceData) cod
 
 func readCodefreshObject(
 	d *schema.ResourceData,
-	getFromSource func(d *schema.ResourceData) (codefreshObject, error),
+	c *Config,
+	getFromSource func(d *schema.ResourceData, c *Config) (codefreshObject, error),
 	mapToResource func(codefreshObject, *schema.ResourceData) error) error {
-	cfObject, err := getFromSource(d)
+	cfObject, err := getFromSource(d, c)
 	if err != nil {
 		return err
 	}
@@ -157,14 +148,19 @@ func readCodefreshObject(
 
 func getFromCodefresh(
 	d *schema.ResourceData,
-	url string,
+	c *Config,
+	path string,
 	readFunc func(*schema.ResourceData, []byte) (codefreshObject, error),
 ) (codefreshObject, error) {
+
+	url := c.APIServer + path
+	apiKey := c.Token
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Authorization", getAPIKey())
+	req.Header.Add("Authorization", apiKey)
 
 	client := http.DefaultClient
 	resp, err := client.Do(req)
@@ -192,22 +188,26 @@ func getFromCodefresh(
 
 func updateCodefreshObject(
 	d *schema.ResourceData,
-	url string,
+	c *Config,
+	path string,
 	httpMethod string,
 	mapFunc func(data *schema.ResourceData) codefreshObject,
 	readFunc func(*schema.ResourceData, []byte) (codefreshObject, error),
-	resourceRead func(d *schema.ResourceData, _ interface{}) error,
+	resourceRead func(d *schema.ResourceData, m interface{}) error,
 ) error {
 	body, err := getBody(d, mapFunc)
 	if err != nil {
 		return err
 	}
 
+	url := c.APIServer + path
+	apiKey := c.Token
+
 	req, err := http.NewRequest(httpMethod, url, body)
 	if err != nil {
 		return err
 	}
-	req.Header.Add("Authorization", getAPIKey())
+	req.Header.Add("Authorization", apiKey)
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
 
 	client := http.DefaultClient
@@ -231,15 +231,18 @@ func updateCodefreshObject(
 		return err
 	}
 
-	return resourceRead(d, nil)
+	return resourceRead(d, c)
 }
 
-func deleteCodefreshObject(url string) error {
+func deleteCodefreshObject(c *Config, path string) error {
+	url := c.APIServer + path
+	apiKey := c.Token
+
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Add("Authorization", getAPIKey())
+	req.Header.Add("Authorization", apiKey)
 
 	client := http.DefaultClient
 	resp, err := client.Do(req)
@@ -264,10 +267,11 @@ func deleteCodefreshObject(url string) error {
 
 func importCodefreshObject(
 	d *schema.ResourceData,
-	getFromCodefresh func(d *schema.ResourceData) (codefreshObject, error),
+	c *Config,
+	getFromCodefresh func(d *schema.ResourceData, c *Config) (codefreshObject, error),
 	mapToResource func(codefreshObject, *schema.ResourceData) error,
 ) ([]*schema.ResourceData, error) {
-	cfObject, err := getFromCodefresh(d)
+	cfObject, err := getFromCodefresh(d, c)
 	if err != nil {
 		return nil, err
 	}

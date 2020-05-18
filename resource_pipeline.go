@@ -208,9 +208,10 @@ func resourcePipeline() *schema.Resource {
 	}
 }
 
-func resourcePipelineCreate(d *schema.ResourceData, _ interface{}) error {
+func resourcePipelineCreate(d *schema.ResourceData, m interface{}) error {
 	return createCodefreshObject(
-		fmt.Sprintf("%v/pipelines", getCfUrl()),
+		m.(*Config),
+		"/pipelines",
 		"POST",
 		d,
 		mapResourceToPipeline,
@@ -218,29 +219,35 @@ func resourcePipelineCreate(d *schema.ResourceData, _ interface{}) error {
 	)
 }
 
-func resourcePipelineRead(d *schema.ResourceData, _ interface{}) error {
-	return readCodefreshObject(d, getPipelineFromCodefresh, mapPipelineToResource)
+func resourcePipelineRead(d *schema.ResourceData, m interface{}) error {
+	return readCodefreshObject(
+		d,
+		m.(*Config),
+		getPipelineFromCodefresh,
+		mapPipelineToResource)
 }
 
-func resourcePipelineUpdate(d *schema.ResourceData, _ interface{}) error {
-	url := fmt.Sprintf("%v/pipelines/%v?disableRevisionCheck=true", getCfUrl(), d.Id())
+func resourcePipelineUpdate(d *schema.ResourceData, m interface{}) error {
+	path := fmt.Sprintf("/pipelines/%v?disableRevisionCheck=true", d.Id())
 	return updateCodefreshObject(
 		d,
-		url,
+		m.(*Config),
+		path,
 		"PUT",
 		mapResourceToPipeline,
 		readPipeline,
 		resourcePipelineRead)
 }
 
-func resourcePipelineDelete(d *schema.ResourceData, _ interface{}) error {
-	url := fmt.Sprintf("%v/pipelines/%v", getCfUrl(), d.Id())
-	return deleteCodefreshObject(url)
+func resourcePipelineDelete(d *schema.ResourceData, m interface{}) error {
+	path := fmt.Sprintf("/pipelines/%v", d.Id())
+	return deleteCodefreshObject(m.(*Config), path)
 }
 
-func resourcePipelineImport(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {
+func resourcePipelineImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	return importCodefreshObject(
 		d,
+		m.(*Config),
 		getPipelineFromCodefresh,
 		mapPipelineToResource)
 }
@@ -254,10 +261,10 @@ func readPipeline(_ *schema.ResourceData, b []byte) (codefreshObject, error) {
 	return pipeline, nil
 }
 
-func getPipelineFromCodefresh(d *schema.ResourceData) (codefreshObject, error) {
+func getPipelineFromCodefresh(d *schema.ResourceData, c *Config) (codefreshObject, error) {
 	pipelineName := d.Id()
-	url := fmt.Sprintf("%v/pipelines/%v", getCfUrl(), pipelineName)
-	return getFromCodefresh(d, url, readPipeline)
+	path := fmt.Sprintf("/pipelines/%v", pipelineName)
+	return getFromCodefresh(d, c, path, readPipeline)
 }
 
 func mapPipelineToResource(cfObject codefreshObject, d *schema.ResourceData) error {
