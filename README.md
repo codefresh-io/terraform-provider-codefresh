@@ -26,10 +26,14 @@ For Linux OS it can be:
 
 ## Configuration
 
-There are two environment variables to configure Codefresh provider:
+To configure codefresh provider:
 
-- `CODEFRESH_API_URL`. Default value - https://g.codefresh.io/api ;
-- `CODEFRESH_API_KEY`.
+```tf
+provider "codefresh" {
+  api_url = "<MY API URL>" # Default value - https://g.codefresh.io/api
+  token = "<MY API TOKEN>". # If token isn't set the provider expects the $CODEFRESH_API_KEY env variable
+}
+```
 
 Get an API key from [Codefresh](https://g.codefresh.io/user/settings) and set the following scopes:
 
