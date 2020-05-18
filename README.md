@@ -26,12 +26,12 @@ For Linux OS it can be:
 
 ## Configuration
 
-To configure codefresh provider:
+To c    onfigure codefresh provider:
 
 ```tf
 provider "codefresh" {
   api_url = "<MY API URL>" # Default value - https://g.codefresh.io/api
-  token = "<MY API TOKEN>". # If token isn't set the provider expects the $CODEFRESH_API_KEY env variable
+  token = "<MY API TOKEN>" # If token isn't set the provider expects the $CODEFRESH_API_KEY env variable
 }
 ```
 
