@@ -1,4 +1,4 @@
-package main
+package codefresh
 
 import (
 // "net/http"

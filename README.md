@@ -28,7 +28,7 @@ For Linux OS it can be:
 
 To configure codefresh provider:
 
-```tf
+```hcl
 provider "codefresh" {
   api_url = "<MY API URL>" # Default value - https://g.codefresh.io/api
   token = "<MY API TOKEN>" # If token isn't set the provider expects the $CODEFRESH_API_KEY env variable
