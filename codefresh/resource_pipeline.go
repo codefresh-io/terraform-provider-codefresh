@@ -208,9 +208,9 @@ func resourcePipeline() *schema.Resource {
 	}
 }
 
-func resourcePipelineCreate(d *schema.ResourceData, m interface{}) error {
+func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 	return createCodefreshObject(
-		m.(*Config),
+		meta.(*Config),
 		"/pipelines",
 		"POST",
 		d,
@@ -219,19 +219,19 @@ func resourcePipelineCreate(d *schema.ResourceData, m interface{}) error {
 	)
 }
 
-func resourcePipelineRead(d *schema.ResourceData, m interface{}) error {
+func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	return readCodefreshObject(
 		d,
-		m.(*Config),
+		meta.(*Config),
 		getPipelineFromCodefresh,
 		mapPipelineToResource)
 }
 
-func resourcePipelineUpdate(d *schema.ResourceData, m interface{}) error {
+func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 	path := fmt.Sprintf("/pipelines/%v?disableRevisionCheck=true", d.Id())
 	return updateCodefreshObject(
 		d,
-		m.(*Config),
+		meta.(*Config),
 		path,
 		"PUT",
 		mapResourceToPipeline,
@@ -239,15 +239,15 @@ func resourcePipelineUpdate(d *schema.ResourceData, m interface{}) error {
 		resourcePipelineRead)
 }
 
-func resourcePipelineDelete(d *schema.ResourceData, m interface{}) error {
+func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
 	path := fmt.Sprintf("/pipelines/%v", d.Id())
-	return deleteCodefreshObject(m.(*Config), path)
+	return deleteCodefreshObject(meta.(*Config), path)
 }
 
-func resourcePipelineImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourcePipelineImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	return importCodefreshObject(
 		d,
-		m.(*Config),
+		meta.(*Config),
 		getPipelineFromCodefresh,
 		mapPipelineToResource)
 }

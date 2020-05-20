@@ -8,13 +8,13 @@ func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"api_url": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "https://g.codefresh.io/api",
 			},
 			"token": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("CODEFRESH_API_KEY", ""),
 			},
 		},

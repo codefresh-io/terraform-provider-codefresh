@@ -56,9 +56,9 @@ func resourceProject() *schema.Resource {
 	}
 }
 
-func resourceProjectCreate(d *schema.ResourceData, m interface{}) error {
+func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	return createCodefreshObject(
-		m.(*Config),
+		meta.(*Config),
 		"/projects",
 		"POST",
 		d,
@@ -67,19 +67,19 @@ func resourceProjectCreate(d *schema.ResourceData, m interface{}) error {
 	)
 }
 
-func resourceProjectRead(d *schema.ResourceData, m interface{}) error {
+func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	return readCodefreshObject(
 		d,
-		m.(*Config),
+		meta.(*Config),
 		getProjectFromCodefresh,
 		mapProjectToResource)
 }
 
-func resourceProjectUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	path := fmt.Sprintf("/projects/%v", d.Id())
 	return updateCodefreshObject(
 		d,
-		m.(*Config),
+		meta.(*Config),
 		path,
 		"PATCH",
 		mapResourceToProject,
@@ -87,15 +87,15 @@ func resourceProjectUpdate(d *schema.ResourceData, m interface{}) error {
 		resourceProjectRead)
 }
 
-func resourceProjectDelete(d *schema.ResourceData, m interface{}) error {
+func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	path := fmt.Sprintf("/projects/%v", d.Id())
-	return deleteCodefreshObject(m.(*Config), path)
+	return deleteCodefreshObject(meta.(*Config), path)
 }
 
-func resourceProjectImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceProjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	return importCodefreshObject(
 		d,
-		m.(*Config),
+		meta.(*Config),
 		getProjectFromCodefresh,
 		mapProjectToResource)
 }
