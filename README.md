@@ -9,13 +9,13 @@ The provider is still under development, and can be used as a terraform [third-p
 - [Terraform](https://www.terraform.io/downloads.html) 0.11+ ;
 - [Go](https://golang.org/doc/install) 1.12+ (to build the provider plugin).
 
-## Build
+## Building the Provider
 
 ```sh
-go build
+go build -o terraform-provider-codefresh
 ```
 
-## Usage
+## Using the Provicer
 
 Compile or take from the [Releases](https://github.com/codefresh-contrib/terraform-provider-codefresh/releases) `terraform-provider-codefresh` binary and place it locally according the Terraform plugins [documentation](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins).
 
@@ -24,11 +24,9 @@ For Linux OS it can be:
 - _~/.terraform.d/plugins/linux\_amd64_
 - _./terraform.d/plugins/linux\_amd64_. The relative path in your Terraform project.
 
-## Configuration
-
 To configure codefresh provider:
 
-```tf
+```hcl
 provider "codefresh" {
   api_url = "<MY API URL>" # Default value - https://g.codefresh.io/api
   token = "<MY API TOKEN>" # If token isn't set the provider expects the $CODEFRESH_API_KEY env variable
@@ -49,6 +47,10 @@ Get an API key from [Codefresh](https://g.codefresh.io/user/settings) and set th
 export CODEFRESH_API_KEY='xyz'
 ```
 
-## Examples
+## Testing the Provider
 
-See the [examples](examples/).
+## License
+
+Copyright 2020 Codefresh.
+
+The Codefresh Provider is available under [MPL2.0 license](./LICENSE).
