@@ -12,7 +12,7 @@ func resourceProject() *schema.Resource {
 		Update: resourceProjectUpdate,
 		Delete: resourceProjectDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceProjectImport,
+			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -57,16 +57,20 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
 
-	projectName := d.Get("name").(string)
+	projectID := d.Id()
+	if projectID == "" {
+		d.SetId("")
+		return nil
+	}
 
-	project, err := client.GetProjectByName(projectName)
+	project, err := client.GetProjectByID(projectID)
 	if err != nil {
 		return err
 	}
 
-	if project.ID == "" {
-		d.SetId("")
-		return nil
+	err = mapProjectToResource(project, d)
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -84,8 +84,8 @@ func resourcePipeline() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"trigger": {
-							Type:     schema.TypeList,
+						"triggers": {
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -175,16 +175,21 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
 
-	pipelineName := d.Id()
+	pipelineID:= d.Id()
 
-	pipeline, err := client.GetPipeline(pipelineName)
+	if pipelineID == "" {
+		d.SetId("")
+		return nil
+	}
+
+	pipeline, err := client.GetPipeline(pipelineID)
 	if err != nil {
 		return err
 	}
 
-	if pipeline.Metadata.ID == "" {
-		d.SetId("")
-		return nil
+	err = mapPipelineToResource(*pipeline, d)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -216,6 +221,104 @@ func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func resourcePipelineImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+
+	client := meta.(*cfClient.Client)
+
+	pipelineID := d.Id()
+
+	pipeline, err := client.GetPipeline(pipelineID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = mapPipelineToResource(*pipeline, d)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func mapPipelineToResource(pipeline cfClient.Pipeline, d *schema.ResourceData) error {
+
+	err := d.Set("name", pipeline.Metadata.Name)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("project_id", pipeline.Metadata.ProjectId)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("spec", flattenSpec(pipeline.Spec))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("tags", pipeline.Metadata.Labels.Tags)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func flattenSpec(spec cfClient.Spec) []interface{} {
+
+	var res = make([]interface{}, 0, 0)
+	m := make(map[string]interface{})
+
+	if len(spec.Triggers) > 0 {
+		m["triggers"] = flattenTriggers(spec.Triggers)
+	}
+
+	if spec.SpecTemplate != (cfClient.SpecTemplate{}) {
+		m["spec_template"] = flattenSpecTemplate(spec.SpecTemplate)
+	}
+
+	if len(spec.Variables) != 0 {
+		m["variables"] = convertVariables(spec.Variables)
+	}
+
+	res = append(res, m)
+	return res
+}
+
+func flattenSpecTemplate(spec cfClient.SpecTemplate) []map[string]interface{} {
+	return []map[string]interface{}{
+		{
+			"location":    spec.Location,
+			"repo":        spec.Repo,
+			"context":     spec.Context,
+			"revision":    spec.Revision,
+			"path":        spec.Path,
+		},
+	}
+}
+
+func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
+	var res = make([]map[string]interface{}, len(triggers), len(triggers))
+	for i, trigger := range triggers {
+		m := make(map[string]interface{})
+		m["name"] =                trigger.Name
+		m["description"] =         trigger.Description
+		m["context"] =             trigger.Context
+		m["repo"] =                trigger.Repo
+		m["branch_regex"] =        trigger.BranchRegex
+		m["modified_files_glob"] = trigger.ModifiedFilesGlob
+		m["disabled"] =            trigger.Disabled
+		m["provider"] =            trigger.Provider
+		m["type"] =                trigger.Type
+		m["events"] =              trigger.Events
+		m["variables"] =           convertVariables(trigger.Variables)
+
+		res[i] = m
+	}
+	return res
 }
 
 func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
