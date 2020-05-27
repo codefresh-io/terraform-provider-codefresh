@@ -4,6 +4,7 @@ import (
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"os"
 )
 
 func Provider() terraform.ResourceProvider {
@@ -12,7 +13,12 @@ func Provider() terraform.ResourceProvider {
 			"api_url": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "https://g.codefresh.io/api",
+				DefaultFunc: func() (interface{}, error) {
+					if url := os.Getenv("CODEFRESH_API_URL"); url != "" {
+						return url, nil
+					}
+					return "https://g.codefresh.io/api", nil
+				},
 			},
 			"token": {
 				Type:        schema.TypeString,
