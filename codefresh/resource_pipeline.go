@@ -175,7 +175,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
 
-	pipelineID:= d.Id()
+	pipelineID := d.Id()
 
 	if pipelineID == "" {
 		d.SetId("")
@@ -291,11 +291,11 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 func flattenSpecTemplate(spec cfClient.SpecTemplate) []map[string]interface{} {
 	return []map[string]interface{}{
 		{
-			"location":    spec.Location,
-			"repo":        spec.Repo,
-			"context":     spec.Context,
-			"revision":    spec.Revision,
-			"path":        spec.Path,
+			"location": spec.Location,
+			"repo":     spec.Repo,
+			"context":  spec.Context,
+			"revision": spec.Revision,
+			"path":     spec.Path,
 		},
 	}
 }
@@ -304,17 +304,17 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 	var res = make([]map[string]interface{}, len(triggers), len(triggers))
 	for i, trigger := range triggers {
 		m := make(map[string]interface{})
-		m["name"] =                trigger.Name
-		m["description"] =         trigger.Description
-		m["context"] =             trigger.Context
-		m["repo"] =                trigger.Repo
-		m["branch_regex"] =        trigger.BranchRegex
+		m["name"] = trigger.Name
+		m["description"] = trigger.Description
+		m["context"] = trigger.Context
+		m["repo"] = trigger.Repo
+		m["branch_regex"] = trigger.BranchRegex
 		m["modified_files_glob"] = trigger.ModifiedFilesGlob
-		m["disabled"] =            trigger.Disabled
-		m["provider"] =            trigger.Provider
-		m["type"] =                trigger.Type
-		m["events"] =              trigger.Events
-		m["variables"] =           convertVariables(trigger.Variables)
+		m["disabled"] = trigger.Disabled
+		m["provider"] = trigger.Provider
+		m["type"] = trigger.Type
+		m["events"] = trigger.Events
+		m["variables"] = convertVariables(trigger.Variables)
 
 		res[i] = m
 	}

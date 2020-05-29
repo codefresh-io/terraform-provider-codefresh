@@ -1,8 +1,8 @@
 package codefresh
 
 import (
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"fmt"
+	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -13,43 +13,43 @@ import (
 var projectNamePrefix = "TerraformAccTest_"
 
 func TestAccCodefreshProject_basic(t *testing.T) {
-  name := projectNamePrefix + acctest.RandString(10)
-  resourceName := "codefresh_project.test"
+	name := projectNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_project.test"
 
-  resource.Test(t, resource.TestCase{
-    PreCheck:     func() { testAccPreCheck(t) },
-    Providers:    testAccProviders,
-    CheckDestroy: testAccCheckCodefreshProjectDestroy,
-    Steps: []resource.TestStep{
-      {
-        Config: testAccCodefreshProjectBasicConfig(name),
-        Check: resource.ComposeTestCheckFunc(
-          testAccCheckCodefreshProjectExists(resourceName),
-          resource.TestCheckResourceAttr(resourceName, "name", name),
-        ),
-      },
-      {
-        ResourceName:      resourceName,
-        ImportState:       true,
-        ImportStateVerify: true,
-      },
-    },
-  })
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshProjectBasicConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshProjectExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func TestAccCodefreshProject_Tags(t *testing.T) {
-	name := acctest.RandString(10)
-  	resourceName := "codefresh_project.test"
+	name := projectNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_project.test"
 
-  	resource.Test(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-    	CheckDestroy: testAccCheckCodefreshProjectDestroy,
+		CheckDestroy: testAccCheckCodefreshProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodefreshProjectBasicConfigTags(name, "testTag1", "testTag2"),
 				Check: resource.ComposeTestCheckFunc(
-          			testAccCheckCodefreshProjectExists(resourceName),
+					testAccCheckCodefreshProjectExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.3247715412", "testTag2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.3938019223", "testTag1"),
 				),
@@ -64,38 +64,38 @@ func TestAccCodefreshProject_Tags(t *testing.T) {
 }
 
 func TestAccCodefreshProject_Variables(t *testing.T) {
-  name := projectNamePrefix + acctest.RandString(10)
-  resourceName := "codefresh_project.test"
+	name := projectNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_project.test"
 
-resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { testAccPreCheck(t) },
-    Providers:    testAccProviders,
-    CheckDestroy: testAccCheckCodefreshProjectDestroy,
-    Steps: []resource.TestStep{
-      {
-        Config: testAccCodefreshProjectBasicConfigVariables(name, "var1", "val1", "var2", "val2"),
-        Check: resource.ComposeTestCheckFunc(
-          testAccCheckCodefreshProjectExists(resourceName),
-		  resource.TestCheckResourceAttr(resourceName, "variables.var1", "val1"),
-		  resource.TestCheckResourceAttr(resourceName, "variables.var2", "val2"),
-        ),
-      },
-      {
-        ResourceName:      resourceName,
-        ImportState:       true,
-        ImportStateVerify: true,
-	  },
-	{
-        Config: testAccCodefreshProjectBasicConfigVariables(name, "var1", "val1_updated", "var2", "val2_updated"),
-        Check: resource.ComposeTestCheckFunc(
-          testAccCheckCodefreshProjectExists(resourceName),
-		  resource.TestCheckResourceAttr(resourceName, "variables.var1", "val1_updated"),
-		  resource.TestCheckResourceAttr(resourceName, "variables.var2", "val2_updated"),
-        //   resource.TestCheckResourceAttr(resourceName, "variables.", name),
-        ),
-      },
-    },
-  })
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshProjectBasicConfigVariables(name, "var1", "val1", "var2", "val2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshProjectExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "variables.var1", "val1"),
+					resource.TestCheckResourceAttr(resourceName, "variables.var2", "val2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodefreshProjectBasicConfigVariables(name, "var1", "val1_updated", "var2", "val2_updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshProjectExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "variables.var1", "val1_updated"),
+					resource.TestCheckResourceAttr(resourceName, "variables.var2", "val2_updated"),
+				//   resource.TestCheckResourceAttr(resourceName, "variables.", name),
+				),
+			},
+		},
+	})
 }
 
 func testAccCheckCodefreshProjectExists(resource string) resource.TestCheckFunc {
@@ -145,14 +145,13 @@ func testAccCheckCodefreshProjectDestroy(s *terraform.State) error {
 	return nil
 }
 
-
 // CONFIGS
-func testAccCodefreshProjectBasicConfig(rName string) string { 
-  return fmt.Sprintf(` 
+func testAccCodefreshProjectBasicConfig(rName string) string {
+	return fmt.Sprintf(` 
 resource "codefresh_project" "test" { 
   name = "%s" 
 } 
-`, rName) 
+`, rName)
 }
 
 func testAccCodefreshProjectBasicConfigTags(rName, tag1, tag2 string) string {
@@ -164,7 +163,7 @@ resource "codefresh_project" "test" {
     %q,
   ]
 } 
-`, rName, tag1, tag2) 
+`, rName, tag1, tag2)
 }
 
 func testAccCodefreshProjectBasicConfigVariables(rName, var1Name, var1Value, var2Name, var2Value string) string {
