@@ -99,6 +99,72 @@ func TestAccCodefreshPipeline_Variables(t *testing.T) {
 	})
 }
 
+func TestAccCodefreshPipeline_Triggers(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineBasicConfigTriggers(
+					name,
+					"codefresh-contrib/react-sample-app",
+					"./codefresh.yml",
+					"master",
+					"git",
+					"commits",
+					"git",
+					"push.heads",
+					"codefresh-contrib/react-sample-app",
+					"tags",
+					"git",
+					"push.tags",
+					"codefresh-contrib/react-sample-app",
+					"triggerTestVar",
+					"triggerTestValue",
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.name", "commits"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.name", "tags"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodefreshPipelineBasicConfigTriggers(
+					name,
+					"codefresh-contrib/react-sample-app",
+					"./codefresh.yml",
+					"master",
+					"git",
+					"commits",
+					"git",
+					"push.heads",
+					"codefresh-contrib/react-sample-app",
+					"tags",
+					"git",
+					"push.tags",
+					"codefresh-contrib/react-sample-app",
+					"triggerTestVar",
+					"triggerTestValue",
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.variables.triggerTestVar", "triggerTestValue"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCodefreshPipelineExists(resource string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 
@@ -208,4 +274,85 @@ resource "codefresh_pipeline" "test" {
   }
 }
 `, rName, repo, path, revision, context, var1Name, var1Value, var2Name, var2Value)
+}
+
+func testAccCodefreshPipelineBasicConfigTriggers(
+	rName,
+	repo,
+	path,
+	revision,
+	context,
+	trigger1Name,
+	trigger1Context,
+	trigger1Event,
+	trigger1Repo,
+	trigger2Name,
+	trigger2Context,
+	trigger2Event,
+	trigger2Repo,
+	trigger2VarName,
+	trigger2VarValue string) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+  name = "%s"
+
+  spec {
+	spec_template {
+		repo        = %q
+		path        = %q
+		revision    = %q
+		context     = %q
+	}
+
+	trigger {
+        name = %q
+        branch_regex = "/.*/gi"
+        context = %q
+        description = ""
+        disabled = false
+        events = [
+          %q
+        ]
+        modified_files_glob = ""
+        provider = "github"
+        repo = %q
+        type = "git"
+    }
+
+    trigger {
+        name = %q
+        branch_regex = "/.*/gi"
+        context = %q
+        description = ""
+        disabled = false
+        events = [
+          %q
+        ]
+        modified_files_glob = ""
+        provider = "github"
+        repo = %q
+		type = "git"
+
+		variables = {
+			%q = %q
+		}
+    }
+  }
+}
+`,
+		rName,
+		repo,
+		path,
+		revision,
+		context,
+		trigger1Name,
+		trigger1Context,
+		trigger1Event,
+		trigger1Repo,
+		trigger2Name,
+		trigger2Context,
+		trigger2Event,
+		trigger2Repo,
+		trigger2VarName,
+		trigger2VarValue)
 }
