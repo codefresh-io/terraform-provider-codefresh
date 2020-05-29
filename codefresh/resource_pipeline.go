@@ -84,8 +84,8 @@ func resourcePipeline() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"triggers": {
-							Type:     schema.TypeSet,
+						"trigger": {
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -273,7 +273,7 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 	m := make(map[string]interface{})
 
 	if len(spec.Triggers) > 0 {
-		m["triggers"] = flattenTriggers(spec.Triggers)
+		m["trigger"] = flattenTriggers(spec.Triggers)
 	}
 
 	if spec.SpecTemplate != (cfClient.SpecTemplate{}) {
@@ -347,20 +347,20 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 	variables := d.Get("spec.0.variables").(map[string]interface{})
 	pipeline.SetVariables(variables)
 
-	triggers := d.Get("spec.trigger").(map[string]interface{})
+	triggers := d.Get("spec.0.trigger").([]interface{})
 	for idx := range triggers {
 		events := d.Get(fmt.Sprintf("spec.0.trigger.%v.events", idx)).([]interface{})
 
 		codefreshTrigger := cfClient.Trigger{
-			Name:              d.Get(fmt.Sprintf("trigger.%v.name", idx)).(string),
-			Description:       d.Get(fmt.Sprintf("trigger.%v.description", idx)).(string),
-			Type:              d.Get(fmt.Sprintf("trigger.%v.type", idx)).(string),
-			Repo:              d.Get(fmt.Sprintf("trigger.%v.repo", idx)).(string),
-			BranchRegex:       d.Get(fmt.Sprintf("trigger.%v.branch_regex", idx)).(string),
-			ModifiedFilesGlob: d.Get(fmt.Sprintf("trigger.%v.modified_files_glob", idx)).(string),
-			Provider:          d.Get(fmt.Sprintf("trigger.%v.provider", idx)).(string),
-			Disabled:          d.Get(fmt.Sprintf("trigger.%v.disabled", idx)).(bool),
-			Context:           d.Get(fmt.Sprintf("trigger.%v.context", idx)).(string),
+			Name:              d.Get(fmt.Sprintf("spec.0.trigger.%v.name", idx)).(string),
+			Description:       d.Get(fmt.Sprintf("spec.0.trigger.%v.description", idx)).(string),
+			Type:              d.Get(fmt.Sprintf("spec.0.trigger.%v.type", idx)).(string),
+			Repo:              d.Get(fmt.Sprintf("spec.0.trigger.%v.repo", idx)).(string),
+			BranchRegex:       d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex", idx)).(string),
+			ModifiedFilesGlob: d.Get(fmt.Sprintf("spec.0.trigger.%v.modified_files_glob", idx)).(string),
+			Provider:          d.Get(fmt.Sprintf("spec.0.trigger.%v.provider", idx)).(string),
+			Disabled:          d.Get(fmt.Sprintf("spec.0.trigger.%v.disabled", idx)).(bool),
+			Context:           d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
 			Events:            convertStringArr(events),
 		}
 		variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
