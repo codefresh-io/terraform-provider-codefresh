@@ -1,76 +1,78 @@
 # Example
 
-```yaml
-resource "codefresh_project" "test" {
-    name = "test"
-}
-```
-
 Run `terraform plan` or `terraform apply` as usual. Note this will modify the actual Codefresh configuration.
 
-# Syntax Examples
-
-## Project
-
-```yaml
-resource "codefresh_project" "docker" {
-  name = "docker"
+```hcl
+provider "codefresh" {
+  api_url = "https://my.onpremcodefresh.com/api"
+  token = "xxxxxxxxxxxxxxx.xxxxxxxxxxxxxx"
 }
-```
 
-## Pipeline
-
-```yaml
-resource "codefresh_pipeline" "docker_monorepo" {
-  name    = "docker/docker-monorepo"
-  project = "docker"
-
-  spec = {
-    repo        = "abcinc/monorepo"
-    path        = "./codefresh/docker/docker-monorepo.yaml"
-    revision    = "master"
-    concurrency = 1
-    priority    = 5
-  }
+resource "codefresh_project" "test" {
+  name = "myproject"
 
   tags = [
     "docker",
   ]
 
   variables {
-    TAG = "master"
+    go_version = "1.13"
   }
 }
-```
 
-## Cron Trigger
+resource "codefresh_pipeline" "test" {
+  name    = "${codefresh_project.test.name}/react-sample-app"
 
-```yaml
-resource "codefresh_cron_event" "docker_monorepo_cron" {
-  expression = "40 0 * * *"
-  message    = "build monorepo docker"
-}
+  tags = [
+    "production",
+    "docker",
+  ]
 
-resource "codefresh_cron_trigger" "docker_monorepo_cron" {
-  pipeline = "${codefresh_pipeline.docker_monorepo.id}"
-  event    = "${codefresh_cron_event.docker_monorepo_cron.id}"
-}
-```
+  spec {
+    concurrency = 1
+    priority    = 5
 
-## Environment
+    spec_template {
+      repo        = "codefresh-contrib/react-sample-app"
+      path        = "./codefresh.yml"
+      revision    = "master"
+      context     = "git"
+    }
 
-```yaml
-resource "codefresh_environment" "staging" {
-  account_id = "<redacted>"
-  name       = "staging"
-  namespace  = "staging"
-  cluster    = "abcinc-staging"
-}
-```
+    trigger {
+      branch_regex  = "/.*/gi"
+      context       = "git"
+      description   = "Trigger for commits"
+      disabled      = false
+      events        = [
+        "push.heads"
+      ]
+      modified_files_glob = ""
+      name                = "commits"
+      provider            = "github"
+      repo                = "codefresh-contrib/react-sample-app"
+      type                = "git"
+    }
 
-## User
-```yaml
-resource "codefresh_user" "john_doe" {
-  email = "jdoe@abcinc.com"
+    trigger {
+      branch_regex  = "/.*/gi"
+      context       = "git"
+      description   = "Trigger for tags"
+      disabled      = false
+      events        = [
+        "push.tags"
+      ]
+      modified_files_glob = ""
+      name                = "tags"
+      provider            = "github"
+      repo                = "codefresh-contrib/react-sample-app"
+      type                = "git"
+    }
+
+    variables = {
+      MY_PIP_VAR      = "value"
+      ANOTHER_PIP_VAR = "another_value"
+    }
+  }
 }
 ```
