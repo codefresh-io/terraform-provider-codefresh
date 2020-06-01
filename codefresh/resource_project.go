@@ -40,8 +40,7 @@ func resourceProject() *schema.Resource {
 func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfClient.Client)
 
-	var project cfClient.Project
-	project = *mapResourceToProject(d)
+	project := *mapResourceToProject(d)
 
 	resp, err := client.CreateProject(&project)
 	if err != nil {
@@ -79,8 +78,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfClient.Client)
 
-	var project cfClient.Project
-	project = *mapResourceToProject(d)
+	project := *mapResourceToProject(d)
 
 	err := client.UpdateProject(&project)
 	if err != nil {
@@ -99,25 +97,6 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func resourceProjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-
-	client := meta.(*cfClient.Client)
-
-	projectID := d.Id()
-
-	project, err := client.GetProjectByID(projectID)
-	if err != nil {
-		return nil, err
-	}
-
-	err = mapProjectToResource(project, d)
-	if err != nil {
-		return nil, err
-	}
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func mapProjectToResource(project *cfClient.Project, d *schema.ResourceData) error {

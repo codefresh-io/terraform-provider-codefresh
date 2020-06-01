@@ -43,6 +43,10 @@ func (client *Client) RequestAPI(opt *RequestOptions) ([]byte, error) {
 		finalURL += ToQS(opt.QS)
 	}
 	request, err := http.NewRequest(opt.Method, finalURL, bytes.NewBuffer(opt.Body))
+	if err != nil {
+		return nil, err
+	}
+
 	request.Header.Set("Authorization", client.Token)
 	request.Header.Set("Content-Type", "application/json; charset=utf-8")
 

@@ -199,8 +199,7 @@ func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
 
-	var pipeline cfClient.Pipeline
-	pipeline = *mapResourceToPipeline(d)
+	pipeline := *mapResourceToPipeline(d)
 	pipeline.Metadata.ID = d.Id()
 
 	_, err := client.UpdatePipeline(&pipeline)
@@ -221,25 +220,6 @@ func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func resourcePipelineImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-
-	client := meta.(*cfClient.Client)
-
-	pipelineID := d.Id()
-
-	pipeline, err := client.GetPipeline(pipelineID)
-	if err != nil {
-		return nil, err
-	}
-
-	err = mapPipelineToResource(*pipeline, d)
-	if err != nil {
-		return nil, err
-	}
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func mapPipelineToResource(pipeline cfClient.Pipeline, d *schema.ResourceData) error {
@@ -269,7 +249,7 @@ func mapPipelineToResource(pipeline cfClient.Pipeline, d *schema.ResourceData) e
 
 func flattenSpec(spec cfClient.Spec) []interface{} {
 
-	var res = make([]interface{}, 0, 0)
+	var res = make([]interface{}, 0)
 	m := make(map[string]interface{})
 
 	if len(spec.Triggers) > 0 {
@@ -301,7 +281,7 @@ func flattenSpecTemplate(spec cfClient.SpecTemplate) []map[string]interface{} {
 }
 
 func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
-	var res = make([]map[string]interface{}, len(triggers), len(triggers))
+	var res = make([]map[string]interface{}, len(triggers))
 	for i, trigger := range triggers {
 		m := make(map[string]interface{})
 		m["name"] = trigger.Name
