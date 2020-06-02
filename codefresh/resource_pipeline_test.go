@@ -218,6 +218,38 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 	})
 }
 
+func TestAccCodefreshPipeline_Revision(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineBasicConfig(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "revision", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodefreshPipelineBasicConfig(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "development", "git"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCodefreshPipelineExists(resource string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 
@@ -271,6 +303,13 @@ func testAccCheckCodefreshPipelineDestroy(s *terraform.State) error {
 func testAccCodefreshPipelineBasicConfig(rName, repo, path, revision, context string) string {
 	return fmt.Sprintf(` 
 resource "codefresh_pipeline" "test" { 
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
   name = "%s" 
 
   spec {
@@ -288,6 +327,13 @@ resource "codefresh_pipeline" "test" {
 func testAccCodefreshPipelineBasicConfigTags(rName, repo, path, revision, context, tag1, tag2 string) string {
 	return fmt.Sprintf(` 
 resource "codefresh_pipeline" "test" { 
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
   name = "%s" 
 
   spec {
@@ -310,6 +356,13 @@ resource "codefresh_pipeline" "test" {
 func testAccCodefreshPipelineBasicConfigVariables(rName, repo, path, revision, context, var1Name, var1Value, var2Name, var2Value string) string {
 	return fmt.Sprintf(`
 resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
   name = "%s"
 
   spec {
@@ -347,6 +400,13 @@ func testAccCodefreshPipelineBasicConfigTriggers(
 	trigger2VarValue string) string {
 	return fmt.Sprintf(`
 resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
   name = "%s"
 
   spec {
@@ -413,6 +473,13 @@ resource "codefresh_pipeline" "test" {
 func testAccCodefreshPipelineBasicConfigRuntimeEnvironment(rName, repo, path, revision, context, runtimeName string) string {
 	return fmt.Sprintf(`
 resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
   name = "%s"
 
   spec {
@@ -434,6 +501,12 @@ resource "codefresh_pipeline" "test" {
 func testAccCodefreshPipelineBasicConfigOriginalYamlString(rName, originalYamlString string) string {
 	return fmt.Sprintf(`
 resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
 
   name = "%s"
 
