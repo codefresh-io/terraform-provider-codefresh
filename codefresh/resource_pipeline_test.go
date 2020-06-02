@@ -442,5 +442,5 @@ resource "codefresh_pipeline" "test" {
   spec {}
 
 }
-`, rName,  originalYamlString)
+`, rName, originalYamlString)
 }

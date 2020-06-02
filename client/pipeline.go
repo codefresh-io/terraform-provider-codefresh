@@ -23,6 +23,7 @@ type Metadata struct {
 	OriginalYamlString string `json:"originalYamlString,omitempty"`
 	Project            string `json:"project,omitempty"`
 	ProjectId          string `json:"projectId,omitempty"`
+	Revision           int    `json:"revision,omitempty"`
 }
 
 type SpecTemplate struct {
@@ -70,7 +71,7 @@ type Spec struct {
 	Steps              map[string]interface{} `json:"steps,omitempty"`
 	Stages             []interface{}          `json:"stages,omitempty"`
 	Mode               string                 `json:"mode,omitempty"`
-	RuntimeEnvironment RuntimeEnvironment 	  `json:"runtimeEnvironment,omitempty"`
+	RuntimeEnvironment RuntimeEnvironment     `json:"runtimeEnvironment,omitempty"`
 }
 
 func (s *Spec) SetVariables(variables map[string]interface{}) {

@@ -21,8 +21,16 @@ func resourcePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"original_yaml_string": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"project_id": {
 				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"revision": {
+				Type:     schema.TypeInt,
 				Optional: true,
 			},
 			"tags": {
@@ -31,10 +39,6 @@ func resourcePipeline() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-			},
-			"original_yaml_string": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"spec": {
 				Type:     schema.TypeList,
@@ -197,7 +201,7 @@ func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(resp.Metadata.ID)
 
-	return nil
+	return resourcePipelineRead(d, meta)
 }
 
 func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
@@ -236,7 +240,7 @@ func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return nil
+	return resourcePipelineRead(d, meta)
 }
 
 func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
@@ -254,6 +258,11 @@ func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
 func mapPipelineToResource(pipeline cfClient.Pipeline, d *schema.ResourceData) error {
 
 	err := d.Set("name", pipeline.Metadata.Name)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("revision", pipeline.Metadata.Revision)
 	if err != nil {
 		return err
 	}
@@ -325,9 +334,9 @@ func flattenSpecTemplate(spec cfClient.SpecTemplate) []map[string]interface{} {
 func flattenSpecRuntimeEnvironment(spec cfClient.RuntimeEnvironment) []map[string]interface{} {
 	return []map[string]interface{}{
 		{
-			"name": spec.Name,
-			"memory":     spec.Memory,
-			"cpu":  spec.CPU,
+			"name":         spec.Name,
+			"memory":       spec.Memory,
+			"cpu":          spec.CPU,
 			"dind_storage": spec.DindStorage,
 		},
 	}
@@ -357,9 +366,11 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 
 	tags := d.Get("tags").(*schema.Set).List()
+
 	pipeline := &cfClient.Pipeline{
 		Metadata: cfClient.Metadata{
 			Name:      d.Get("name").(string),
+			Revision:  d.Get("revision").(int),
 			ProjectId: d.Get("project_id").(string),
 			Labels: cfClient.Labels{
 				Tags: convertStringArr(tags),
@@ -386,12 +397,11 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 		}
 	}
 
-
 	if _, ok := d.GetOk("spec.0.runtime_environment"); ok {
 		pipeline.Spec.RuntimeEnvironment = cfClient.RuntimeEnvironment{
-			Name: d.Get("spec.0.runtime_environment.0.name").(string),
-			Memory: d.Get("spec.0.runtime_environment.0.memory").(string),
-			CPU: d.Get("spec.0.runtime_environment.0.cpu").(string),
+			Name:        d.Get("spec.0.runtime_environment.0.name").(string),
+			Memory:      d.Get("spec.0.runtime_environment.0.memory").(string),
+			CPU:         d.Get("spec.0.runtime_environment.0.cpu").(string),
 			DindStorage: d.Get("spec.0.runtime_environment.0.dind_storage").(string),
 		}
 	}
