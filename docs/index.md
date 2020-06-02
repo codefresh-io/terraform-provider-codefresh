@@ -36,6 +36,12 @@ resource "codefresh_project" "project" {
 }
 
 resource "codefresh_pipeline" "pipeline" {
+    lifecycle {
+        ignore_changes = [
+            revision
+        ]
+    }
+
     name  = "${codefresh_project.project.name}/mypipeline"
 
     spec {

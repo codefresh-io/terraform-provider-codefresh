@@ -11,6 +11,13 @@ resource "codefresh_project" "test" {
 }
 
 resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
   name    = "${codefresh_project.test.name}/react-sample-app"
 
   tags = [
@@ -70,6 +77,7 @@ resource "codefresh_pipeline" "test" {
 ## Argument Reference
 
 - `name` - (Required) The display name for the pipeline.
+- `revision` - (Optional) The pipeline's revision. Should be added to the **lifecycle/ignore_changes** or incremented mannually each update.
 - `tags` - (Optional) A list of tags to mark a project for easy management and access control.
 - `spec` - (Required) A collection of `spec` blocks as documented below.
 - `original_yaml_string` - (Optional) A string with original yaml pipeline.
