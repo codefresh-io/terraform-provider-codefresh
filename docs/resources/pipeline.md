@@ -72,6 +72,9 @@ resource "codefresh_pipeline" "test" {
 - `name` - (Required) The display name for the pipeline.
 - `tags` - (Optional) A list of tags to mark a project for easy management and access control.
 - `spec` - (Required) A collection of `spec` blocks as documented below.
+- `original_yaml_string` - (Optional) A string with original yaml pipeline.
+  - `original_yaml_string` = "version: \"1.0\"\nsteps:\n  test:\n    image: alpine:latest\n    commands:\n      - echo \"ACC tests\""
+  - or `original_yaml_string` = file("/path/to/my/codefresh.yml")
 
 ---
 
@@ -81,7 +84,8 @@ resource "codefresh_pipeline" "test" {
 - `priority` - (optional) Helps to organize the order of builds execution in case of reaching the concurrency limit.
 - `variables` - (Optional) Pipeline variables.
 - `trigger` - (Optional) A collection of `trigger` blocks as documented below. Triggers [documentation](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/triggers/git-triggers/).
-- `spec_template` - (optional) A collection of `spec_template` blocks as documented below.
+- `spec_template` - (Optional) A collection of `spec_template` blocks as documented below.
+- `runtime_environment` - (Optional) A collection of `runtime_environment` blocks as documented below.
 
 ---
 
@@ -107,6 +111,15 @@ resource "codefresh_pipeline" "test" {
 - `provider` - (Optional) Default value - **github**.
 - `context` - (Optional) Codefresh Git context.
 - `variables` - (Optional) Trigger variables.
+
+---
+
+`runtime_environment` supports the following:
+
+- `name` - (Required) A name of runtime.
+- `cpu` - (Optional) A required amount of CPU.
+- `memory` - (Optional) A required amount of memory.
+- `dind_storage` - (Optional) A pipeline shared storage.
 
 ## Attributes Reference
 
