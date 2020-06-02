@@ -17,11 +17,12 @@ type Labels struct {
 }
 
 type Metadata struct {
-	Name      string `json:"name,omitempty"`
-	ID        string `json:"id,omitempty"`
-	Labels    Labels `json:"labels,omitempty"`
-	Project   string `json:"project,omitempty"`
-	ProjectId string `json:"projectId,omitempty"`
+	Name               string `json:"name,omitempty"`
+	ID                 string `json:"id,omitempty"`
+	Labels             Labels `json:"labels,omitempty"`
+	OriginalYamlString string `json:"originalYamlString,omitempty"`
+	Project            string `json:"project,omitempty"`
+	ProjectId          string `json:"projectId,omitempty"`
 }
 
 type SpecTemplate struct {
@@ -46,6 +47,13 @@ type Trigger struct {
 	Variables         []Variable `json:"variables,omitempty"`
 }
 
+type RuntimeEnvironment struct {
+	Name        string `json:"name,omitempty"`
+	Memory      string `json:"memory,omitempty"`
+	CPU         string `json:"cpu,omitempty"`
+	DindStorage string `json:"dindStorage,omitempty"`
+}
+
 func (t *Trigger) SetVariables(variables map[string]interface{}) {
 	for key, value := range variables {
 		t.Variables = append(t.Variables, Variable{Key: key, Value: value.(string)})
@@ -54,7 +62,7 @@ func (t *Trigger) SetVariables(variables map[string]interface{}) {
 
 type Spec struct {
 	Variables          []Variable             `json:"variables,omitempty"`
-	SpecTemplate       SpecTemplate           `json:"specTemplate,omitempty"`
+	SpecTemplate       *SpecTemplate          `json:"specTemplate,omitempty"`
 	Triggers           []Trigger              `json:"triggers,omitempty"`
 	Priority           int                    `json:"priority,omitempty"`
 	Concurrency        int                    `json:"concurrency,omitempty"`
@@ -62,7 +70,7 @@ type Spec struct {
 	Steps              map[string]interface{} `json:"steps,omitempty"`
 	Stages             []interface{}          `json:"stages,omitempty"`
 	Mode               string                 `json:"mode,omitempty"`
-	RuntimeEnvironment map[string]interface{} `json:"runtimeEnvironment,omitempty"`
+	RuntimeEnvironment RuntimeEnvironment 	  `json:"runtimeEnvironment,omitempty"`
 }
 
 func (s *Spec) SetVariables(variables map[string]interface{}) {

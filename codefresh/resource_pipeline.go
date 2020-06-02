@@ -4,6 +4,7 @@ import (
 	"fmt"
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"strings"
 )
 
 func resourcePipeline() *schema.Resource {
@@ -31,9 +32,13 @@ func resourcePipeline() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"original_yaml_string": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"spec": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -148,6 +153,30 @@ func resourcePipeline() *schema.Resource {
 								},
 							},
 						},
+						"runtime_environment": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"memory": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"cpu": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"dind_storage": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -244,6 +273,11 @@ func mapPipelineToResource(pipeline cfClient.Pipeline, d *schema.ResourceData) e
 		return err
 	}
 
+	err = d.Set("original_yaml_string", pipeline.Metadata.OriginalYamlString)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -256,13 +290,21 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 		m["trigger"] = flattenTriggers(spec.Triggers)
 	}
 
-	if spec.SpecTemplate != (cfClient.SpecTemplate{}) {
-		m["spec_template"] = flattenSpecTemplate(spec.SpecTemplate)
+	if spec.SpecTemplate != nil {
+		m["spec_template"] = flattenSpecTemplate(*spec.SpecTemplate)
 	}
 
 	if len(spec.Variables) != 0 {
 		m["variables"] = convertVariables(spec.Variables)
 	}
+
+	if spec.RuntimeEnvironment != (cfClient.RuntimeEnvironment{}) {
+		m["runtime_environment"] = flattenSpecRuntimeEnvironment(spec.RuntimeEnvironment)
+	}
+
+	m["concurrency"] = spec.Concurrency
+
+	m["priority"] = spec.Priority
 
 	res = append(res, m)
 	return res
@@ -276,6 +318,17 @@ func flattenSpecTemplate(spec cfClient.SpecTemplate) []map[string]interface{} {
 			"context":  spec.Context,
 			"revision": spec.Revision,
 			"path":     spec.Path,
+		},
+	}
+}
+
+func flattenSpecRuntimeEnvironment(spec cfClient.RuntimeEnvironment) []map[string]interface{} {
+	return []map[string]interface{}{
+		{
+			"name": spec.Name,
+			"memory":     spec.Memory,
+			"cpu":  spec.CPU,
+			"dind_storage": spec.DindStorage,
 		},
 	}
 }
@@ -311,19 +364,38 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			Labels: cfClient.Labels{
 				Tags: convertStringArr(tags),
 			},
+			OriginalYamlString: strings.Replace(
+				d.Get("original_yaml_string").(string),
+				"\n",
+				"\n",
+				-1),
 		},
 		Spec: cfClient.Spec{
-			SpecTemplate: cfClient.SpecTemplate{
-				Location: d.Get("spec.0.spec_template.0.location").(string),
-				Repo:     d.Get("spec.0.spec_template.0.repo").(string),
-				Path:     d.Get("spec.0.spec_template.0.path").(string),
-				Revision: d.Get("spec.0.spec_template.0.revision").(string),
-				Context:  d.Get("spec.0.spec_template.0.context").(string),
-			},
 			Priority:    d.Get("spec.0.priority").(int),
 			Concurrency: d.Get("spec.0.concurrency").(int),
 		},
 	}
+
+	if _, ok := d.GetOk("spec.0.spec_template"); ok {
+		pipeline.Spec.SpecTemplate = &cfClient.SpecTemplate{
+			Location: d.Get("spec.0.spec_template.0.location").(string),
+			Repo:     d.Get("spec.0.spec_template.0.repo").(string),
+			Path:     d.Get("spec.0.spec_template.0.path").(string),
+			Revision: d.Get("spec.0.spec_template.0.revision").(string),
+			Context:  d.Get("spec.0.spec_template.0.context").(string),
+		}
+	}
+
+
+	if _, ok := d.GetOk("spec.0.runtime_environment"); ok {
+		pipeline.Spec.RuntimeEnvironment = cfClient.RuntimeEnvironment{
+			Name: d.Get("spec.0.runtime_environment.0.name").(string),
+			Memory: d.Get("spec.0.runtime_environment.0.memory").(string),
+			CPU: d.Get("spec.0.runtime_environment.0.cpu").(string),
+			DindStorage: d.Get("spec.0.runtime_environment.0.dind_storage").(string),
+		}
+	}
+
 	variables := d.Get("spec.0.variables").(map[string]interface{})
 	pipeline.SetVariables(variables)
 

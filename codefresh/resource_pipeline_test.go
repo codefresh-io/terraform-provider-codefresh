@@ -99,6 +99,59 @@ func TestAccCodefreshPipeline_Variables(t *testing.T) {
 	})
 }
 
+func TestAccCodefreshPipeline_RuntimeEnvironment(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+	runtimeName := "system/codefresh-inc-default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineBasicConfigRuntimeEnvironment(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", runtimeName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.runtime_environment.0.name", runtimeName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCodefreshPipeline_OriginalYamlString(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+	originalYamlString := "version: \"1.0\"\nsteps:\n  test:\n    image: alpine:latest\n    commands:\n      - echo \"ACC tests\""
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineBasicConfigOriginalYamlString(name, originalYamlString),
+				Check: resource.ComposeTestCheckFunc(
+
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "original_yaml_string", originalYamlString),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
@@ -355,4 +408,39 @@ resource "codefresh_pipeline" "test" {
 		trigger2Repo,
 		trigger2VarName,
 		trigger2VarValue)
+}
+
+func testAccCodefreshPipelineBasicConfigRuntimeEnvironment(rName, repo, path, revision, context, runtimeName string) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+  name = "%s"
+
+  spec {
+	spec_template {
+		repo        = %q
+		path        = %q
+		revision    = %q
+		context     = %q
+	}
+
+	runtime_environment {
+		name = %q
+	}
+  }
+}
+`, rName, repo, path, revision, context, runtimeName)
+}
+
+func testAccCodefreshPipelineBasicConfigOriginalYamlString(rName, originalYamlString string) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+
+  name = "%s"
+
+  original_yaml_string = %#v
+
+  spec {}
+
+}
+`, rName,  originalYamlString)
 }
