@@ -73,8 +73,8 @@ resource "codefresh_pipeline" "test" {
 - `tags` - (Optional) A list of tags to mark a project for easy management and access control.
 - `spec` - (Required) A collection of `spec` blocks as documented below.
 - `original_yaml_string` - (Optional) A string with original yaml pipeline.
-  - `original_yaml_string` = "version: \"1.0\"\nsteps:\n  test:\n    image: alpine:latest\n    commands:\n      - echo \"ACC tests\""
-  - or `original_yaml_string` = file("/path/to/my/codefresh.yml")
+  - `original_yaml_string = "version: \"1.0\"\nsteps:\n  test:\n    image: alpine:latest\n    commands:\n      - echo \"ACC tests\""`
+  - or `original_yaml_string = file("/path/to/my/codefresh.yml")`
 
 ---
 
