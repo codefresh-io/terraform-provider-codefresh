@@ -1,5 +1,8 @@
 # Example
 
+In the example the Codefresh Provider is configured to authenticate with Codefresh API, and new project and pipeline are created.
+Pipeline includes link to the original __codefresh.yml__ spec and two git triggres.
+
 Run `terraform plan` or `terraform apply` as usual. Note this will modify the actual Codefresh configuration.
 
 ```hcl
