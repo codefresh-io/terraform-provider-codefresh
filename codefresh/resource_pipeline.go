@@ -406,7 +406,7 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 		}
 	}
 
-	variables := d.Get("spec.0.variables").(map[string]interface{})
+	variables := d.Get("spec.0.variables").(map[string]string)
 	pipeline.SetVariables(variables)
 
 	triggers := d.Get("spec.0.trigger").([]interface{})
@@ -425,7 +425,7 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			Context:           d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
 			Events:            convertStringArr(events),
 		}
-		variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
+		variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]string)
 		codefreshTrigger.SetVariables(variables)
 
 		pipeline.Spec.Triggers = append(pipeline.Spec.Triggers, codefreshTrigger)
