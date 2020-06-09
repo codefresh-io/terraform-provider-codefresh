@@ -19,9 +19,9 @@ func (project *Project) GetID() string {
 }
 
 // SetVariables project variables
-func (project *Project) SetVariables(variables map[string]string) {
+func (project *Project) SetVariables(variables map[string]interface{}) {
 	for key, value := range variables {
-		project.Variables = append(project.Variables, Variable{Key: key, Value: value})
+		project.Variables = append(project.Variables, Variable{Key: key, Value: value.(string)})
 	}
 }
 

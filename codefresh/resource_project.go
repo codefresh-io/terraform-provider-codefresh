@@ -125,7 +125,7 @@ func mapResourceToProject(d *schema.ResourceData) *cfClient.Project {
 		ProjectName: d.Get("name").(string),
 		Tags:        convertStringArr(tags),
 	}
-	variables := d.Get("variables").(map[string]string)
+	variables := d.Get("variables").(map[string]interface{})
 	project.SetVariables(variables)
 	return project
 }
