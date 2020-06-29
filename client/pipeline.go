@@ -55,9 +55,9 @@ type RuntimeEnvironment struct {
 	DindStorage string `json:"dindStorage,omitempty"`
 }
 
-func (t *Trigger) SetVariables(variables map[string]string) {
+func (t *Trigger) SetVariables(variables map[string]interface{}) {
 	for key, value := range variables {
-		t.Variables = append(t.Variables, Variable{Key: key, Value: value})
+		t.Variables = append(t.Variables, Variable{Key: key, Value: value.(string)})
 	}
 }
 
@@ -80,9 +80,9 @@ type Pipeline struct {
 	Version  string   `json:"version,omitempty"`
 }
 
-func (p *Pipeline) SetVariables(variables map[string]string) {
+func (p *Pipeline) SetVariables(variables map[string]interface{}) {
 	for key, value := range variables {
-		p.Spec.Variables = append(p.Spec.Variables, Variable{Key: key, Value: value})
+		p.Spec.Variables = append(p.Spec.Variables, Variable{Key: key, Value: value.(string)})
 	}
 }
 
