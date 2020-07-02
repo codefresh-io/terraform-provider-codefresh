@@ -29,6 +29,7 @@ func Provider() terraform.ResourceProvider {
 		ResourcesMap: map[string]*schema.Resource{
 			"codefresh_project":  resourceProject(),
 			"codefresh_pipeline": resourcePipeline(),
+			"codefresh_team":     resourceTeam(),
 		},
 		ConfigureFunc: configureProvider,
 	}
