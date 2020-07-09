@@ -102,7 +102,7 @@ func resourceTeamUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	team := *mapResourceToTeam(d)
 
-	_, err := client.CreateTeam(&team)
+	_, err := client.RenameTeam(team.ID, team.Name)
 	if err != nil {
 		return err
 	}

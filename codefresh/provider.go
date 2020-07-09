@@ -30,6 +30,7 @@ func Provider() terraform.ResourceProvider {
 			"codefresh_project":  resourceProject(),
 			"codefresh_pipeline": resourcePipeline(),
 			"codefresh_team":     resourceTeam(),
+			"codefresh_account":  resourceAccount(),
 		},
 		ConfigureFunc: configureProvider,
 	}

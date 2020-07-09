@@ -8,6 +8,7 @@ require (
 	github.com/golangci/golangci-lint v1.27.0
 	github.com/hashicorp/terraform v0.12.25
 	github.com/hashicorp/terraform-plugin-sdk v1.7.0
+	github.com/imdario/mergo v0.3.9
 )
 
 go 1.13
