@@ -1,7 +1,6 @@
 package codefresh
 
 import (
-	"fmt"
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -22,10 +21,9 @@ func resourceTeam() *schema.Resource {
 			},
 			"type": {
 				Type:     schema.TypeString,
-				ForceNew: true,
 				Optional: true,
 			},
-			"account": {
+			"account_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -33,26 +31,15 @@ func resourceTeam() *schema.Resource {
 			"tags": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"users": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"user_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 		},
@@ -102,9 +89,34 @@ func resourceTeamUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	team := *mapResourceToTeam(d)
 
-	_, err := client.RenameTeam(team.ID, team.Name)
+	// Rename
+	err := client.RenameTeam(team.ID, team.Name)
 	if err != nil {
 		return err
+	}
+
+	// Update users
+	existingTeam, err := client.GetTeamByID(team.ID)
+	if err != nil {
+		return nil
+	}
+
+	desiredUsers := d.Get("users").(*schema.Set).List()
+
+	usersToAdd, usersToDelete := cfClient.GetUsersDiff(convertStringArr(desiredUsers), existingTeam.Users)
+
+	for _, userId := range usersToDelete{
+		err := client.DeleteUserFromTeam(team.ID, userId)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, userId := range usersToAdd{
+		err := client.AddUserToTeam(team.ID, userId)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -133,7 +145,7 @@ func mapTeamToResource(team *cfClient.Team, d *schema.ResourceData) error {
 		return err
 	}
 
-	err = d.Set("account", team.Account)
+	err = d.Set("account_id", team.Account)
 	if err != nil {
 		return err
 	}
@@ -151,16 +163,11 @@ func mapTeamToResource(team *cfClient.Team, d *schema.ResourceData) error {
 	return nil
 }
 
-func flattenTeamUsers(users []cfClient.TeamUser) []map[string]interface{} {
-	var res = make([]map[string]interface{}, len(users))
-	for i, user := range users {
-		m := make(map[string]interface{})
-		m["name"] = user.UserName
-		m["user_id"] = user.ID
-
-		res[i] = m
+func flattenTeamUsers(users []cfClient.TeamUser) []string {
+	res := []string{}
+	for _, user := range users {
+		res = append(res, user.ID)
 	}
-
 	return res
 }
 
@@ -170,18 +177,16 @@ func mapResourceToTeam(d *schema.ResourceData) *cfClient.Team {
 		ID:      d.Id(),
 		Name:    d.Get("name").(string),
 		Type:    d.Get("type").(string),
-		Account: d.Get("account").(string),
+		Account: d.Get("account_id").(string),
 		Tags:    convertStringArr(tags),
 	}
 
 	if _, ok := d.GetOk("users"); ok {
-		users := d.Get("users").([]interface{})
-		for idx := range users {
+		users := d.Get("users").(*schema.Set).List()
+		for _, id := range users {
 			user := cfClient.TeamUser{
-				ID:       d.Get(fmt.Sprintf("users.%v.user_id", idx)).(string),
-				UserName: d.Get(fmt.Sprintf("users.%v.name", idx)).(string),
+				ID: id.(string),
 			}
-
 			team.Users = append(team.Users, user)
 		}
 	}

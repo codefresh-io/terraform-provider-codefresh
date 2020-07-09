@@ -7,6 +7,7 @@ import (
 type TeamUser struct {
 	ID       string `json:"id,omitempty"`
 	UserName string `json:"userName,omitempty"`
+	Email    string `json:"email,omitempty"`
 }
 
 // Team spec
@@ -171,7 +172,7 @@ func (client *Client) SynchronizeClientWithGroup(name, ssoType string, notificat
 	return nil
 }
 
-func (client *Client) AddUserToTeam(teamID, userID string) (*Team, error) {
+func (client *Client) AddUserToTeam(teamID, userID string) error {
 
 	fullPath := fmt.Sprintf("/team/%s/%s/assignUserToTeam", teamID, userID)
 	opts := RequestOptions{
@@ -179,22 +180,15 @@ func (client *Client) AddUserToTeam(teamID, userID string) (*Team, error) {
 		Method: "PUT",
 	}
 
-	resp, err := client.RequestAPI(&opts)
-
+	_, err := client.RequestAPI(&opts)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var respTeam Team
-	err = DecodeResponseInto(resp, &respTeam)
-	if err != nil {
-		return nil, err
-	}
-
-	return &respTeam, nil
+	return nil
 }
 
-func (client *Client) DeleteUserFromTeam(teamID, userID string) (*Team, error) {
+func (client *Client) DeleteUserFromTeam(teamID, userID string)  error {
 
 	fullPath := fmt.Sprintf("/team/%s/%s/deleteUserFromTeam", teamID, userID)
 	opts := RequestOptions{
@@ -202,22 +196,16 @@ func (client *Client) DeleteUserFromTeam(teamID, userID string) (*Team, error) {
 		Method: "PUT",
 	}
 
-	resp, err := client.RequestAPI(&opts)
+	_, err := client.RequestAPI(&opts)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var respTeam Team
-	err = DecodeResponseInto(resp, &respTeam)
-	if err != nil {
-		return nil, err
-	}
-
-	return &respTeam, nil
+	return nil
 }
 
-func (client *Client) RenameTeam(teamID, name string) (*Team, error) {
+func (client *Client) RenameTeam(teamID, name string) error {
 
 	fullPath := fmt.Sprintf("/team/%s/renameTeam", teamID)
 
@@ -225,7 +213,7 @@ func (client *Client) RenameTeam(teamID, name string) (*Team, error) {
 	body, err := EncodeToJSON(team)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	opts := RequestOptions{
@@ -234,17 +222,47 @@ func (client *Client) RenameTeam(teamID, name string) (*Team, error) {
 		Body:   body,
 	}
 
-	resp, err := client.RequestAPI(&opts)
+	_, err = client.RequestAPI(&opts)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var respTeam Team
-	err = DecodeResponseInto(resp, &respTeam)
-	if err != nil {
-		return nil, err
+	return nil
+}
+
+func GetUsersDiff(desiredUsers []string, existingUsers []TeamUser) (usersToAdd []string, usersToDelete []string) {
+
+	existingUsersIDs := []string{}
+	usersToAdd = []string{}
+	usersToDelete = []string{}
+
+	for _, user := range existingUsers{
+		existingUsersIDs = append(existingUsersIDs, user.ID)
 	}
 
-	return &respTeam, nil
+	for _, id := range existingUsersIDs{
+		ok := find(desiredUsers, id)
+		if !ok {
+			usersToDelete = append(usersToDelete, id)
+		}
+	}
+
+	for _, id := range desiredUsers{
+		ok := find(existingUsersIDs, id)
+		if !ok {
+			usersToAdd = append(usersToAdd, id)
+		}
+	}
+
+	return usersToAdd, usersToDelete
+}
+
+func find(slice []string, val string) bool {
+    for _, item := range slice {
+        if item == val {
+            return true
+        }
+    }
+    return false
 }
