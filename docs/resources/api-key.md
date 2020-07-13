@@ -91,4 +91,3 @@ resource "codefresh_team" "team_1" {
 
 - `id` - The Key ID.
 - `token` - The Token, that should used as a new provider's token attribute.
-
