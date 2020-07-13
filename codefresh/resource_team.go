@@ -57,6 +57,7 @@ func resourceTeamCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(resp.ID)
+	d.Set("account_id",resp.Account)
 
 	return nil
 }
@@ -105,14 +106,14 @@ func resourceTeamUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	usersToAdd, usersToDelete := cfClient.GetUsersDiff(convertStringArr(desiredUsers), existingTeam.Users)
 
-	for _, userId := range usersToDelete{
+	for _, userId := range usersToDelete {
 		err := client.DeleteUserFromTeam(team.ID, userId)
 		if err != nil {
 			return err
 		}
 	}
 
-	for _, userId := range usersToAdd{
+	for _, userId := range usersToAdd {
 		err := client.AddUserToTeam(team.ID, userId)
 		if err != nil {
 			return err

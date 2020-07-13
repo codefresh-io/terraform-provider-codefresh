@@ -31,6 +31,7 @@ func Provider() terraform.ResourceProvider {
 			"codefresh_pipeline": resourcePipeline(),
 			"codefresh_team":     resourceTeam(),
 			"codefresh_account":  resourceAccount(),
+			"codefresh_api_key":  resourceApiKey(),
 		},
 		ConfigureFunc: configureProvider,
 	}

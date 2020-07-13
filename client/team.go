@@ -157,7 +157,7 @@ func (client *Client) DeleteTeam(id string) error {
 
 func (client *Client) SynchronizeClientWithGroup(name, ssoType string, notifications bool) error {
 
-	fullPath := fmt.Sprintf("/team/group/synchronize/name/%s/type/%s?disableNotifications=%b", name, ssoType, notifications)
+	fullPath := fmt.Sprintf("/team/group/synchronize/name/%s/type/%s?disableNotifications=%t", name, ssoType, notifications)
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "GET",
@@ -188,7 +188,7 @@ func (client *Client) AddUserToTeam(teamID, userID string) error {
 	return nil
 }
 
-func (client *Client) DeleteUserFromTeam(teamID, userID string)  error {
+func (client *Client) DeleteUserFromTeam(teamID, userID string) error {
 
 	fullPath := fmt.Sprintf("/team/%s/%s/deleteUserFromTeam", teamID, userID)
 	opts := RequestOptions{
@@ -237,18 +237,18 @@ func GetUsersDiff(desiredUsers []string, existingUsers []TeamUser) (usersToAdd [
 	usersToAdd = []string{}
 	usersToDelete = []string{}
 
-	for _, user := range existingUsers{
+	for _, user := range existingUsers {
 		existingUsersIDs = append(existingUsersIDs, user.ID)
 	}
 
-	for _, id := range existingUsersIDs{
+	for _, id := range existingUsersIDs {
 		ok := find(desiredUsers, id)
 		if !ok {
 			usersToDelete = append(usersToDelete, id)
 		}
 	}
 
-	for _, id := range desiredUsers{
+	for _, id := range desiredUsers {
 		ok := find(existingUsersIDs, id)
 		if !ok {
 			usersToAdd = append(usersToAdd, id)
@@ -259,10 +259,10 @@ func GetUsersDiff(desiredUsers []string, existingUsers []TeamUser) (usersToAdd [
 }
 
 func find(slice []string, val string) bool {
-    for _, item := range slice {
-        if item == val {
-            return true
-        }
-    }
-    return false
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
 }

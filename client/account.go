@@ -3,12 +3,10 @@ package client
 import (
 	"errors"
 	"fmt"
-	"strconv"
-
-	"github.com/google/martian/log"
 	"github.com/imdario/mergo"
+	"log"
+	"strconv"
 )
-
 
 type DockerRegistry struct {
 	Kind                string `json:"kind"`
@@ -120,7 +118,7 @@ type Account struct {
 	IncreasedAttention          bool                `json:"increasedAttention,omitempty"`
 	LocalUserPasswordIDPEnabled bool                `json:"localUserPasswordIDPEnabled,omitempty"`
 	CodefreshEnv                string              `json:"codefreshEnv,omitempty"`
-	ID                          string              `json:"_id,omitempty,omitempty"`
+	ID                          string              `json:"_id,omitempty"`
 	BadgeToken                  string              `json:"badgeToken,omitempty"`
 	CreatedAt                   string              `json:"createdAt,omitempty"`
 	UpdatedAt                   string              `json:"updatedAt,omitempty"`
@@ -129,7 +127,6 @@ type Account struct {
 	CfcrRepositoryPath          string              `json:"cfcrRepositoryPath,omitempty"`
 	Notifications               []NotificationEvent `json:"notifications,omitempty"`
 	RepoPermission              string              `json:"repoPermission,omitempty"`
-	__V                         int                 `json:"__v,omitempty"`
 	Limits                      *Limits             `json:"limits,omitempty"`
 	Features                    map[string]bool     `json:"features,omitempty"`
 	// Features                    *Features           `json:"features,omitempty"`
@@ -149,7 +146,7 @@ func (account *Account) SetFeatures(m map[string]interface{}) {
 		value := v.(string)
 		b, err := strconv.ParseBool(value)
 		if err != nil {
-			log.Errorf("[ERROR] Can't parse '%s = %s' as boolean", k, value)
+			log.Fatalf("[ERROR] Can't parse '%s = %s' as boolean", k, value)
 		}
 		res[k] = b
 	}
@@ -220,7 +217,12 @@ func (client *Client) UpdateAccount(account *Account) (*Account, error) {
 	}
 
 	existingAccount, err := client.GetAccountByID(id)
-	if err = mergo.Merge(account, existingAccount); err != nil {
+	if  err != nil {
+		return nil, err
+	}
+
+	err = mergo.Merge(account, existingAccount)
+	if  err != nil {
 		return nil, err
 	}
 

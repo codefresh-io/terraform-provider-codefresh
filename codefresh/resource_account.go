@@ -1,10 +1,8 @@
 package codefresh
 
 import (
-	// "fmt"
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	// "os"
 )
 
 func resourceAccount() *schema.Resource {
@@ -21,10 +19,6 @@ func resourceAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			// "runtime_environment": {
-			// 	Type:     schema.TypeString,
-			// 	Optional: true,
-			// },
 			"admins": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -64,14 +58,6 @@ func resourceAccount() *schema.Resource {
 					},
 				},
 			},
-	// Features can not be managed by account API
-			// "features": {
-			// 	Type:     schema.TypeMap,
-			// 	Optional: true,
-			// 	Elem: &schema.Schema {
-			// 		Type: schema.TypeString,
-			// 	},
-			// },
 		},
 	}
 }
@@ -151,11 +137,6 @@ func mapAccountToResource(account *cfClient.Account, d *schema.ResourceData) err
 		return err
 	}
 
-	// err = d.Set("runtime_environment", account.RuntimeEnvironment)
-	// if err != nil {
-	// 	return err
-	// }
-
 	err = d.Set("admins", account.Admins)
 	if err != nil {
 		return err
@@ -191,12 +172,11 @@ func mapResourceToAccount(d *schema.ResourceData) *cfClient.Account {
 	admins := d.Get("admins").(*schema.Set).List()
 
 	account := &cfClient.Account{
-		ID:                 d.Id(),
-		Name:               d.Get("name").(string),
-		Admins:             convertStringArr(admins),
-		// RuntimeEnvironment: d.Get("runtime_environment").(string),
+		ID:     d.Id(),
+		Name:   d.Get("name").(string),
+		Admins: convertStringArr(admins),
 	}
-	
+
 	if _, ok := d.GetOk("limits"); ok {
 		account.Limits = &cfClient.Limits{
 			Collaborators: cfClient.Collaborators{
@@ -214,11 +194,5 @@ func mapResourceToAccount(d *schema.ResourceData) *cfClient.Account {
 			Nodes:    d.Get("build.0.nodes").(int),
 		}
 	}
-
-	// Features can not be managed by account API
-	// features := d.Get("features").(map[string]interface{})
-	// account.SetFeatures(features)
-
 	return account
 }
-
