@@ -217,12 +217,12 @@ func (client *Client) UpdateAccount(account *Account) (*Account, error) {
 	}
 
 	existingAccount, err := client.GetAccountByID(id)
-	if  err != nil {
+	if err != nil {
 		return nil, err
 	}
 
 	err = mergo.Merge(account, existingAccount)
-	if  err != nil {
+	if err != nil {
 		return nil, err
 	}
 

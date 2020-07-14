@@ -242,27 +242,18 @@ func GetUsersDiff(desiredUsers []string, existingUsers []TeamUser) (usersToAdd [
 	}
 
 	for _, id := range existingUsersIDs {
-		ok := find(desiredUsers, id)
+		ok := FindInSlice(desiredUsers, id)
 		if !ok {
 			usersToDelete = append(usersToDelete, id)
 		}
 	}
 
 	for _, id := range desiredUsers {
-		ok := find(existingUsersIDs, id)
+		ok := FindInSlice(existingUsersIDs, id)
 		if !ok {
 			usersToAdd = append(usersToAdd, id)
 		}
 	}
 
 	return usersToAdd, usersToDelete
-}
-
-func find(slice []string, val string) bool {
-	for _, item := range slice {
-		if item == val {
-			return true
-		}
-	}
-	return false
 }

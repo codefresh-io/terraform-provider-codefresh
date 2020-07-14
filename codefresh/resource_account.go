@@ -112,10 +112,6 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// TODO
-	// - rename account
-	// - add/remove admins
-
 	return nil
 }
 

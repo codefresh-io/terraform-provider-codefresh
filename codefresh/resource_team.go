@@ -39,7 +39,7 @@ func resourceTeam() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,g
+					Type: schema.TypeString,
 				},
 			},
 		},
