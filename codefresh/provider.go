@@ -28,6 +28,7 @@ func Provider() terraform.ResourceProvider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"codefresh_users": dataSourceUsers(),
+			"codefresh_user":  dataSourceUser(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"codefresh_project":      resourceProject(),
