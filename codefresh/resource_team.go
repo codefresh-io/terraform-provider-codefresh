@@ -57,7 +57,7 @@ func resourceTeamCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(resp.ID)
-	d.Set("account_id",resp.Account)
+	d.Set("account_id", resp.Account)
 
 	return nil
 }

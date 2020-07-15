@@ -72,7 +72,7 @@ func (client *Client) GetIdpByName(idpName string) (*IDP, error) {
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("[ERROR] IDP with name %s isn't found.", idpName ))
+	return nil, errors.New(fmt.Sprintf("[ERROR] IDP with name %s isn't found.", idpName))
 }
 
 func (client *Client) GetIdpByID(idpID string) (*IDP, error) {
@@ -83,14 +83,13 @@ func (client *Client) GetIdpByID(idpID string) (*IDP, error) {
 	}
 
 	for _, idp := range *idpList {
-		if idp.ID == idpID{
+		if idp.ID == idpID {
 			return &idp, nil
 		}
 	}
 
 	return nil, errors.New(fmt.Sprintf("[ERROR] IDP with ID %s isn't found.", idpID))
 }
-
 
 // get account idps
 func (client *Client) GetAccountIDPs() (*[]IDP, error) {
@@ -124,7 +123,7 @@ func (client *Client) AddAccountToIDP(accountId, idpId string) error {
 	opts := RequestOptions{
 		Path:   "/admin/idp/addAccount",
 		Method: "POST",
-		Body: []byte(body),
+		Body:   []byte(body),
 	}
 
 	_, err := client.RequestAPI(&opts)

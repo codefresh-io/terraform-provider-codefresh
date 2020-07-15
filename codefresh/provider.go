@@ -26,13 +26,16 @@ func Provider() terraform.ResourceProvider {
 				DefaultFunc: schema.EnvDefaultFunc("CODEFRESH_API_KEY", ""),
 			},
 		},
+		DataSourcesMap: map[string]*schema.Resource{
+			"codefresh_users": dataSourceUsers(),
+		},
 		ResourcesMap: map[string]*schema.Resource{
-			"codefresh_project":  resourceProject(),
-			"codefresh_pipeline": resourcePipeline(),
-			"codefresh_team":     resourceTeam(),
-			"codefresh_account":  resourceAccount(),
-			"codefresh_api_key":  resourceApiKey(),
-			"codefresh_idp_accounts":  resourceIDPAccounts(),
+			"codefresh_project":      resourceProject(),
+			"codefresh_pipeline":     resourcePipeline(),
+			"codefresh_team":         resourceTeam(),
+			"codefresh_account":      resourceAccount(),
+			"codefresh_api_key":      resourceApiKey(),
+			"codefresh_idp_accounts": resourceIDPAccounts(),
 		},
 		ConfigureFunc: configureProvider,
 	}

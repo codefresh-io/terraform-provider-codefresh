@@ -18,18 +18,18 @@ type ShortProfile struct {
 }
 
 type Personal struct {
-	FirstName string `json:"firstName,omitempty"`
-	LastName string `json:"lastName,omitempty"`
+	FirstName   string `json:"firstName,omitempty"`
+	LastName    string `json:"lastName,omitempty"`
 	CompanyName string `json:"companyName,omitempty"`
 	PhoneNumber string `json:"phoneNumber,omitempty"`
-	Country string `json:"country,omitempty"`
+	Country     string `json:"country,omitempty"`
 }
 
 type User struct {
 	ID             string              `json:"_id,omitempty"`
 	UserName       string              `json:"userName"`
 	Email          string              `json:"email"`
-	Personal 	   Personal			   `json:"personal,omitempty"`
+	Personal       *Personal           `json:"personal,omitempty"`
 	Roles          []string            `json:"roles,omitempty"`
 	DefaultAccount int                 `json:"defaultAccount,omitempty"`
 	Account        []Account           `json:"account,omitempty"`
@@ -193,4 +193,3 @@ func (client *Client) DeleteUser(userName string) error {
 
 	return nil
 }
-

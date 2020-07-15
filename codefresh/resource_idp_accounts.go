@@ -34,7 +34,7 @@ func resourceAccountIDPCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
 
-	accounts:= convertStringArr(d.Get("accounts").(*schema.Set).List())
+	accounts := convertStringArr(d.Get("accounts").(*schema.Set).List())
 
 	idpName := d.Get("idp").(string)
 
@@ -79,7 +79,6 @@ func resourceAccountIDPRead(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
-
 
 func resourceAccountIDPDelete(_ *schema.ResourceData, _ interface{}) error {
 	return nil
