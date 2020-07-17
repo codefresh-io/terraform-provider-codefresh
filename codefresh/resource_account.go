@@ -19,13 +19,13 @@ func resourceAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"admins": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			// "admins": {
+			// 	Type:     schema.TypeSet,
+			// 	Optional: true,
+			// 	Elem: &schema.Schema{
+			// 		Type: schema.TypeString,
+			// 	},
+			// },
 			"limits": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -133,10 +133,10 @@ func mapAccountToResource(account *cfClient.Account, d *schema.ResourceData) err
 		return err
 	}
 
-	err = d.Set("admins", account.Admins)
-	if err != nil {
-		return err
-	}
+	// err = d.Set("admins", account.Admins)
+	// if err != nil {
+	// 	return err
+	// }
 
 	err = d.Set("limits", []map[string]interface{}{flattenLimits(*account.Limits)})
 	if err != nil {
@@ -165,12 +165,12 @@ func flattenBuild(build cfClient.Build) map[string]interface{} {
 	return res
 }
 func mapResourceToAccount(d *schema.ResourceData) *cfClient.Account {
-	admins := d.Get("admins").(*schema.Set).List()
+	// admins := d.Get("admins").(*schema.Set).List()
 
 	account := &cfClient.Account{
 		ID:     d.Id(),
 		Name:   d.Get("name").(string),
-		Admins: convertStringArr(admins),
+		// Admins: convertStringArr(admins),
 	}
 
 	if _, ok := d.GetOk("limits"); ok {

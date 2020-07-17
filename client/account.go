@@ -270,3 +270,24 @@ func (client *Client) DeleteAccount(id string) error {
 
 	return nil
 }
+
+func GetAccountAdminsDiff(desiredAdmins []string, existingAdmins []string) (adminsToAdd []string, adminsToDelete []string) {
+
+	adminsToAdd = []string{}
+	adminsToDelete = []string{}
+
+	for _, id := range existingAdmins {
+		if ok := FindInSlice(desiredAdmins, id); !ok {
+			adminsToDelete = append(adminsToDelete, id)
+		}
+	}
+
+	for _, id := range desiredAdmins {
+
+		if ok := FindInSlice(existingAdmins, id); !ok {
+			adminsToAdd = append(adminsToAdd, id)
+		}
+	}
+
+	return adminsToAdd, adminsToDelete
+}

@@ -9,7 +9,7 @@ import (
 
 func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUserRead,
+		Read:   dataSourceUserRead,
 		Schema: *UserSchema(),
 	}
 }
@@ -18,7 +18,7 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
 
-	users, err := client.ListUsers()
+	users, err := client.GetAllUsers()
 	if err != nil {
 		return err
 	}

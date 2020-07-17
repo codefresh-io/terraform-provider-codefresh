@@ -81,6 +81,8 @@ func resourceAccountIDPRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccountIDPDelete(_ *schema.ResourceData, _ interface{}) error {
+	// todo
+	// warning message
 	return nil
 }
 

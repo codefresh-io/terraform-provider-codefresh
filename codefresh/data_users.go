@@ -25,7 +25,7 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
 
-	users, err := client.ListUsers()
+	users, err := client.GetAllUsers()
 	if err != nil {
 		return err
 	}

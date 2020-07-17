@@ -9,13 +9,6 @@ See the [documentation](https://codefresh.io/docs/docs/administration/ent-accoun
 resource "codefresh_account" "test" {
   name = "my_account_name"
 
-
-  admins = [
-    "5efc3cb6355c6647041b6e49",
-    "5f0acee3b6132b460546c1c6",
-    "59009221c102763beda7cf04"
-  ]
-
   limits {
     collaborators = 25
     data_retention_weeks = 5
@@ -31,7 +24,6 @@ resource "codefresh_account" "test" {
 ## Argument Reference
 
 - `name` - (Required) The display name for the account.
-- `admins` - (Optional) A list of users IDs to set them as account admins.
 - `limits` - (Optional) A collection of `limits` blocks as documented below.
 - `build` -  (Optional) A collection of `build` blocks as documented below.
 
