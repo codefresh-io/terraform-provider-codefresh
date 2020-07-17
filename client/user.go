@@ -46,16 +46,18 @@ type User struct {
 }
 
 type NewUser struct {
-	UserName string   `json:"userName"`
-	Email    string   `json:"email"`
-	Logins   []Login  `json:"logins,omitempty"`
-	Roles    []string `json:"roles,omitempty"`
-	Account  []string `json:"account,omitempty"`
+	ID       string    `json:"_id,omitempty"`
+	UserName string    `json:"userName"`
+	Email    string    `json:"email"`
+	Logins   []Login   `json:"logins,omitempty"`
+	Roles    []string  `json:"roles,omitempty"`
+	Account  []string  `json:"account,omitempty"`
+	Personal *Personal `json:"personal,omitempty"`
 }
 
 type UserAccounts struct {
-	UserName string    `json:"userName`
-	Account  []Account `json:"account`
+	UserName string    `json:"userName"`
+	Account  []Account `json:"account"`
 }
 
 func (client *Client) AddNewUserToAccount(accountId, userName, userEmail string) (*User, error) {

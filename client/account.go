@@ -3,9 +3,10 @@ package client
 import (
 	"errors"
 	"fmt"
-	"github.com/imdario/mergo"
 	"log"
 	"strconv"
+
+	"github.com/imdario/mergo"
 )
 
 type DockerRegistry struct {
@@ -178,6 +179,45 @@ func (client *Client) GetAccountByID(id string) (*Account, error) {
 	}
 
 	return &account, nil
+}
+
+func (client *Client) GetAllAccounts() (*[]Account, error) {
+
+	opts := RequestOptions{
+		Path:   "/admin/accounts",
+		Method: "GET",
+	}
+
+	resp, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var accounts []Account
+
+	err = DecodeResponseInto(resp, &accounts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &accounts, nil
+}
+
+func (client *Client) GetAccountsList(accountsId []string) (*[]Account, error) {
+
+	var accounts []Account
+
+	for _, accountId := range accountsId {
+		account, err := client.GetAccountByID(accountId)
+		if err != nil {
+			return nil, err
+		}
+
+		accounts = append(accounts, *account)
+	}
+
+	return &accounts, nil
 }
 
 func (client *Client) CreateAccount(account *Account) (*Account, error) {

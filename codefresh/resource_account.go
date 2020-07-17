@@ -168,8 +168,8 @@ func mapResourceToAccount(d *schema.ResourceData) *cfClient.Account {
 	// admins := d.Get("admins").(*schema.Set).List()
 
 	account := &cfClient.Account{
-		ID:     d.Id(),
-		Name:   d.Get("name").(string),
+		ID:   d.Id(),
+		Name: d.Get("name").(string),
 		// Admins: convertStringArr(admins),
 	}
 

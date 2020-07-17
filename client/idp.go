@@ -21,7 +21,7 @@ type IDP struct {
 	CookieIv        string   `json:"cookieIv,omitempty"`
 	CookieKey       string   `json:"cookieKey,omitempty"`
 	DisplayName     string   `json:"displayName,omitempty"`
-	ID              string   `json:"id,omitempty"`
+	ID              string   `json:"_id,omitempty"`
 	IDPLoginUrl     string   `json:"IDPLoginUrl,omitempty"`
 	LoginUrl        string   `json:"loginUrl,omitempty"`
 	RedirectUiUrl   string   `json:"redirectUiUrl,omitempty"`
