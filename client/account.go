@@ -249,17 +249,17 @@ func (client *Client) UpdateAccount(account *Account) (*Account, error) {
 		return nil, errors.New("[ERROR] Account ID is empty")
 	}
 
-	existingAccount, err := client.GetAccountByID(id)
+	accountToUpdate, err := client.GetAccountByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	err = mergo.Merge(account, existingAccount)
+	err = mergo.MergeWithOverwrite(accountToUpdate, account)
 	if err != nil {
 		return nil, err
 	}
 
-	putAccount := AccountDetails{*account}
+	putAccount := AccountDetails{*accountToUpdate}
 
 	body, err := EncodeToJSON(putAccount)
 	if err != nil {
@@ -285,20 +285,17 @@ func (client *Client) UpdateAccount(account *Account) (*Account, error) {
 	}
 	
 	// Update Features
-	var featureUpdatePath string 
-	for k, v := range account.Features{
-		//body
+	requestOptions := &RequestOptions{}
+	for k, v := range account.Features{		
+		requestOptions.Body = []byte(fmt.Sprintf("{\"feature\": \"%s\"}", k))
 		if v {
-			featureUpdatePath = fmt.Sprintf("/features/%s", id)
+			requestOptions.Path = fmt.Sprintf("/features/%s", id)
+			requestOptions.Method = "POST"
 		} else {
-			featureUpdatePath = fmt.Sprintf("/features/switchOff/%s", id)
-		}
-		bodyFeatures := []byte(fmt.Sprintf("{\"feature\": \"%s\"}", k))
-		_, err = client.RequestAPI(&RequestOptions{
-			Path:   featureUpdatePath,
-			Method: "POST",
-			Body:   bodyFeatures,
-		})
+			requestOptions.Path = fmt.Sprintf("/features/switchOff/%s", id)
+			requestOptions.Method = "PUT"			
+		}		
+		_, err = client.RequestAPI(requestOptions)
 		if err != nil {
 			return nil, err
 		}
