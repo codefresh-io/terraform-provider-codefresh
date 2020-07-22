@@ -2,7 +2,7 @@ package codefresh
 
 import (
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAccount() *schema.Resource {
@@ -26,6 +26,21 @@ func resourceAccount() *schema.Resource {
 			// 		Type: schema.TypeString,
 			// 	},
 			// },
+
+			"features": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeBool,
+				},
+				Default: map[string]bool{
+					"OfflineLogging":          true,
+					"ssoManagement":           true,
+					"teamsManagement":         true,
+					"abac":                    true,
+					"customKubernetesCluster": true,
+				},
+			},
 			"limits": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -137,6 +152,10 @@ func mapAccountToResource(account *cfClient.Account, d *schema.ResourceData) err
 	// if err != nil {
 	// 	return err
 	// }
+	err = d.Set("features", account.Features)
+	if err != nil {
+		return err
+	}
 
 	err = d.Set("limits", []map[string]interface{}{flattenLimits(*account.Limits)})
 	if err != nil {
@@ -173,6 +192,9 @@ func mapResourceToAccount(d *schema.ResourceData) *cfClient.Account {
 		// Admins: convertStringArr(admins),
 	}
 
+	if _, ok := d.GetOk("features"); ok {
+		account.SetFeatures(d.Get("features").(map[string]interface{}))
+	}
 	if _, ok := d.GetOk("limits"); ok {
 		account.Limits = &cfClient.Limits{
 			Collaborators: cfClient.Collaborators{

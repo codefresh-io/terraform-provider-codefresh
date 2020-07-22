@@ -2,7 +2,7 @@ package codefresh
 
 import (
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceTeam() *schema.Resource {

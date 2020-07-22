@@ -3,7 +3,7 @@ package codefresh
 import (
 	"fmt"
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceUser() *schema.Resource {
@@ -253,7 +253,7 @@ func flattenUserLogins(logins *[]cfClient.Login) []map[string]interface{} {
 
 		m["idp"] = []map[string]interface{}{
 			{
-				"idp_id":          login.IDP.ID,
+				"idp_id":      login.IDP.ID,
 				"client_type": login.IDP.ClientType,
 			},
 		}
@@ -263,8 +263,6 @@ func flattenUserLogins(logins *[]cfClient.Login) []map[string]interface{} {
 
 	return res
 }
-
-
 
 func mapResourceToUser(d *schema.ResourceData) *cfClient.NewUser {
 
@@ -291,7 +289,6 @@ func mapResourceToUser(d *schema.ResourceData) *cfClient.NewUser {
 
 	logins := d.Get("login").([]interface{})
 
-	
 	for idx := range logins {
 
 		permissions := convertStringArr(d.Get(fmt.Sprintf("login.%v.credentials.0.permissions", idx)).([]interface{}))

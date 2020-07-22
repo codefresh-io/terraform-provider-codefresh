@@ -3,8 +3,6 @@ package client
 import (
 	"errors"
 	"fmt"
-	"log"
-	"strconv"
 
 	"github.com/imdario/mergo"
 )
@@ -144,12 +142,7 @@ type AccountDetails struct {
 func (account *Account) SetFeatures(m map[string]interface{}) {
 	res := make(map[string]bool)
 	for k, v := range m {
-		value := v.(string)
-		b, err := strconv.ParseBool(value)
-		if err != nil {
-			log.Fatalf("[ERROR] Can't parse '%s = %s' as boolean", k, value)
-		}
-		res[k] = b
+		res[k] = v.(bool)
 	}
 	account.Features = res
 }
@@ -290,6 +283,28 @@ func (client *Client) UpdateAccount(account *Account) (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
+	
+	// Update Features
+	var featureUpdatePath string 
+	for k, v := range account.Features{
+		//body
+		if v {
+			featureUpdatePath = fmt.Sprintf("/features/%s", id)
+		} else {
+			featureUpdatePath = fmt.Sprintf("/features/switchOff/%s", id)
+		}
+		bodyFeatures := []byte(fmt.Sprintf("{\"feature\": \"%s\"}", k))
+		_, err = client.RequestAPI(&RequestOptions{
+			Path:   featureUpdatePath,
+			Method: "POST",
+			Body:   bodyFeatures,
+		})
+		if err != nil {
+			return nil, err
+		}
+		respAccount.Features[k] = v
+	}
+
 
 	return &respAccount, nil
 }
