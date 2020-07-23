@@ -29,6 +29,7 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"codefresh_users": dataSourceUsers(),
 			"codefresh_user":  dataSourceUser(),
+			"codefresh_idps": dataSourceIdps(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"codefresh_project":        resourceProject(),

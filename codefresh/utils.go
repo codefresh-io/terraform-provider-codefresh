@@ -26,3 +26,11 @@ func convertVariables(vars []cfClient.Variable) map[string]string {
 	}
 	return res
 }
+
+func flattenStringArr(sArr []string) []interface{} {
+	iArr := []interface{}{}
+	for _, s := range sArr {
+		iArr = append(iArr, s)
+	}
+	return iArr
+}
