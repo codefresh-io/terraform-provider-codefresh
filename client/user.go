@@ -3,6 +3,7 @@ package client
 import (
 	"errors"
 	"fmt"
+	"log"
 )
 
 type Credentials struct {
@@ -14,6 +15,8 @@ type Login struct {
 	PersonalGit bool        `json:"personalGit,omitempty"`
 	Permissions []string    `json:"permissions,omitempty"`
 	IDP         IDP         `json:"idp,omitempty"`
+	Idp_ID      string      `json:"idp_id,omitempty"`
+	Sso         bool        `json:"sso,omitempty"`
 }
 
 type ShortProfile struct {
@@ -180,7 +183,8 @@ func (client *Client) GetAllUsers() (*[]User, error) {
 	}
 
 	var users []User
-
+	respStr := string(resp)
+	log.Printf("[INFO] GetAllUsers resp: %s", respStr)
 	err = DecodeResponseInto(resp, &users)
 	if err != nil {
 		return nil, err

@@ -20,6 +20,10 @@ func IdpSchema() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
+		"client_name": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"display_name": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -61,14 +65,14 @@ func IdpSchema() map[string]*schema.Schema {
 			Computed: true,
 		},										
 		"scopes": {
-			Type:     schema.TypeList,
+			Type:     schema.TypeSet,
 			Computed: true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
 		},
 		"accounts": {
-			Type:     schema.TypeList,
+			Type:     schema.TypeSet,
 			Computed: true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -87,16 +91,20 @@ func dataSourceIdpRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_id, _idOk := d.GetOk("_id")
-	displayName, displayNameOk := d.GetOk("displayName")
-	clientType, clientTypeOk := d.GetOk("clientType")
+	clientName, clientNameOk := d.GetOk("client_name")
+	displayName, displayNameOk := d.GetOk("display_name")
+	clientType, clientTypeOk := d.GetOk("client_type")
 
-	if !(_idOk || displayNameOk || clientTypeOk) {
-		return fmt.Errorf("[EROOR] Idp data_source - no parameters specified")
+	if !(_idOk || clientNameOk || displayNameOk || clientTypeOk) {
+		return fmt.Errorf("[ERROR] data.codefresh_idp - no parameters specified")
 	}
 	for _, idp := range *idps {
-		if _idOk && _id.(string) != idp.ID {
+		if clientNameOk && clientName.(string) != idp.ClientName {
 			continue
 		}
+		if _idOk && _id.(string) != idp.ID {
+			continue
+		}		
 		if displayNameOk && displayName.(string) != idp.DisplayName {
 			continue
 		}
@@ -151,3 +159,4 @@ func mapDataIdpToResource(idp cfClient.IDP, d *schema.ResourceData) error {
 
 	return nil
 }
+

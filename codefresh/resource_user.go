@@ -1,7 +1,7 @@
 package codefresh
 
 import (
-	"fmt"
+	"log"
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -38,6 +38,7 @@ func resourceUser() *schema.Resource {
 			"personal": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"first_name": {
@@ -87,40 +88,33 @@ func resourceUser() *schema.Resource {
 				Computed: true,
 			},
 			"login": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"credentials": {
-							Type:     schema.TypeList,
+						// "credentials": {
+						// 	Type:     schema.TypeList,
+						// 	Optional: true,
+						// 	MaxItems:    1,
+						// 	Elem: &schema.Resource{
+						// 		Schema: map[string]*schema.Schema{
+						// 			"permissions": {
+						// 				Type:     schema.TypeList,
+						// 				Optional: true,
+						// 				Elem: &schema.Schema{
+						// 					Type: schema.TypeString,
+						// 				},
+						// 			},
+						// 		},
+						// 	},
+						// },
+						"idp_id": {
+							Type:     schema.TypeString,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"permissions": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
 						},
-						"idp": {
-							Type:     schema.TypeList,
+						"sso": {
+							Type:     schema.TypeBool,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"idp_id": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"client_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
 						},
 					},
 				},
@@ -247,16 +241,12 @@ func flattenUserLogins(logins *[]cfClient.Login) []map[string]interface{} {
 	var res = make([]map[string]interface{}, len(*logins))
 	for i, login := range *logins {
 		m := make(map[string]interface{})
-		m["credentials"] = []map[string]interface{}{
-			{"permissions": login.Credentials.Permissions},
-		}
+		// m["credentials"] = []map[string]interface{}{
+		// 	{"permissions": login.Credentials.Permissions},
+		// }
 
-		m["idp"] = []map[string]interface{}{
-			{
-				"idp_id":      login.IDP.ID,
-				"client_type": login.IDP.ClientType,
-			},
-		}
+		m["idp_id"] = login.IDP.ID
+		m["sso"] = login.Sso
 
 		res[i] = m
 	}
@@ -287,22 +277,39 @@ func mapResourceToUser(d *schema.ResourceData) *cfClient.NewUser {
 		}
 	}
 
-	logins := d.Get("login").([]interface{})
-
-	for idx := range logins {
-
-		permissions := convertStringArr(d.Get(fmt.Sprintf("login.%v.credentials.0.permissions", idx)).([]interface{}))
-		login := cfClient.Login{
-			Credentials: cfClient.Credentials{
-				Permissions: permissions,
-			},
-			IDP: cfClient.IDP{
-				ID:         d.Get(fmt.Sprintf("login.%v.idp.0.idp_id", idx)).(string),
-				ClientType: d.Get(fmt.Sprintf("login.%v.idp.0.client_type", idx)).(string),
-			},
-		}
-		user.Logins = append(user.Logins, login)
+	if logins, ok := d.GetOk("login"); ok {
+	   loginsList := logins.(*schema.Set).List()
+	   for _, loginDataI := range loginsList {
+		  if loginData, isMap := loginDataI.(map[string]interface{}); isMap {
+			idpID := loginData["idp_id"].(string)
+			login := cfClient.Login{
+				// Credentials: cfClient.Credentials{
+				// 	Permissions: loginData.Get("credentials.permissions").([]string),
+				// },
+				IDP: cfClient.IDP{
+					ID:         idpID,
+				},
+				Sso: loginData["sso"].(bool),
+			}
+			user.Logins = append(user.Logins, login)
+			log.Printf("[DEBUG] login = %v", login) 			  
+		  }
+	   }
 	}
+	// logins := d.Get("login").(*schema.Set)
+
+	// for idx := range logins {
+
+	// 	permissions := convertStringArr(d.Get(fmt.Sprintf("login.%v.credentials.0.permissions", idx)).([]interface{}))
+	// 	login := cfClient.Login{
+	// 		Credentials: cfClient.Credentials{
+	// 			Permissions: permissions,
+	// 		},
+	// 		Idp: d.Get(fmt.Sprintf("login.%v.idp_id", idx)).(string),
+	// 		Sso: d.Get(fmt.Sprintf("login.%v.sso", idx)).(bool),
+	// 	}
+	// 	user.Logins = append(user.Logins, login)
+	// }
 
 	return user
 }

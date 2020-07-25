@@ -15,11 +15,11 @@ func resourceIDPAccounts() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"idp": {
+			"idp_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"accounts": {
+			"account_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Schema{
@@ -34,17 +34,17 @@ func resourceAccountIDPCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
 
-	accounts := convertStringArr(d.Get("accounts").(*schema.Set).List())
+	accountIds := convertStringArr(d.Get("account_ids").(*schema.Set).List())
 
-	idpName := d.Get("idp").(string)
+	idpID := d.Get("idp_id").(string)
 
-	idp, err := client.GetIdpByName(idpName)
+	idp, err := client.GetIdpByID(idpID)
 	if err != nil {
 		return err
 	}
 
-	for _, account := range accounts {
-		client.AddAccountToIDP(account, idp.ID)
+	for _, accountID := range accountIds {
+		client.AddAccountToIDP(accountID, idp.ID)
 	}
 
 	d.SetId(idp.ID)
@@ -67,12 +67,12 @@ func resourceAccountIDPRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = d.Set("idp", idp.ClientName)
+	err = d.Set("idp_id", idp.ID)
 	if err != nil {
 		return err
 	}
 
-	err = d.Set("accounts", idp.Accounts)
+	err = d.Set("account_ids", idp.Accounts)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func resourceAccountIDPUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	existingAccounts := idp.Accounts
 
-	desiredAccounts := convertStringArr(d.Get("accounts").(*schema.Set).List())
+	desiredAccounts := convertStringArr(d.Get("account_ids").(*schema.Set).List())
 
 	for _, account := range desiredAccounts {
 		if ok := cfClient.FindInSlice(existingAccounts, account); !ok {

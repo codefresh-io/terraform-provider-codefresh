@@ -31,11 +31,15 @@ resource "codefresh_user" "new" {
   ]
 
   login {
-    idp {
-      idp_id = <IDP ID>
-      client_type = "azure"
-    }
+      idp_id = data.codefresh_idps.idp_azure.id
+      sso = true
   }
+  
+  login  {
+      idp_id = data.codefresh_idps.local.id
+      //sso = false
+  }
+
 
   personal {
     first_name = "John"
