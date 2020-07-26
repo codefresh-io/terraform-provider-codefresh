@@ -239,6 +239,10 @@ func (client *Client) CreateAccount(account *Account) (*Account, error) {
 		return nil, err
 	}
 
+	err = client.setAccountFeatures(account.Features, &respAccount)
+	if err != nil {
+		return nil, err
+	}	
 	return &respAccount, nil
 }
 
@@ -284,24 +288,10 @@ func (client *Client) UpdateAccount(account *Account) (*Account, error) {
 		return nil, err
 	}
 	
-	// Update Features
-	requestOptions := &RequestOptions{}
-	for k, v := range account.Features{		
-		requestOptions.Body = []byte(fmt.Sprintf("{\"feature\": \"%s\"}", k))
-		if v {
-			requestOptions.Path = fmt.Sprintf("/features/%s", id)
-			requestOptions.Method = "POST"
-		} else {
-			requestOptions.Path = fmt.Sprintf("/features/switchOff/%s", id)
-			requestOptions.Method = "PUT"			
-		}		
-		_, err = client.RequestAPI(requestOptions)
-		if err != nil {
-			return nil, err
-		}
-		respAccount.Features[k] = v
-	}
-
+	err = client.setAccountFeatures(account.Features, &respAccount)
+	if err != nil {
+		return nil, err
+	}	
 
 	return &respAccount, nil
 }
@@ -335,11 +325,32 @@ func GetAccountAdminsDiff(desiredAdmins []string, existingAdmins []string) (admi
 	}
 
 	for _, id := range desiredAdmins {
-
 		if ok := FindInSlice(existingAdmins, id); !ok {
 			adminsToAdd = append(adminsToAdd, id)
 		}
 	}
 
 	return adminsToAdd, adminsToDelete
+}
+
+// Update Features
+func(client *Client) setAccountFeatures(features map[string]bool, account *Account) error {
+	id := account.GetID()
+	requestOptions := &RequestOptions{}
+	for k, v := range features{		
+		requestOptions.Body = []byte(fmt.Sprintf("{\"feature\": \"%s\"}", k))
+		if v {
+			requestOptions.Path = fmt.Sprintf("/features/%s", id)
+			requestOptions.Method = "POST"
+		} else {
+			requestOptions.Path = fmt.Sprintf("/features/switchOff/%s", id)
+			requestOptions.Method = "PUT"			
+		}		
+		_, err := client.RequestAPI(requestOptions)
+		if err != nil {
+			return err
+		}
+		account.Features[k] = v
+	}
+	return nil
 }
