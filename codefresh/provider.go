@@ -22,8 +22,7 @@ func Provider() *schema.Provider {
 			},
 			"token": {
 				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("CODEFRESH_API_KEY", ""),
+				Optional: true,				
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -49,6 +48,8 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 
 	apiURL := d.Get("api_url").(string)
 	token := d.Get("token").(string)
-
+	if token == "" {
+		token = os.Getenv("CODEFRESH_API_KEY")
+	}
 	return cfClient.NewClient(apiURL, token), nil
 }

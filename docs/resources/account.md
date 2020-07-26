@@ -18,6 +18,14 @@ resource "codefresh_account" "test" {
     parallel = 27
   }
 
+  features = {
+    OfflineLogging = true,
+    ssoManagement = true,
+    teamsManagement = true,
+    abac = true,
+    customKubernetesCluster = true,
+    launchDarklyManagement = false,
+  }
 }
 ```
 
@@ -26,7 +34,7 @@ resource "codefresh_account" "test" {
 - `name` - (Required) The display name for the account.
 - `limits` - (Optional) A collection of `limits` blocks as documented below.
 - `build` -  (Optional) A collection of `build` blocks as documented below.
-
+- `features` - (Optional) map of supported features toggles 
 ---
 
 `limits` supports the following:
