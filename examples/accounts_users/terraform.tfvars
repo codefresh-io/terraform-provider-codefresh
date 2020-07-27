@@ -1,4 +1,5 @@
-api_url = "https://onprem-tst-1.cf-cd.com/api"
+api_url = "https://my-codefresh.example.com/api"
+token = "cfAdmin-token"
 
 default_idps = {
     local = {
@@ -6,7 +7,7 @@ default_idps = {
        sso = false
     }
     azure_sso = { 
-        display_name = "codefresh-azure-sso-1"
+        display_name = "azure-sso-1"
         sso = true
     }
 }
@@ -23,17 +24,17 @@ accounts = {
 
 users = {
     user1 = {
-        email = "kosta@codefresh.io"
+        email = "user1@example.com"
         personal = {
-            first_name = "Kosta"
-            last_name = "A"
+            first_name = "John"
+            last_name = "Smith"
         }
         accounts = ["acc1", "acc2"]
         admin_of_accounts = ["acc1"]
         global_admin = true
     }
     user2 = {
-        email = "live.com#kosta777@gmail.com"
+        email = "live.com#user2@gmail.com"
         personal = {
             first_name = "Q"
             last_name = "D"
@@ -43,10 +44,10 @@ users = {
         global_admin = false
     }
     user3 = {
-        email = "kosta@sysadmiral.io"
+        email = "user3@example.com"
         personal = {
-            first_name = "Kosta"
-            last_name = "sysadmiral-io"
+            first_name = "Sam"
+            last_name = "Johnson"
         }
         accounts = ["acc1", "acc2"]
         admin_of_accounts = ["acc1", "acc2"]

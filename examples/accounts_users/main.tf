@@ -1,5 +1,5 @@
 module "codefresh_access_control" {
-  source = "../../tf_modules/access_control"
+  source = "../../tf_modules/accounts_users"
   api_url = var.api_url
   default_idps = var.default_idps
   accounts = var.accounts
