@@ -6,8 +6,11 @@ The provider is still under development, and can be used as a terraform [third-p
 
 ## Requirements
 
-- [Terraform](https://www.terraform.io/downloads.html) 0.11+ ;
+- [Terraform](https://www.terraform.io/downloads.html) 0.12+ ;
 - [Go](https://golang.org/doc/install) 1.12+ (to build the provider plugin).
+
+## Download Provider
+Download and extract terraform-provider-codefresh from [releases](https://github.com/codefresh-io/terraform-provider-codefresh/releases)
 
 ## Building the Provider
 
@@ -24,7 +27,11 @@ For Linux OS it can be:
 - _~/.terraform.d/plugins/linux\_amd64_
 - _./terraform.d/plugins/linux\_amd64_. The relative path in your Terraform project.
 
-To configure codefresh provider:
+## [Documentations](./docs)
+
+## [Examples](./examples)
+
+## To configure codefresh provider:
 
 ```hcl
 provider "codefresh" {
