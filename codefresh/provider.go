@@ -41,6 +41,7 @@ func Provider() *schema.Provider {
 			"codefresh_idp_accounts":   resourceIDPAccounts(),
 			"codefresh_account_admins": resourceAccountAdmins(),
 			"codefresh_user":           resourceUser(),
+			"codefresh_permission":     resourcePermission(),
 		},
 		ConfigureFunc: configureProvider,
 	}
