@@ -1,7 +1,8 @@
 package codefresh
 
 import (
-	"fmt"	
+	"fmt"
+	"log"
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -26,17 +27,12 @@ func resourcePermission() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"account": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"resource": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
-					if v != "cluster" || v != "pipeline" {
+					if v != "cluster" && v != "pipeline" {
 					  errs = append(errs, fmt.Errorf("%q must be between \"pipeline\" or \"cluster\", got: %s", key, v))
 					}
 					return
@@ -47,7 +43,7 @@ func resourcePermission() *schema.Resource {
 				Required: true,
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
-					if v != "create" || v != "read" || v != "update" || v != "delete" || v != "approve"  {
+					if v != "create" && v != "read" && v != "update" && v != "delete" && v != "run" && v != "approve"  {
 					  errs = append(errs, fmt.Errorf("%q must be between one of create,read,update,delete,approve, got: %s", key, v))
 					}
 					return
@@ -59,7 +55,6 @@ func resourcePermission() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Default: []string{"*", "untagged"},
 			},
 		},
 	}
@@ -70,12 +65,15 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	permission := *mapResourceToPermission(d)
 
-	resp, err := client.CreatePermission(&permission)
+	newPermission, err := client.CreatePermission(&permission)
 	if err != nil {
 		return err
 	}
+	if newPermission == nil {
+		return fmt.Errorf("resourcePermissionCreate - failed to create permission, empty responce")
+	}
 
-	d.SetId(resp.ID)
+	d.SetId(newPermission.ID)
 
 	return resourcePermissionRead(d, meta)
 }
@@ -107,17 +105,16 @@ func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfClient.Client)
 
 	permission := *mapResourceToPermission(d)
-
-
-	// existingPermission, err := client.GetPermissionByID(permission.ID)
-	// if err != nil {
-	// 	return nil
-	// }
-
+	permission.ID = ""
 	resp, err := client.CreatePermission(&permission)
 	if err != nil {
 		return err
-	}    
+	}
+	
+	deleteErr := resourcePermissionDelete(d, meta)
+	if deleteErr != nil {
+		log.Printf("[WARN] failed to delete permission %v: %v",permission, deleteErr)
+	}
 	d.SetId(resp.ID)
 
 	return resourcePermissionRead(d, meta)
@@ -146,11 +143,6 @@ func mapPermissionToResource(permission *cfClient.Permission, d *schema.Resource
 		return err
 	}
 
-	err = d.Set("account", permission.Account)
-	if err != nil {
-		return err
-	}
-
 	err = d.Set("action", permission.Action)
 	if err != nil {
 		return err
@@ -171,14 +163,19 @@ func mapPermissionToResource(permission *cfClient.Permission, d *schema.Resource
 
 func mapResourceToPermission(d *schema.ResourceData) *cfClient.Permission {
 	
-	tags := d.Get("tags").(*schema.Set).List()
+	tagsI := d.Get("tags").(*schema.Set).List()
+	var tags []string
+	if len(tagsI) > 0 {
+		tags = convertStringArr(tagsI)
+	} else {
+		tags = []string{"*", "untagged"}
+	}
 	permission := &cfClient.Permission{
 		ID:      d.Id(),
 		Team:    d.Get("team").(string),
 		Action:  d.Get("action").(string),
-		Resource: d.Get("string").(string),
-		//Account: d.Get("account_id").(string),
-		Tags:    convertStringArr(tags),
+		Resource: d.Get("resource").(string),
+		Tags:    tags,
 	}
 
 	return permission

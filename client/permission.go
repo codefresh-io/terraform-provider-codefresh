@@ -2,12 +2,23 @@ package client
 
 import (
 	"fmt"
+	//"log"
 )
 
 // Permission spec
 type Permission struct {
-	ID       string     `json:"_id,omitempty"`
+	ID       string     `json:"id,omitempty"`
 	Team     string     `json:"role,omitempty"`
+	Resource string     `json:"resource,omitempty"`
+	Action   string     `json:"action,omitempty"`
+	Account  string     `json:"account,omitempty"`
+	Tags     []string   `json:"attributes,omitempty"`
+}
+
+// NewPermission spec, diffs from Permission is `json:"team,omitempty"` vs `json:"role,omitempty"`
+type NewPermission struct {
+	ID       string     `json:"_id,omitempty"`
+	Team     string     `json:"team,omitempty"`
 	Resource string     `json:"resource,omitempty"`
 	Action   string     `json:"action,omitempty"`
 	Account  string     `json:"account,omitempty"`
@@ -76,7 +87,16 @@ func (client *Client) GetPermissionByID(id string) (*Permission, error) {
 // CreatePermision -
 func (client *Client) CreatePermission(permission  *Permission) (*Permission, error) {
 
-	body, err := EncodeToJSON(permission)
+	newPermission := &NewPermission{
+		ID: permission.ID,
+		Team: permission.Team,
+		Resource: permission.Resource,
+		Action: permission.Action,
+		Account: permission.Account,
+		Tags: permission.Tags,
+	}
+
+	body, err := EncodeToJSON(newPermission)
 
 	if err != nil {
 		return nil, err
@@ -93,13 +113,20 @@ func (client *Client) CreatePermission(permission  *Permission) (*Permission, er
 		return nil, err
 	}
 
-	var newPermission Permission
-	err = DecodeResponseInto(resp, &newPermission)
+	// respStr := string(resp)
+	// log.Printf("[DEBUG] createPermission responce body = %s", respStr)
+	var permissionResp []Permission
+	err = DecodeResponseInto(resp, &permissionResp)
 	if err != nil {
 		return nil, err
 	}
+	if len(permissionResp) != 1 {
+		return nil, fmt.Errorf("createPermission - unknown response lenght!=1:  %v", permissionResp)
+	}
 
-	return &newPermission, nil
+	newPermissionID := permissionResp[0].ID
+    
+	return client.GetPermissionByID(newPermissionID)
 }
 
 // DeletePermission -
