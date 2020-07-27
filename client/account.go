@@ -174,6 +174,43 @@ func (client *Client) GetAccountByID(id string) (*Account, error) {
 	return &account, nil
 }
 
+// GetAccountByName - returns account
+func (client *Client) GetAccountByName(name string) (*Account, error) {
+
+	if name == "" {
+		return nil, fmt.Errorf("GetAccountByName - must specify name param")
+	}
+	opts := RequestOptions{
+		Path:   "/admin/accounts",
+		Method: "GET",
+		QS: map[string]string{"filter[name]": name},
+	}
+
+	resp, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var accounts []Account
+
+	err = DecodeResponseInto(resp, &accounts)
+	if err != nil {
+		return nil, err
+	}
+
+	var account *Account
+	for _, acc := range(accounts) {
+		if acc.Name == name {
+			account = &acc
+		}		
+	}
+	if account == nil {
+		return nil, fmt.Errorf("GetAccountByName - cannot find account by name %s", name)
+	}
+	return account, nil
+}
+
 func (client *Client) GetAllAccounts() (*[]Account, error) {
 
 	opts := RequestOptions{

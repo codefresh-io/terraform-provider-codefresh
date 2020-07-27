@@ -97,7 +97,8 @@ func (client *Client) UpdateAPIKey(key *ApiKey) error {
 	return nil
 }
 
-func (client *Client) CreateApiKey(accountId string, apiKey *ApiKey) (string, error) {
+// CreateApiKey - creates api key for account by switch to the user and call /api/auth/keys
+func (client *Client) CreateApiKey(userID string, accountId string, apiKey *ApiKey) (string, error) {
 
 	// Check collaborataros
 	account, err := client.GetAccountByID(accountId)
@@ -108,34 +109,18 @@ func (client *Client) CreateApiKey(accountId string, apiKey *ApiKey) (string, er
 		log.Fatal("[ERROR] Collaborators are not set")
 	}
 
-	// add user
-	userPrefix := acctest.RandString(10)
-	userName := "tfuser" + userPrefix
-	userEmail := userName + "@codefresh.io"
-
-	user, err := client.AddNewUserToAccount(accountId, userName, userEmail)
-	if err != nil {
-		return "", err
-	}
-	userID := user.ID
-
-	// activate
-	_, err = client.ActivateUser(userID)
-	if err != nil {
-		return "", err
-	}
-
-	// set user as account admin
-	err = client.SetUserAsAccountAdmin(accountId, userID)
-	if err != nil {
-		return "", nil
-	}
-
+	var xAccessToken string
+	if userID == "" {
+		userID, err = client.createRandomUser(accountId)
+		if err != nil {
+			return "", err
+		}		
+	} 
 	// login as user
-	xAccessToken, err := client.GetXAccessToken(userID)
+	xAccessToken, err = client.GetXAccessToken(userID, accountId)
 	if err != nil {
 		return "", err
-	}
+	}	
 
 	// generate token
 	apiToken, err := client.GenerateToken(xAccessToken, apiKey)
@@ -144,10 +129,10 @@ func (client *Client) CreateApiKey(accountId string, apiKey *ApiKey) (string, er
 	}
 
 	return apiToken, nil
-
 }
 
-func (client *Client) GetXAccessToken(userID string) (string, error) {
+// GetXAccessToken
+func (client *Client) GetXAccessToken(userID string, accountId string) (string, error) {
 
 	url := fmt.Sprintf("%s/admin/user/loginAsUser?userId=%s", client.Host, userID)
 	request, err := http.NewRequest("GET", url, nil)
@@ -165,13 +150,44 @@ func (client *Client) GetXAccessToken(userID string) (string, error) {
 
 	defer resp.Body.Close()
 
+	var userCfAccessToken string
 	for _, cookie := range resp.Cookies() {
 		if cookie.Name == "cf-access-token" {
-			return cookie.Value, nil
+			userCfAccessToken = cookie.Value
+			break
 		}
 	}
+	if userCfAccessToken == "" {
+		return "", fmt.Errorf("Failed to GetXAccessToken for userId = %s", userID)
+	}
 
-	return "", nil
+	// change account
+	changeAccURL := fmt.Sprintf("%s/user/changeaccount/%s", client.Host, accountId)
+	changeAccRequest, err := http.NewRequest("POST", changeAccURL, nil)
+	if err != nil {
+		return "", err
+	}
+
+	changeAccRequest.Header.Set("x-access-token", userCfAccessToken)
+	changeAccRequest.Header.Set("Content-Type", "application/json; charset=utf-8")
+
+	changeAccResp, err := client.Client.Do(changeAccRequest)
+	if err != nil {
+		return "", err
+	}
+
+	var accCfAccessToken string
+	for _, cookie := range changeAccResp.Cookies() {
+		if cookie.Name == "cf-access-token" {
+			accCfAccessToken = cookie.Value
+			break
+		}
+	}
+	if accCfAccessToken == "" {
+		return "", fmt.Errorf("Failed to GetXAccessToken for userId = %s after ChangeAcocunt to %s", userID, accountId)
+	}
+
+	return accCfAccessToken, nil
 }
 
 func (client *Client) GenerateToken(xToken string, apiKey *ApiKey) (string, error) {
@@ -218,4 +234,31 @@ func (client *Client) GetApiKeysList() ([]ApiKey, error) {
 	}
 
 	return apiKeys, nil
+}
+
+func (client *Client) createRandomUser(accountId string) (string, error) {
+	// add user
+	userPrefix := acctest.RandString(10)
+	userName := "tfuser" + userPrefix
+	userEmail := userName + "@codefresh.io"
+
+	user, err := client.AddNewUserToAccount(accountId, userName, userEmail)
+	if err != nil {
+		return "", err
+	}
+	userID := user.ID
+
+	// activate
+	_, err = client.ActivateUser(userID)
+	if err != nil {
+		return "", err
+	}
+
+	// set user as account admin
+	err = client.SetUserAsAccountAdmin(accountId, userID)
+	if err != nil {
+		return "", nil
+	}
+	return userID, nil
+
 }

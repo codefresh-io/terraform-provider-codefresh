@@ -25,6 +25,10 @@ func resourceApiKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"user_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"token": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -45,8 +49,9 @@ func resourceApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	apiKey := *mapResourceToApiKey(d)
 	accountID := d.Get("account_id").(string)
+	userID := d.Get("user_id").(string)
 
-	resp, err := client.CreateApiKey(accountID, &apiKey)
+	resp, err := client.CreateApiKey(userID, accountID, &apiKey)
 	if err != nil {
 		fmt.Println(string(resp))
 		return err
