@@ -30,6 +30,7 @@ func Provider() *schema.Provider {
 			"codefresh_user":  dataSourceUser(),
 			"codefresh_idps": dataSourceIdps(),
 			"codefresh_account": dataSourceAccount(),
+			"codefresh_team": dataSourceTeam(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"codefresh_project":        resourceProject(),
