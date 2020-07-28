@@ -42,3 +42,10 @@ resource "codefresh_permission" "permission" {
 ```
 
 ### [Example account-tokens](../../examples/account_tokens)
+Output example:  
+```
+    "account_tokens": {
+        "acc1": "1xxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx1",
+        "acc2": "2xxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx2"
+      }
+```
