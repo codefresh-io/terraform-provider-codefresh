@@ -1,0 +1,6 @@
+# resource codefresh_permission
+
+```
+
+
+```

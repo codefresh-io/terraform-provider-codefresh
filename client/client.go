@@ -18,10 +18,11 @@ type Client struct {
 
 // RequestOptions  path, method, etc
 type RequestOptions struct {
-	Path   string
-	Method string
-	Body   []byte
-	QS     map[string]string
+	Path         string
+	Method       string
+	Body         []byte
+	QS           map[string]string
+	XAccessToken string
 }
 
 // NewClient returns a new client configured to communicate on a server with the
@@ -48,6 +49,37 @@ func (client *Client) RequestAPI(opt *RequestOptions) ([]byte, error) {
 	}
 
 	request.Header.Set("Authorization", client.Token)
+	request.Header.Set("Content-Type", "application/json; charset=utf-8")
+
+	resp, err := client.Client.Do(request)
+
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read body %v %v", resp.StatusCode, resp.Status)
+	}
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("%v, %s", resp.Status, string(body))
+	}
+	return body, nil
+}
+
+func (client *Client) RequestApiXAccessToken(opt *RequestOptions) ([]byte, error) {
+	finalURL := fmt.Sprintf("%s%s", client.Host, opt.Path)
+	if opt.QS != nil {
+		finalURL += ToQS(opt.QS)
+	}
+	request, err := http.NewRequest(opt.Method, finalURL, bytes.NewBuffer(opt.Body))
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("x-access-token", opt.XAccessToken)
 	request.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	resp, err := client.Client.Do(request)

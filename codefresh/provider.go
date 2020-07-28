@@ -2,12 +2,12 @@ package codefresh
 
 import (
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	//"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"os"
 )
 
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"api_url": {
@@ -22,13 +22,27 @@ func Provider() terraform.ResourceProvider {
 			},
 			"token": {
 				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("CODEFRESH_API_KEY", ""),
+				Optional: true,				
 			},
 		},
+		DataSourcesMap: map[string]*schema.Resource{
+			"codefresh_users": dataSourceUsers(),
+			"codefresh_user":  dataSourceUser(),
+			"codefresh_idps": dataSourceIdps(),
+			"codefresh_account": dataSourceAccount(),
+			"codefresh_team": dataSourceTeam(),
+			"codefresh_current_account": dataSourceCurrentAccount(),
+		},
 		ResourcesMap: map[string]*schema.Resource{
-			"codefresh_project":  resourceProject(),
-			"codefresh_pipeline": resourcePipeline(),
+			"codefresh_project":        resourceProject(),
+			"codefresh_pipeline":       resourcePipeline(),
+			"codefresh_team":           resourceTeam(),
+			"codefresh_account":        resourceAccount(),
+			"codefresh_api_key":        resourceApiKey(),
+			"codefresh_idp_accounts":   resourceIDPAccounts(),
+			"codefresh_account_admins": resourceAccountAdmins(),
+			"codefresh_user":           resourceUser(),
+			"codefresh_permission":     resourcePermission(),
 		},
 		ConfigureFunc: configureProvider,
 	}
@@ -38,6 +52,8 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 
 	apiURL := d.Get("api_url").(string)
 	token := d.Get("token").(string)
-
+	if token == "" {
+		token = os.Getenv("CODEFRESH_API_KEY")
+	}
 	return cfClient.NewClient(apiURL, token), nil
 }

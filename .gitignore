@@ -1,2 +1,7 @@
 terraform-provider-codefresh
 dist/
+
+**/.terraform
+**/terraform.tfstate
+**/terraform.tfstate.backup
+tests/
