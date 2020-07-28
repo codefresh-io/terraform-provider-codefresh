@@ -8,16 +8,16 @@ import (
 
 // CurrentAccountUser spec
 type CurrentAccountUser struct {
-	ID       string 
-	UserName string
-	Email    string
+	ID       string `json:"id,omitempty"`
+	UserName string `json:"name,omitempty"`
+	Email    string `json:"email,omitempty"`
 }
 
 // CurrentAccount spec
 type CurrentAccount struct {
 	ID      string
 	Name    string
-	Users   map[string]CurrentAccountUser
+	Users   []CurrentAccountUser
 }
 
 // GetCurrentAccount -
@@ -31,8 +31,8 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 	if err != nil {
 		return nil, err
 	}
-
-    currentAccountX, err := objx.FromJSON(string(userResp))
+	userRespStr := string(userResp)
+    currentAccountX, err := objx.FromJSON(userRespStr)
 	if err != nil {
 		return nil, err
 	}
@@ -43,10 +43,10 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 	}
 	currentAccount := &CurrentAccount{
 		Name: activeAccountName,
-		Users: make(map[string]CurrentAccountUser),
+		Users: make([]CurrentAccountUser, 0),
 	}
 
-	allAccountsI := currentAccountX.Get("account").MSISlice()
+	allAccountsI := currentAccountX.Get("account").InterSlice()
 	for _, accI := range(allAccountsI) {
 		accX := objx.New(accI)
 		if accX.Get("name").String() == activeAccountName {
@@ -73,14 +73,14 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 	}
 	for _, userI := range(accountUsersI) {
 		userX := objx.New(userI)
-		userName := userX.Get("userX").String()
+		userName := userX.Get("userName").String()
 		email := userX.Get("email").String()
 		userID := userX.Get("_id").String()
-		currentAccount.Users[userName] = CurrentAccountUser{
+		currentAccount.Users= append(currentAccount.Users, CurrentAccountUser{
 			ID:       userID,
 			UserName: userName,
 			Email:    email,
-		}
+		})
 	}
 
 	return currentAccount, nil

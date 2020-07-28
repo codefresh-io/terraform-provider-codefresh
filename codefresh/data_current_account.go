@@ -14,12 +14,12 @@ func dataSourceCurrentAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"id": {
+			"_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"users": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -37,7 +37,7 @@ func dataSourceCurrentAccount() *schema.Resource {
 						},						
 					},
 				},
-			}	
+			},	
 		},
 	}
 }
@@ -48,7 +48,7 @@ func dataSourceCurrentAccountRead(d *schema.ResourceData, meta interface{}) erro
 	var currentAccount *cfClient.CurrentAccount
 	var err error
 
-	currentAccount, err = client.GetCurrentAccount
+	currentAccount, err = client.GetCurrentAccount()
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func dataSourceCurrentAccountRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("data.codefresh_current_account - failed to get current_account")
 	}
 
-    return mapDataCurrentAccountToResource(team, d)
+    return mapDataCurrentAccountToResource(currentAccount, d)
 
 }
 
@@ -68,9 +68,26 @@ func mapDataCurrentAccountToResource(currentAccount *cfClient.CurrentAccount, d 
 	}
 	d.SetId(currentAccount.ID)
 
-	d.Set("id", currentAccount.ID)
-	d.Set("name", currentAccount.Name)	
-	d.Set("users", currentAccount.Users)
+	d.Set("_id", currentAccount.ID)
+	d.Set("name", currentAccount.Name)
+	
+	// users := make(map[string](map[string]interface{}))
+    // for n, user := range currentAccount.Users {
+	// 	users[n] = make(map[string]interface{})
+	// 	users[n]["name"] = user.UserName
+	// 	users[n]["email"] = user.Email
+	// 	users[n]["id"] = user.ID
+	// }
 
+	// d.Set("users", []map[string](map[string]interface{}){users})
+	users := make([](map[string]interface{}), len(currentAccount.Users))
+	for n, user := range currentAccount.Users {
+		users[n] = make(map[string]interface{})
+		users[n]["name"] = user.UserName
+		users[n]["email"] = user.Email
+		users[n]["id"] = user.ID
+	}
+	
+    d.Set("users", users)
 	return nil
 }

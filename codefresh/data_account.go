@@ -29,10 +29,8 @@ func dataSourceAccount() *schema.Resource {
 	}
 }
 
-
 func dataSourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 
-	
 	client := meta.(*cfClient.Client)
 	var account *cfClient.Account
 	var err error
@@ -53,7 +51,6 @@ func dataSourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
     return mapDataAccountToResource(account, d)
-
 }
 
 func mapDataAccountToResource(account *cfClient.Account, d *schema.ResourceData) error {
