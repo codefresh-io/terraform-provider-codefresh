@@ -1,16 +1,19 @@
 data "codefresh_account" "acc" {
-  name = var.account_id
+  for_each = var.accounts
+  name = each.value
 }
 
 resource "random_string" "random" {
-  length = 16
+  for_each = var.accounts
+  length = 5
   special = false
 }
 
 resource "codefresh_api_key" "new" {
-  account_id = data.codefresh_account.acc.id
-  user_id = data.codefresh_account.acc.admins[0]
-  name = "tfkey_${random_string.random.result}"
+  for_each = var.accounts
+  account_id = data.codefresh_account.acc[each.value].id
+  user_id = data.codefresh_account.acc[each.value].admins[0]
+  name = "tfkey_${random_string.random[each.value].result}"
 
   scopes = [
     "agent",
@@ -34,6 +37,9 @@ resource "codefresh_api_key" "new" {
   ]
 }
 
-output "token" {
-  value = codefresh_api_key.new.token
+output "tokens" {
+  value = {
+    for acc, token in codefresh_api_key.new:
+      acc => token.token
+  }  
 }

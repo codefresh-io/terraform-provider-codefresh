@@ -1,6 +1,7 @@
 package codefresh
 
 import (
+	"fmt"
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -136,6 +137,9 @@ func resourceTeamDelete(d *schema.ResourceData, meta interface{}) error {
 
 func mapTeamToResource(team *cfClient.Team, d *schema.ResourceData) error {
 
+	if team == nil {
+		return fmt.Errorf("mapTeamToResource - cannot find team")
+	}
 	err := d.Set("name", team.Name)
 	if err != nil {
 		return err

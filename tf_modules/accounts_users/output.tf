@@ -9,6 +9,6 @@ output "idps" {
 output "accounts" {
   value = {
     for acc in codefresh_account.acc:
-      acc.id => acc.name   
+      acc.id => acc.name
   }
 }
