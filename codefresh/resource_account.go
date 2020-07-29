@@ -53,7 +53,7 @@ func resourceAccount() *schema.Resource {
 						"data_retention_weeks": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default: 5,
+							Default:  5,
 						},
 					},
 				},
@@ -69,7 +69,7 @@ func resourceAccount() *schema.Resource {
 						},
 						"nodes": {
 							Type:     schema.TypeInt,
-							Default: 1,
+							Default:  1,
 							Optional: true,
 						},
 					},

@@ -8,7 +8,7 @@ import (
 
 func dataSourceAccount() *schema.Resource {
 	return &schema.Resource{
-		Read:   dataSourceAccountRead,
+		Read: dataSourceAccountRead,
 		Schema: map[string]*schema.Schema{
 			"_id": {
 				Type:     schema.TypeString,
@@ -24,7 +24,7 @@ func dataSourceAccount() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-			},	
+			},
 		},
 	}
 }
@@ -50,11 +50,11 @@ func dataSourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("data.codefresh_account - cannot find account")
 	}
 
-    return mapDataAccountToResource(account, d)
+	return mapDataAccountToResource(account, d)
 }
 
 func mapDataAccountToResource(account *cfClient.Account, d *schema.ResourceData) error {
-	
+
 	if account == nil || account.ID == "" {
 		return fmt.Errorf("data.codefresh_account - failed to mapDataAccountToResource")
 	}
@@ -66,4 +66,3 @@ func mapDataAccountToResource(account *cfClient.Account, d *schema.ResourceData)
 
 	return nil
 }
-
