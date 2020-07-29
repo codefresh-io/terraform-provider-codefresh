@@ -1,8 +1,8 @@
 package client
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/objx"
 )
 
@@ -15,9 +15,9 @@ type CurrentAccountUser struct {
 
 // CurrentAccount spec
 type CurrentAccount struct {
-	ID      string
-	Name    string
-	Users   []CurrentAccountUser
+	ID    string
+	Name  string
+	Users []CurrentAccountUser
 }
 
 // GetCurrentAccount -
@@ -32,7 +32,7 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 		return nil, err
 	}
 	userRespStr := string(userResp)
-    currentAccountX, err := objx.FromJSON(userRespStr)
+	currentAccountX, err := objx.FromJSON(userRespStr)
 	if err != nil {
 		return nil, err
 	}
@@ -42,12 +42,12 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 		return nil, fmt.Errorf("GetCurrentAccount - cannot get activeAccountName")
 	}
 	currentAccount := &CurrentAccount{
-		Name: activeAccountName,
+		Name:  activeAccountName,
 		Users: make([]CurrentAccountUser, 0),
 	}
 
 	allAccountsI := currentAccountX.Get("account").InterSlice()
-	for _, accI := range(allAccountsI) {
+	for _, accI := range allAccountsI {
 		accX := objx.New(accI)
 		if accX.Get("name").String() == activeAccountName {
 			currentAccount.ID = accX.Get("id").String()
@@ -71,12 +71,12 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 	if e := json.Unmarshal(accountUsersResp, &accountUsersI); e != nil {
 		return nil, fmt.Errorf("Cannot unmarshal accountUsers responce for accountId=%s: %v", currentAccount.ID, e)
 	}
-	for _, userI := range(accountUsersI) {
+	for _, userI := range accountUsersI {
 		userX := objx.New(userI)
 		userName := userX.Get("userName").String()
 		email := userX.Get("email").String()
 		userID := userX.Get("_id").String()
-		currentAccount.Users= append(currentAccount.Users, CurrentAccountUser{
+		currentAccount.Users = append(currentAccount.Users, CurrentAccountUser{
 			ID:       userID,
 			UserName: userName,
 			Email:    email,

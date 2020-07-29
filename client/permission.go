@@ -7,22 +7,22 @@ import (
 
 // Permission spec
 type Permission struct {
-	ID       string     `json:"id,omitempty"`
-	Team     string     `json:"role,omitempty"`
-	Resource string     `json:"resource,omitempty"`
-	Action   string     `json:"action,omitempty"`
-	Account  string     `json:"account,omitempty"`
-	Tags     []string   `json:"attributes,omitempty"`
+	ID       string   `json:"id,omitempty"`
+	Team     string   `json:"role,omitempty"`
+	Resource string   `json:"resource,omitempty"`
+	Action   string   `json:"action,omitempty"`
+	Account  string   `json:"account,omitempty"`
+	Tags     []string `json:"attributes,omitempty"`
 }
 
 // NewPermission spec, diffs from Permission is `json:"team,omitempty"` vs `json:"role,omitempty"`
 type NewPermission struct {
-	ID       string     `json:"_id,omitempty"`
-	Team     string     `json:"team,omitempty"`
-	Resource string     `json:"resource,omitempty"`
-	Action   string     `json:"action,omitempty"`
-	Account  string     `json:"account,omitempty"`
-	Tags     []string   `json:"tags,omitempty"`
+	ID       string   `json:"_id,omitempty"`
+	Team     string   `json:"team,omitempty"`
+	Resource string   `json:"resource,omitempty"`
+	Action   string   `json:"action,omitempty"`
+	Account  string   `json:"account,omitempty"`
+	Tags     []string `json:"tags,omitempty"`
 }
 
 // GetPermissionList -
@@ -56,7 +56,7 @@ func (client *Client) GetPermissionList(teamID, action, resource string) ([]Perm
 		if resource != "" && p.Resource != resource {
 			continue
 		}
-		permissionsFiltered = append(permissionsFiltered, p)		
+		permissionsFiltered = append(permissionsFiltered, p)
 	}
 
 	return permissionsFiltered, nil
@@ -85,15 +85,15 @@ func (client *Client) GetPermissionByID(id string) (*Permission, error) {
 }
 
 // CreatePermision -
-func (client *Client) CreatePermission(permission  *Permission) (*Permission, error) {
+func (client *Client) CreatePermission(permission *Permission) (*Permission, error) {
 
 	newPermission := &NewPermission{
-		ID: permission.ID,
-		Team: permission.Team,
+		ID:       permission.ID,
+		Team:     permission.Team,
 		Resource: permission.Resource,
-		Action: permission.Action,
-		Account: permission.Account,
-		Tags: permission.Tags,
+		Action:   permission.Action,
+		Account:  permission.Account,
+		Tags:     permission.Tags,
 	}
 
 	body, err := EncodeToJSON(newPermission)
@@ -125,7 +125,7 @@ func (client *Client) CreatePermission(permission  *Permission) (*Permission, er
 	}
 
 	newPermissionID := permissionResp[0].ID
-    
+
 	return client.GetPermissionByID(newPermissionID)
 }
 

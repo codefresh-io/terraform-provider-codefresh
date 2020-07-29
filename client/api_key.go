@@ -114,13 +114,13 @@ func (client *Client) CreateApiKey(userID string, accountId string, apiKey *ApiK
 		userID, err = client.createRandomUser(accountId)
 		if err != nil {
 			return "", err
-		}		
-	} 
+		}
+	}
 	// login as user
 	xAccessToken, err = client.GetXAccessToken(userID, accountId)
 	if err != nil {
 		return "", err
-	}	
+	}
 
 	// generate token
 	apiToken, err := client.GenerateToken(xAccessToken, apiKey)

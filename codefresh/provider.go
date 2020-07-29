@@ -21,16 +21,16 @@ func Provider() *schema.Provider {
 				},
 			},
 			"token": {
-				Type:        schema.TypeString,
-				Optional: true,				
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"codefresh_users": dataSourceUsers(),
-			"codefresh_user":  dataSourceUser(),
-			"codefresh_idps": dataSourceIdps(),
-			"codefresh_account": dataSourceAccount(),
-			"codefresh_team": dataSourceTeam(),
+			"codefresh_users":           dataSourceUsers(),
+			"codefresh_user":            dataSourceUser(),
+			"codefresh_idps":            dataSourceIdps(),
+			"codefresh_account":         dataSourceAccount(),
+			"codefresh_team":            dataSourceTeam(),
 			"codefresh_current_account": dataSourceCurrentAccount(),
 		},
 		ResourcesMap: map[string]*schema.Resource{

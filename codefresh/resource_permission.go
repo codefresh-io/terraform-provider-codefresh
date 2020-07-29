@@ -2,10 +2,9 @@ package codefresh
 
 import (
 	"fmt"
-	"log"
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
+	"log"
 )
 
 func resourcePermission() *schema.Resource {
@@ -33,22 +32,22 @@ func resourcePermission() *schema.Resource {
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
 					if v != "cluster" && v != "pipeline" {
-					  errs = append(errs, fmt.Errorf("%q must be between \"pipeline\" or \"cluster\", got: %s", key, v))
+						errs = append(errs, fmt.Errorf("%q must be between \"pipeline\" or \"cluster\", got: %s", key, v))
 					}
 					return
-				  },
-			},	
+				},
+			},
 			"action": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
-					if v != "create" && v != "read" && v != "update" && v != "delete" && v != "run" && v != "approve"  {
-					  errs = append(errs, fmt.Errorf("%q must be between one of create,read,update,delete,approve, got: %s", key, v))
+					if v != "create" && v != "read" && v != "update" && v != "delete" && v != "run" && v != "approve" {
+						errs = append(errs, fmt.Errorf("%q must be between one of create,read,update,delete,approve, got: %s", key, v))
 					}
 					return
-				  },
-			},					
+				},
+			},
 			"tags": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -110,10 +109,10 @@ func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	
+
 	deleteErr := resourcePermissionDelete(d, meta)
 	if deleteErr != nil {
-		log.Printf("[WARN] failed to delete permission %v: %v",permission, deleteErr)
+		log.Printf("[WARN] failed to delete permission %v: %v", permission, deleteErr)
 	}
 	d.SetId(resp.ID)
 
@@ -162,7 +161,7 @@ func mapPermissionToResource(permission *cfClient.Permission, d *schema.Resource
 }
 
 func mapResourceToPermission(d *schema.ResourceData) *cfClient.Permission {
-	
+
 	tagsI := d.Get("tags").(*schema.Set).List()
 	var tags []string
 	if len(tagsI) > 0 {
@@ -171,11 +170,11 @@ func mapResourceToPermission(d *schema.ResourceData) *cfClient.Permission {
 		tags = []string{"*", "untagged"}
 	}
 	permission := &cfClient.Permission{
-		ID:      d.Id(),
-		Team:    d.Get("team").(string),
-		Action:  d.Get("action").(string),
+		ID:       d.Id(),
+		Team:     d.Get("team").(string),
+		Action:   d.Get("action").(string),
 		Resource: d.Get("resource").(string),
-		Tags:    tags,
+		Tags:     tags,
 	}
 
 	return permission

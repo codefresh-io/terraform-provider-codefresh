@@ -8,7 +8,7 @@ import (
 
 func dataSourceCurrentAccount() *schema.Resource {
 	return &schema.Resource{
-		Read:   dataSourceCurrentAccountRead,
+		Read: dataSourceCurrentAccountRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -34,14 +34,13 @@ func dataSourceCurrentAccount() *schema.Resource {
 						"email": {
 							Type:     schema.TypeString,
 							Required: true,
-						},						
+						},
 					},
 				},
-			},	
+			},
 		},
 	}
 }
-
 
 func dataSourceCurrentAccountRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfClient.Client)
@@ -57,12 +56,12 @@ func dataSourceCurrentAccountRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("data.codefresh_current_account - failed to get current_account")
 	}
 
-    return mapDataCurrentAccountToResource(currentAccount, d)
+	return mapDataCurrentAccountToResource(currentAccount, d)
 
 }
 
 func mapDataCurrentAccountToResource(currentAccount *cfClient.CurrentAccount, d *schema.ResourceData) error {
-	
+
 	if currentAccount == nil || currentAccount.ID == "" {
 		return fmt.Errorf("data.codefresh_current_account - failed to mapDataCurrentAccountToResource")
 	}
@@ -70,9 +69,9 @@ func mapDataCurrentAccountToResource(currentAccount *cfClient.CurrentAccount, d 
 
 	d.Set("_id", currentAccount.ID)
 	d.Set("name", currentAccount.Name)
-	
+
 	// users := make(map[string](map[string]interface{}))
-    // for n, user := range currentAccount.Users {
+	// for n, user := range currentAccount.Users {
 	// 	users[n] = make(map[string]interface{})
 	// 	users[n]["name"] = user.UserName
 	// 	users[n]["email"] = user.Email
@@ -87,7 +86,7 @@ func mapDataCurrentAccountToResource(currentAccount *cfClient.CurrentAccount, d 
 		users[n]["email"] = user.Email
 		users[n]["id"] = user.ID
 	}
-	
-    d.Set("users", users)
+
+	d.Set("users", users)
 	return nil
 }

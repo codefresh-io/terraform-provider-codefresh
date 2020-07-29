@@ -8,7 +8,7 @@ import (
 
 func dataSourceTeam() *schema.Resource {
 	return &schema.Resource{
-		Read:   dataSourceTeamRead,
+		Read: dataSourceTeamRead,
 		Schema: map[string]*schema.Schema{
 			"_id": {
 				Type:     schema.TypeString,
@@ -39,15 +39,13 @@ func dataSourceTeam() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-			},			
+			},
 		},
 	}
 }
 
-
 func dataSourceTeamRead(d *schema.ResourceData, meta interface{}) error {
 
-	
 	client := meta.(*cfClient.Client)
 	var team *cfClient.Team
 	var err error
@@ -55,10 +53,10 @@ func dataSourceTeamRead(d *schema.ResourceData, meta interface{}) error {
 	if _id, _idOk := d.GetOk("_id"); _idOk {
 		team, err = client.GetTeamByID(_id.(string))
 	} else if name, nameOk := d.GetOk("name"); nameOk {
-		// accountID, accountOk := d.GetOk("account_id");		
+		// accountID, accountOk := d.GetOk("account_id");
 		team, err = client.GetTeamByName(name.(string))
 	}
-	
+
 	if err != nil {
 		return err
 	}
@@ -67,12 +65,12 @@ func dataSourceTeamRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("data.codefresh_team - cannot find team")
 	}
 
-    return mapDataTeamToResource(team, d)
+	return mapDataTeamToResource(team, d)
 
 }
 
 func mapDataTeamToResource(team *cfClient.Team, d *schema.ResourceData) error {
-	
+
 	if team == nil || team.ID == "" {
 		return fmt.Errorf("data.codefresh_team - failed to mapDataTeamToResource")
 	}
@@ -85,10 +83,9 @@ func mapDataTeamToResource(team *cfClient.Team, d *schema.ResourceData) error {
 	var users []string
 	for _, user := range team.Users {
 		users = append(users, user.ID)
-	}	
+	}
 	d.Set("users", users)
 	d.Set("tags", team.Tags)
 
 	return nil
 }
-

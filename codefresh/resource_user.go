@@ -1,9 +1,9 @@
 package codefresh
 
 import (
-	"log"
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"log"
 )
 
 func resourceUser() *schema.Resource {
@@ -38,7 +38,7 @@ func resourceUser() *schema.Resource {
 			"personal": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MaxItems:    1,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"first_name": {
@@ -278,23 +278,23 @@ func mapResourceToUser(d *schema.ResourceData) *cfClient.NewUser {
 	}
 
 	if logins, ok := d.GetOk("login"); ok {
-	   loginsList := logins.(*schema.Set).List()
-	   for _, loginDataI := range loginsList {
-		  if loginData, isMap := loginDataI.(map[string]interface{}); isMap {
-			idpID := loginData["idp_id"].(string)
-			login := cfClient.Login{
-				// Credentials: cfClient.Credentials{
-				// 	Permissions: loginData.Get("credentials.permissions").([]string),
-				// },
-				IDP: cfClient.IDP{
-					ID:         idpID,
-				},
-				Sso: loginData["sso"].(bool),
+		loginsList := logins.(*schema.Set).List()
+		for _, loginDataI := range loginsList {
+			if loginData, isMap := loginDataI.(map[string]interface{}); isMap {
+				idpID := loginData["idp_id"].(string)
+				login := cfClient.Login{
+					// Credentials: cfClient.Credentials{
+					// 	Permissions: loginData.Get("credentials.permissions").([]string),
+					// },
+					IDP: cfClient.IDP{
+						ID: idpID,
+					},
+					Sso: loginData["sso"].(bool),
+				}
+				user.Logins = append(user.Logins, login)
+				log.Printf("[DEBUG] login = %v", login)
 			}
-			user.Logins = append(user.Logins, login)
-			log.Printf("[DEBUG] login = %v", login) 			  
-		  }
-	   }
+		}
 	}
 	// logins := d.Get("login").(*schema.Set)
 

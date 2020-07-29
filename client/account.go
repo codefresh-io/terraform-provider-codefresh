@@ -183,7 +183,7 @@ func (client *Client) GetAccountByName(name string) (*Account, error) {
 	opts := RequestOptions{
 		Path:   "/admin/accounts",
 		Method: "GET",
-		QS: map[string]string{"filter[name]": name},
+		QS:     map[string]string{"filter[name]": name},
 	}
 
 	resp, err := client.RequestAPI(&opts)
@@ -200,10 +200,10 @@ func (client *Client) GetAccountByName(name string) (*Account, error) {
 	}
 
 	var account *Account
-	for _, acc := range(accounts) {
+	for _, acc := range accounts {
 		if acc.Name == name {
 			account = &acc
-		}		
+		}
 	}
 	if account == nil {
 		return nil, fmt.Errorf("GetAccountByName - cannot find account by name %s", name)
@@ -279,7 +279,7 @@ func (client *Client) CreateAccount(account *Account) (*Account, error) {
 	err = client.setAccountFeatures(account.Features, &respAccount)
 	if err != nil {
 		return nil, err
-	}	
+	}
 	return &respAccount, nil
 }
 
@@ -324,11 +324,11 @@ func (client *Client) UpdateAccount(account *Account) (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	err = client.setAccountFeatures(account.Features, &respAccount)
 	if err != nil {
 		return nil, err
-	}	
+	}
 
 	return &respAccount, nil
 }
@@ -371,18 +371,18 @@ func GetAccountAdminsDiff(desiredAdmins []string, existingAdmins []string) (admi
 }
 
 // Update Features
-func(client *Client) setAccountFeatures(features map[string]bool, account *Account) error {
+func (client *Client) setAccountFeatures(features map[string]bool, account *Account) error {
 	id := account.GetID()
 	requestOptions := &RequestOptions{}
-	for k, v := range features{		
+	for k, v := range features {
 		requestOptions.Body = []byte(fmt.Sprintf("{\"feature\": \"%s\"}", k))
 		if v {
 			requestOptions.Path = fmt.Sprintf("/features/%s", id)
 			requestOptions.Method = "POST"
 		} else {
 			requestOptions.Path = fmt.Sprintf("/features/switchOff/%s", id)
-			requestOptions.Method = "PUT"			
-		}		
+			requestOptions.Method = "PUT"
+		}
 		_, err := client.RequestAPI(requestOptions)
 		if err != nil {
 			return err
