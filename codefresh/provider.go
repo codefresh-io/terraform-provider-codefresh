@@ -55,5 +55,5 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	if token == "" {
 		token = os.Getenv("CODEFRESH_API_KEY")
 	}
-	return cfClient.NewClient(apiURL, token), nil
+	return cfClient.NewClient(apiURL, token, ""), nil
 }

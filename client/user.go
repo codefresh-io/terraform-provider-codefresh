@@ -117,6 +117,45 @@ func (client *Client) AddPendingUser(user *NewUser) (*User, error) {
 	return &respUser, nil
 }
 
+// AddUserToTeamByAdmin - adds user to team with swich account
+func (client *Client) AddUserToTeamByAdmin(userID string, accountID string, team string) error {
+    // get first accountAdmin and its token
+	account, err := client.GetAccountByID(accountID)
+	if err != nil {
+		return err
+	}
+	if len(account.Admins) == 0 {
+		return fmt.Errorf("Error adding userID %s to Users team of account %s - account does not have any admin", userID, account.Name)
+	}
+
+	accountAdminUserID := account.Admins[0]
+	accountAdminToken, err := client.GetXAccessToken(accountAdminUserID, accountID)
+	if err != nil {
+	  return err
+	}
+	// new Client for accountAdmin 
+	accountAdminClient := NewClient(client.Host, accountAdminToken, "x-access-token")
+	usersTeam, err := accountAdminClient.GetTeamByName("users")
+	if err != nil {
+		return err
+	}
+	if usersTeam == nil {
+		fmt.Printf("cannot find users team for account %s", account.Name)
+		return nil
+	}
+
+	// return is user already assigned to the team
+	for _, teamUser := range usersTeam.Users {
+		if teamUser.ID == userID {
+			return nil
+		}
+	}
+
+	err = accountAdminClient.AddUserToTeam(usersTeam.ID, userID)
+ 
+	return err
+}
+
 func (client *Client) ActivateUser(userId string) (*User, error) {
 
 	opts := RequestOptions{

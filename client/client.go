@@ -12,6 +12,7 @@ import (
 // Client token, host, htpp.Client
 type Client struct {
 	Token  string
+	TokenHeader string
 	Host   string
 	Client *http.Client
 }
@@ -28,10 +29,14 @@ type RequestOptions struct {
 // NewClient returns a new client configured to communicate on a server with the
 // given hostname and to send an Authorization Header with the value of
 // token
-func NewClient(hostname string, token string) *Client {
+func NewClient(hostname string, token string, tokenHeader string) *Client {
+	if tokenHeader == "" {
+		tokenHeader = "Authorization"
+	}
 	return &Client{
 		Host:   hostname,
 		Token:  token,
+		TokenHeader: tokenHeader,
 		Client: &http.Client{},
 	}
 
@@ -48,7 +53,11 @@ func (client *Client) RequestAPI(opt *RequestOptions) ([]byte, error) {
 		return nil, err
 	}
 
-	request.Header.Set("Authorization", client.Token)
+	tokenHeader := client.TokenHeader
+	if tokenHeader == "" {
+	  tokenHeader = "Authorization"
+	}
+	request.Header.Set(tokenHeader, client.Token)	
 	request.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	resp, err := client.Client.Do(request)
