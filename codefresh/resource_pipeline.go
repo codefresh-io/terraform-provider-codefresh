@@ -27,11 +27,12 @@ func resourcePipeline() *schema.Resource {
 			},
 			"project_id": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
+
 			},
 			"revision": {
 				Type:     schema.TypeInt,
-				Optional: true,
+				Computed: true,
 			},
 			"tags": {
 				Type:     schema.TypeSet,

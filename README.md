@@ -22,10 +22,31 @@ go build -o terraform-provider-codefresh
 
 Compile or take from the [Releases](https://github.com/codefresh-contrib/terraform-provider-codefresh/releases) `terraform-provider-codefresh` binary and place it locally according the Terraform plugins [documentation](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins).
 
-For Linux OS it can be:
-
+### for terraform 0.12:
 - _~/.terraform.d/plugins/linux\_amd64_
 - _./terraform.d/plugins/linux\_amd64_. The relative path in your Terraform project.
+
+### for terraform 0.13 follow [required providers](https://www.terraform.io/docs/configuration/provider-requirements.html):
+```bash
+# OS  is linux|windows|darwin, ARCH is amd64|arm|x86
+PLUGIN_DIR=~/.terraform.d/plugins/codefresh.io/app/codefresh/0.1.0/<OS_ARCH>
+mkdir -p ${PLUGIN_DIR}
+cp terraform-provider-codefresh  ${PLUGIN_DIR}/
+```
+
+add [required_providers block](https://www.terraform.io/docs/configuration/provider-requirements.html#requiring-providers)
+```terraform
+terraform {
+
+  required_providers {
+    codefresh = {
+      versions = ["0.1.0"]
+      source = "codefresh.io/app/codefresh"
+    }
+  }  
+}
+```
+
 
 ## [Documentations](./docs)
 

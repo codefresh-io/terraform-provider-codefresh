@@ -32,6 +32,7 @@ func resourceApiKey() *schema.Resource {
 			"token": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Sensitive: true,
 			},
 			"scopes": {
 				Type:     schema.TypeSet,
