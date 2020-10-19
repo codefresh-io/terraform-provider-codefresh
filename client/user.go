@@ -135,7 +135,7 @@ func (client *Client) AddUserToTeamByAdmin(userID string, accountID string, team
 	}
 	// new Client for accountAdmin 
 	accountAdminClient := NewClient(client.Host, accountAdminToken, "x-access-token")
-	usersTeam, err := accountAdminClient.GetTeamByName("users")
+	usersTeam, err := accountAdminClient.GetTeamByName(team)
 	if err != nil {
 		return err
 	}
