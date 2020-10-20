@@ -136,6 +136,11 @@ func resourceUsersCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(resp.ID)
 
+	// Adding user to users teams
+	for _, accountID := range user.Account {
+		_ = client.AddUserToTeamByAdmin(resp.ID, accountID, "users")
+	}
+
 	if d.Get("activate").(bool) {
 		client.ActivateUser(d.Id())
 	}
@@ -186,6 +191,10 @@ func resourceUsersUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// Adding user to users teams
+	for _, account := range *accounts {
+		_ = client.AddUserToTeamByAdmin(userId, account.ID, "users")
+	}
 	return nil
 }
 
