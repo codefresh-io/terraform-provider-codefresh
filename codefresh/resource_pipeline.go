@@ -2,9 +2,10 @@ package codefresh
 
 import (
 	"fmt"
+	"strings"
+
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"strings"
 )
 
 func resourcePipeline() *schema.Resource {
@@ -28,7 +29,6 @@ func resourcePipeline() *schema.Resource {
 			"project_id": {
 				Type:     schema.TypeString,
 				Computed: true,
-
 			},
 			"revision": {
 				Type:     schema.TypeInt,
@@ -156,6 +156,13 @@ func resourcePipeline() *schema.Resource {
 										},
 									},
 								},
+							},
+						},
+						"contexts": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"runtime_environment": {
@@ -316,6 +323,8 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 
 	m["priority"] = spec.Priority
 
+	m["contexts"] = spec.Contexts
+
 	res = append(res, m)
 	return res
 }
@@ -406,6 +415,9 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			DindStorage: d.Get("spec.0.runtime_environment.0.dind_storage").(string),
 		}
 	}
+
+	contexts := d.Get("spec.0.contexts").([]interface{})
+	pipeline.Spec.Contexts = contexts
 
 	variables := d.Get("spec.0.variables").(map[string]interface{})
 	pipeline.SetVariables(variables)
