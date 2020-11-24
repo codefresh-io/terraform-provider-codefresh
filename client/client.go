@@ -11,10 +11,10 @@ import (
 
 // Client token, host, htpp.Client
 type Client struct {
-	Token  string
+	Token       string
 	TokenHeader string
-	Host   string
-	Client *http.Client
+	Host        string
+	Client      *http.Client
 }
 
 // RequestOptions  path, method, etc
@@ -34,10 +34,10 @@ func NewClient(hostname string, token string, tokenHeader string) *Client {
 		tokenHeader = "Authorization"
 	}
 	return &Client{
-		Host:   hostname,
-		Token:  token,
+		Host:        hostname,
+		Token:       token,
 		TokenHeader: tokenHeader,
-		Client: &http.Client{},
+		Client:      &http.Client{},
 	}
 
 }
@@ -55,9 +55,9 @@ func (client *Client) RequestAPI(opt *RequestOptions) ([]byte, error) {
 
 	tokenHeader := client.TokenHeader
 	if tokenHeader == "" {
-	  tokenHeader = "Authorization"
+		tokenHeader = "Authorization"
 	}
-	request.Header.Set(tokenHeader, client.Token)	
+	request.Header.Set(tokenHeader, client.Token)
 	request.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	resp, err := client.Client.Do(request)
