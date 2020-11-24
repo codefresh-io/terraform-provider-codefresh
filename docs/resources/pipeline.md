@@ -36,6 +36,11 @@ resource "codefresh_pipeline" "test" {
       context     = "git"
     }
 
+    contexts = [
+      "context1-name",
+      "context2-name",
+    ]
+
     trigger {
       branch_regex  = "/.*/gi"
       context       = "git"
@@ -94,6 +99,7 @@ resource "codefresh_pipeline" "test" {
 - `trigger` - (Optional) A collection of `trigger` blocks as documented below. Triggers [documentation](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/triggers/git-triggers/).
 - `spec_template` - (Optional) A collection of `spec_template` blocks as documented below.
 - `runtime_environment` - (Optional) A collection of `runtime_environment` blocks as documented below.
+- `contexts` - (Optional) A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be configured for the pipeline
 
 ---
 
