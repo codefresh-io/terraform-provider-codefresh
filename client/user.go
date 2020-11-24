@@ -245,7 +245,7 @@ func (client *Client) GetUserByID(userId string) (*User, error) {
 		}
 	}
 
-	return nil, errors.New(fmt.Sprint("[ERROR] User with ID %s wasn't found.", userId))
+	return nil, errors.New(fmt.Sprintf("[ERROR] User with ID %s wasn't found.", userId))
 }
 
 func (client *Client) DeleteUser(userName string) error {
