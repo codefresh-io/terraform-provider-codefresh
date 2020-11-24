@@ -2,12 +2,13 @@ package codefresh
 
 import (
 	"fmt"
+	"regexp"
+	"testing"
+
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"regexp"
-	"testing"
 )
 
 var pipelineNamePrefix = "TerraformAccTest_"
@@ -382,6 +383,36 @@ resource "codefresh_pipeline" "test" {
 `, rName, repo, path, revision, context, var1Name, var1Value, var2Name, var2Value)
 }
 
+func testAccCodefreshPipelineBasicConfigContexts(rName, repo, path, revision, context, sharedContext1, sharedContext2 string) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
+  name = "%s"
+
+  spec {
+	spec_template {
+    	repo        = %q
+    	path        = %q
+    	revision    = %q
+    	context     = %q
+	}
+	
+	contexts = [
+		%q,
+		%q
+	]
+
+  }
+}
+`, rName, repo, path, revision, context, sharedContext1, sharedContext2)
+}
+
 func testAccCodefreshPipelineBasicConfigTriggers(
 	rName,
 	repo,
@@ -516,4 +547,38 @@ resource "codefresh_pipeline" "test" {
 
 }
 `, rName, originalYamlString)
+}
+
+func TestAccCodefreshPipeline_Contexts(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineBasicConfigContexts(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "context1", "context2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.contexts.0", "context1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.contexts.1", "context2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodefreshPipelineBasicConfigContexts(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "context1_updated", "context2_updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.contexts.0", "context1_updated"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.contexts.1", "context2_updated"),
+				),
+			},
+		},
+	})
 }

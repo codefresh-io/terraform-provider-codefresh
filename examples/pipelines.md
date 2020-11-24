@@ -42,6 +42,11 @@ resource "codefresh_pipeline" "test" {
       context     = "git"
     }
 
+    contexts = [
+      "context1-name",
+      "context2-name",
+    ]
+
     trigger {
       branch_regex  = "/.*/gi"
       context       = "git"
