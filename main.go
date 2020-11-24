@@ -12,7 +12,7 @@ import (
 func main() {
 	debugMode := (os.Getenv("CODEFRESH_PLUGIN_DEBUG") != "")
 	// for terraform 0.13: export CODEFRESH_PLUGIN_ADDR="codefresh.io/app/codefresh"
-	providerAddr := os.Getenv("CODEFRESH_PLUGIN_ADDR")	
+	providerAddr := os.Getenv("CODEFRESH_PLUGIN_ADDR")
 	if providerAddr == "" {
 		providerAddr = "registry.terraform.io/-/codefresh"
 	}

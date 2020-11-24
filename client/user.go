@@ -119,7 +119,7 @@ func (client *Client) AddPendingUser(user *NewUser) (*User, error) {
 
 // AddUserToTeamByAdmin - adds user to team with swich account
 func (client *Client) AddUserToTeamByAdmin(userID string, accountID string, team string) error {
-    // get first accountAdmin and its token
+	// get first accountAdmin and its token
 	account, err := client.GetAccountByID(accountID)
 	if err != nil {
 		return err
@@ -131,9 +131,9 @@ func (client *Client) AddUserToTeamByAdmin(userID string, accountID string, team
 	accountAdminUserID := account.Admins[0]
 	accountAdminToken, err := client.GetXAccessToken(accountAdminUserID, accountID)
 	if err != nil {
-	  return err
+		return err
 	}
-	// new Client for accountAdmin 
+	// new Client for accountAdmin
 	accountAdminClient := NewClient(client.Host, accountAdminToken, "x-access-token")
 	usersTeam, err := accountAdminClient.GetTeamByName(team)
 	if err != nil {
@@ -152,7 +152,7 @@ func (client *Client) AddUserToTeamByAdmin(userID string, accountID string, team
 	}
 
 	err = accountAdminClient.AddUserToTeam(usersTeam.ID, userID)
- 
+
 	return err
 }
 
@@ -245,7 +245,7 @@ func (client *Client) GetUserByID(userId string) (*User, error) {
 		}
 	}
 
-	return nil, errors.New(fmt.Sprint("[ERROR] User with ID %s wasn't found.", userId))
+	return nil, errors.New(fmt.Sprintf("[ERROR] User with ID %s wasn't found.", userId))
 }
 
 func (client *Client) DeleteUser(userName string) error {

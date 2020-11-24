@@ -50,8 +50,8 @@ func TestAccCodefreshProject_Tags(t *testing.T) {
 				Config: testAccCodefreshProjectBasicConfigTags(name, "testTag1", "testTag2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshProjectExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.3247715412", "testTag2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.3938019223", "testTag1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.1", "testTag2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.0", "testTag1"),
 				),
 			},
 			{

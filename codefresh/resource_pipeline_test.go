@@ -53,8 +53,8 @@ func TestAccCodefreshPipeline_Tags(t *testing.T) {
 				Config: testAccCodefreshPipelineBasicConfigTags(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "testTag1", "testTag2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.3247715412", "testTag2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.3938019223", "testTag1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.1", "testTag2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.0", "testTag1"),
 				),
 			},
 			{
@@ -103,7 +103,7 @@ func TestAccCodefreshPipeline_Variables(t *testing.T) {
 func TestAccCodefreshPipeline_RuntimeEnvironment(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	runtimeName := "system/codefresh-inc-default"
+	runtimeName := "system/default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
