@@ -143,6 +143,11 @@ func resourcePipeline() *schema.Resource {
 										Optional: true,
 										Default:  false,
 									},
+									"pull_request_allow_fork_events": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 									"context": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -363,6 +368,7 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 		m["branch_regex"] = trigger.BranchRegex
 		m["modified_files_glob"] = trigger.ModifiedFilesGlob
 		m["disabled"] = trigger.Disabled
+		m["pull_request_allow_fork_events"] = trigger.PullRequestAllowForkEvents
 		m["provider"] = trigger.Provider
 		m["type"] = trigger.Type
 		m["events"] = trigger.Events
@@ -427,16 +433,17 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 		events := d.Get(fmt.Sprintf("spec.0.trigger.%v.events", idx)).([]interface{})
 
 		codefreshTrigger := cfClient.Trigger{
-			Name:              d.Get(fmt.Sprintf("spec.0.trigger.%v.name", idx)).(string),
-			Description:       d.Get(fmt.Sprintf("spec.0.trigger.%v.description", idx)).(string),
-			Type:              d.Get(fmt.Sprintf("spec.0.trigger.%v.type", idx)).(string),
-			Repo:              d.Get(fmt.Sprintf("spec.0.trigger.%v.repo", idx)).(string),
-			BranchRegex:       d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex", idx)).(string),
-			ModifiedFilesGlob: d.Get(fmt.Sprintf("spec.0.trigger.%v.modified_files_glob", idx)).(string),
-			Provider:          d.Get(fmt.Sprintf("spec.0.trigger.%v.provider", idx)).(string),
-			Disabled:          d.Get(fmt.Sprintf("spec.0.trigger.%v.disabled", idx)).(bool),
-			Context:           d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
-			Events:            convertStringArr(events),
+			Name:                       d.Get(fmt.Sprintf("spec.0.trigger.%v.name", idx)).(string),
+			Description:                d.Get(fmt.Sprintf("spec.0.trigger.%v.description", idx)).(string),
+			Type:                       d.Get(fmt.Sprintf("spec.0.trigger.%v.type", idx)).(string),
+			Repo:                       d.Get(fmt.Sprintf("spec.0.trigger.%v.repo", idx)).(string),
+			BranchRegex:                d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex", idx)).(string),
+			ModifiedFilesGlob:          d.Get(fmt.Sprintf("spec.0.trigger.%v.modified_files_glob", idx)).(string),
+			Provider:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.provider", idx)).(string),
+			Disabled:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.disabled", idx)).(bool),
+			PullRequestAllowForkEvents: d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_allow_fork_events", idx)).(bool),
+			Context:                    d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
+			Events:                     convertStringArr(events),
 		}
 		variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
 		codefreshTrigger.SetVariables(variables)

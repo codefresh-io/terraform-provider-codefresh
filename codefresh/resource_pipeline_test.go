@@ -441,14 +441,14 @@ resource "codefresh_pipeline" "test" {
   name = "%s"
 
   spec {
-	spec_template {
-		repo        = %q
-		path        = %q
-		revision    = %q
-		context     = %q
-	}
+        spec_template {
+            repo        = %q
+            path        = %q
+            revision    = %q
+            context     = %q
+        }
 
-	trigger {
+        trigger {
         name = %q
         branch_regex = "/.*/gi"
         context = %q
@@ -473,13 +473,14 @@ resource "codefresh_pipeline" "test" {
           %q
         ]
         modified_files_glob = ""
+        pull_request_allow_fork_events = true
         provider = "github"
         repo = %q
-		type = "git"
+        type = "git"
 
-		variables = {
-			%q = %q
-		}
+        variables = {
+            %q = %q
+        }
     }
   }
 }

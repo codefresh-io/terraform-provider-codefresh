@@ -35,17 +35,18 @@ type SpecTemplate struct {
 }
 
 type Trigger struct {
-	Name              string     `json:"name,omitempty"`
-	Description       string     `json:"description,omitempty"`
-	Type              string     `json:"type,omitempty"`
-	Repo              string     `json:"repo,omitempty"`
-	Events            []string   `json:"events,omitempty"`
-	BranchRegex       string     `json:"branchRegex,omitempty"`
-	ModifiedFilesGlob string     `json:"modifiedFilesGlob,omitempty"`
-	Provider          string     `json:"provider,omitempty"`
-	Disabled          bool       `json:"disabled,omitempty"`
-	Context           string     `json:"context,omitempty"`
-	Variables         []Variable `json:"variables,omitempty"`
+	Name                       string     `json:"name,omitempty"`
+	Description                string     `json:"description,omitempty"`
+	Type                       string     `json:"type,omitempty"`
+	Repo                       string     `json:"repo,omitempty"`
+	Events                     []string   `json:"events,omitempty"`
+	BranchRegex                string     `json:"branchRegex,omitempty"`
+	ModifiedFilesGlob          string     `json:"modifiedFilesGlob,omitempty"`
+	Provider                   string     `json:"provider,omitempty"`
+	Disabled                   bool       `json:"disabled,omitempty"`
+	PullRequestAllowForkEvents bool       `json:"pullRequestAllowForkEvents,omitempty"`
+	Context                    string     `json:"context,omitempty"`
+	Variables                  []Variable `json:"variables,omitempty"`
 }
 
 type RuntimeEnvironment struct {

@@ -125,6 +125,8 @@ resource "codefresh_pipeline" "test" {
 - `provider` - (Optional) Default value - **github**.
 - `context` - (Optional) Codefresh Git context.
 - `variables` - (Optional) Trigger variables.
+- `disabled` - (Optional) Boolean. If false, trigger will never be activated.
+- `pull_request_allow_fork_events` - (Optional) Boolean. If this trigger is also applicable to Git forks.
 
 ---
 
