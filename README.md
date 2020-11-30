@@ -1,6 +1,6 @@
 # Terraform provider for Codefresh
 
-This provider was initialized by [LightStep](https://lightstep.com/) and will be maintained as the official Terraform provider for Codefresh.  
+This provider was initialized by [LightStep](https://lightstep.com/) and will be maintained as the official Terraform provider for Codefresh.
 
 The provider is still under development, and can be used as a terraform [third-party plugin](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) only.
 
@@ -18,7 +18,7 @@ Download and extract terraform-provider-codefresh from [releases](https://github
 go build -o terraform-provider-codefresh
 ```
 
-## Using the Provicer
+## Using the Provider
 
 Compile or take from the [Releases](https://github.com/codefresh-contrib/terraform-provider-codefresh/releases) `terraform-provider-codefresh` binary and place it locally according the Terraform plugins [documentation](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins).
 
@@ -43,7 +43,7 @@ terraform {
       versions = ["0.1.0"]
       source = "codefresh.io/app/codefresh"
     }
-  }  
+  }
 }
 ```
 
@@ -52,7 +52,7 @@ terraform {
 
 ## [Examples](./examples)
 
-## To configure codefresh provider:
+## To configure Codefresh provider:
 
 ```hcl
 provider "codefresh" {
