@@ -5,8 +5,15 @@ import (
 	"strings"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+// A OriginalYamlStringAttributesForSpec used to map pipeline attributes to the Spec
+type OriginalYamlStringAttributesForSpec struct {
+	Steps  map[string]interface{} `yaml:"steps"`
+	Stages []interface{}          `yaml:"stages"`
+}
 
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
@@ -383,6 +390,11 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 
 	tags := d.Get("tags").(*schema.Set).List()
 
+	originalYamlString := strings.Replace(
+		d.Get("original_yaml_string").(string),
+		"\n",
+		"\n",
+		-1)
 	pipeline := &cfClient.Pipeline{
 		Metadata: cfClient.Metadata{
 			Name:      d.Get("name").(string),
@@ -391,17 +403,18 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			Labels: cfClient.Labels{
 				Tags: convertStringArr(tags),
 			},
-			OriginalYamlString: strings.Replace(
-				d.Get("original_yaml_string").(string),
-				"\n",
-				"\n",
-				-1),
+			OriginalYamlString: originalYamlString,
 		},
 		Spec: cfClient.Spec{
 			Priority:    d.Get("spec.0.priority").(int),
 			Concurrency: d.Get("spec.0.concurrency").(int),
 		},
 	}
+
+	var unmarshalledOriginalYamlString OriginalYamlStringAttributesForSpec
+	yaml.Unmarshal([]byte(originalYamlString), &unmarshalledOriginalYamlString)
+	pipeline.Spec.Steps = unmarshalledOriginalYamlString.Steps
+	pipeline.Spec.Stages = unmarshalledOriginalYamlString.Stages
 
 	if _, ok := d.GetOk("spec.0.spec_template"); ok {
 		pipeline.Spec.SpecTemplate = &cfClient.SpecTemplate{
