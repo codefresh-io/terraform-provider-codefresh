@@ -11,6 +11,7 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.0-rc.2.0.20200717132200-7435e2abc9d1
 	github.com/imdario/mergo v0.3.9
 	github.com/stretchr/objx v0.1.1
+	github.com/stretchr/testify v1.6.1 // indirect
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 )

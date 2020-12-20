@@ -3,6 +3,7 @@ package codefresh
 import (
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	//"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"os"
 )
@@ -32,10 +33,12 @@ func Provider() *schema.Provider {
 			"codefresh_account":         dataSourceAccount(),
 			"codefresh_team":            dataSourceTeam(),
 			"codefresh_current_account": dataSourceCurrentAccount(),
+			"codefresh_context":         dataSourceContext(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"codefresh_project":        resourceProject(),
 			"codefresh_pipeline":       resourcePipeline(),
+			"codefresh_context":        resourceContext(),
 			"codefresh_team":           resourceTeam(),
 			"codefresh_account":        resourceAccount(),
 			"codefresh_api_key":        resourceApiKey(),
