@@ -26,7 +26,10 @@ resource "codefresh_pipeline" "test" {
   ]
 
   spec {
-    concurrency = 1
+    concurrency         = 1
+    branch_concurrency  = 1
+    trigger_concurrency = 1
+
     priority    = 5
 
     spec_template {
@@ -65,6 +68,7 @@ resource "codefresh_pipeline" "test" {
         "push.tags"
       ]
       modified_files_glob = ""
+      commit_status_title = "tags-trigger"
       name                = "tags"
       provider            = "github"
       repo                = "codefresh-contrib/react-sample-app"
@@ -94,6 +98,8 @@ resource "codefresh_pipeline" "test" {
 `spec` supports the following:
 
 - `concurrency` - (Optional) The maximum amount of concurrent builds.
+- `branch_concurrency` - (Optional) The maximum amount of concurrent builds that may run for each branch
+- `trigger_concurrency` - (Optional) The maximum amount of concurrent builds that may run for each trigger.
 - `priority` - (optional) Helps to organize the order of builds execution in case of reaching the concurrency limit.
 - `variables` - (Optional) Pipeline variables.
 - `trigger` - (Optional) A collection of `trigger` blocks as documented below. Triggers [documentation](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/triggers/git-triggers/).
@@ -124,6 +130,7 @@ resource "codefresh_pipeline" "test" {
 - `events` - (Optional) A list of GitHub events for which a Pipeline is triggered. Default value - **push.heads**.
 - `provider` - (Optional) Default value - **github**.
 - `context` - (Optional) Codefresh Git context.
+- `commit_status_title` - (Optional) The commit status title pushed to the GIT version control system.
 - `variables` - (Optional) Trigger variables.
 - `disabled` - (Optional) Boolean. If false, trigger will never be activated.
 - `pull_request_allow_fork_events` - (Optional) Boolean. If this trigger is also applicable to Git forks.

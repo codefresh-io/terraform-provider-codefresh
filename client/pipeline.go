@@ -45,6 +45,7 @@ type Trigger struct {
 	Provider                   string     `json:"provider,omitempty"`
 	Disabled                   bool       `json:"disabled,omitempty"`
 	PullRequestAllowForkEvents bool       `json:"pullRequestAllowForkEvents,omitempty"`
+	CommitStatusTitle          string     `json:"commitStatusTitle,omitempty"`
 	Context                    string     `json:"context,omitempty"`
 	Variables                  []Variable `json:"variables,omitempty"`
 }

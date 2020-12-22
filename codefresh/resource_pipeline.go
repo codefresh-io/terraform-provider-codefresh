@@ -60,6 +60,16 @@ func resourcePipeline() *schema.Resource {
 							Optional: true,
 							Default:  0, // zero is unlimited
 						},
+						"branch_concurrency": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0, // zero is unlimited
+						},
+						"trigger_concurrency": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0, // zero is unlimited
+						},
 						"spec_template": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -150,6 +160,10 @@ func resourcePipeline() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  false,
+									},
+									"commit_status_title": {
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"context": {
 										Type:     schema.TypeString,
@@ -328,6 +342,8 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 	}
 
 	m["concurrency"] = spec.Concurrency
+	m["branch_concurrency"] = spec.BranchConcurrency
+	m["trigger_concurrency"] = spec.TriggerConcurrency
 
 	m["priority"] = spec.Priority
 
@@ -372,6 +388,7 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 		m["modified_files_glob"] = trigger.ModifiedFilesGlob
 		m["disabled"] = trigger.Disabled
 		m["pull_request_allow_fork_events"] = trigger.PullRequestAllowForkEvents
+		m["commit_status_title"] = trigger.CommitStatusTitle
 		m["provider"] = trigger.Provider
 		m["type"] = trigger.Type
 		m["events"] = trigger.Events
@@ -402,8 +419,10 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			OriginalYamlString: originalYamlString,
 		},
 		Spec: cfClient.Spec{
-			Priority:    d.Get("spec.0.priority").(int),
-			Concurrency: d.Get("spec.0.concurrency").(int),
+			Priority:           d.Get("spec.0.priority").(int),
+			Concurrency:        d.Get("spec.0.concurrency").(int),
+			BranchConcurrency:  d.Get("spec.0.branch_concurrency").(int),
+			TriggerConcurrency: d.Get("spec.0.trigger_concurrency").(int),
 		},
 	}
 
@@ -454,6 +473,7 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			Provider:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.provider", idx)).(string),
 			Disabled:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.disabled", idx)).(bool),
 			PullRequestAllowForkEvents: d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_allow_fork_events", idx)).(bool),
+			CommitStatusTitle:          d.Get(fmt.Sprintf("spec.0.trigger.%v.commit_status_title", idx)).(string),
 			Context:                    d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
 			Events:                     convertStringArr(events),
 		}
