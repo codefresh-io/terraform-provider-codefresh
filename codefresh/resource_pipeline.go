@@ -170,6 +170,13 @@ func resourcePipeline() *schema.Resource {
 										Optional: true,
 										Default:  "github",
 									},
+									"contexts": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
 									"variables": {
 										Type:     schema.TypeMap,
 										Optional: true,
@@ -383,6 +390,7 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 		m["name"] = trigger.Name
 		m["description"] = trigger.Description
 		m["context"] = trigger.Context
+		m["contexts"] = trigger.Contexts
 		m["repo"] = trigger.Repo
 		m["branch_regex"] = trigger.BranchRegex
 		m["modified_files_glob"] = trigger.ModifiedFilesGlob
@@ -462,7 +470,7 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 	triggers := d.Get("spec.0.trigger").([]interface{})
 	for idx := range triggers {
 		events := d.Get(fmt.Sprintf("spec.0.trigger.%v.events", idx)).([]interface{})
-
+		contexts := d.Get(fmt.Sprintf("spec.0.trigger.%v.contexts", idx)).([]interface{})
 		codefreshTrigger := cfClient.Trigger{
 			Name:                       d.Get(fmt.Sprintf("spec.0.trigger.%v.name", idx)).(string),
 			Description:                d.Get(fmt.Sprintf("spec.0.trigger.%v.description", idx)).(string),
@@ -475,6 +483,7 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			PullRequestAllowForkEvents: d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_allow_fork_events", idx)).(bool),
 			CommitStatusTitle:          d.Get(fmt.Sprintf("spec.0.trigger.%v.commit_status_title", idx)).(string),
 			Context:                    d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
+			Contexts:                   convertStringArr(contexts),
 			Events:                     convertStringArr(events),
 		}
 		variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})

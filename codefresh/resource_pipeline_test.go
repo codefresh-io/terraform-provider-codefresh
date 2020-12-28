@@ -207,10 +207,12 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					"git",
 					"commits",
 					"git",
+					"shared_context1",
 					"push.heads",
 					"codefresh-contrib/react-sample-app",
 					"tags",
 					"git",
+					"shared_context2",
 					"push.tags",
 					"codefresh-contrib/react-sample-app",
 					"triggerTestVar",
@@ -222,6 +224,7 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.name", "commits"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.name", "tags"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.contexts.0", "shared_context2"),
 				),
 			},
 			{
@@ -238,10 +241,12 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					"git",
 					"commits",
 					"git",
+					"shared_context1_update",
 					"push.heads",
 					"codefresh-contrib/react-sample-app",
 					"tags",
 					"git",
+					"shared_context2_update",
 					"push.tags",
 					"codefresh-contrib/react-sample-app",
 					"triggerTestVar",
@@ -251,6 +256,7 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.variables.triggerTestVar", "triggerTestValue"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.contexts.0", "shared_context2_update"),
 				),
 			},
 		},
@@ -488,10 +494,12 @@ func testAccCodefreshPipelineBasicConfigTriggers(
 	context,
 	trigger1Name,
 	trigger1Context,
+	trigger1Contexts,
 	trigger1Event,
 	trigger1Repo,
 	trigger2Name,
 	trigger2Context,
+	trigger2Contexts,
 	trigger2Event,
 	trigger2Repo,
 	trigger2VarName,
@@ -519,7 +527,10 @@ resource "codefresh_pipeline" "test" {
         trigger {
         name = %q
         branch_regex = "/.*/gi"
-        context = %q
+		context = %q
+		contexts = [
+			%q
+		]
         description = ""
         disabled = false
         events = [
@@ -534,7 +545,10 @@ resource "codefresh_pipeline" "test" {
     trigger {
         name = %q
         branch_regex = "/.*/gi"
-        context = %q
+		context = %q
+		contexts = [
+			%q
+		]
         description = ""
         disabled = false
         events = [
@@ -562,10 +576,12 @@ resource "codefresh_pipeline" "test" {
 		context,
 		trigger1Name,
 		trigger1Context,
+		trigger1Contexts,
 		trigger1Event,
 		trigger1Repo,
 		trigger2Name,
 		trigger2Context,
+		trigger2Contexts,
 		trigger2Event,
 		trigger2Repo,
 		trigger2VarName,
