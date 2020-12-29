@@ -126,6 +126,9 @@ resource "codefresh_pipeline" "test" {
 - `type` - (Optional) The trigger type. Default value - **git**.
 - `repo` - (Optional) The GitHub `account/repo_name`.
 - `branch_regex` - (Optional) A regular expression and will only trigger for branches that match this naming pattern.
+- `branch_regex_input` - (Optional) Flag to manage how the `branch_regex` field is interpreted. Possible values: "multiselect-exclude", "multiselect", "regex". Default: "regex"
+- `pull_request_target_branch_regex` - (Optional) A regular expression and will only trigger for pull requests to branches that match this naming pattern.
+- `comment_regex` - (Optional) A regular expression and will only trigger for pull requests where a comment matches this naming pattern.
 - `modified_files_glob` - (Optional) Allows to constrain the build and trigger it only if the modified files from the commit match this glob expression.
 - `events` - (Optional) A list of GitHub events for which a Pipeline is triggered. Default value - **push.heads**.
 - `provider` - (Optional) Default value - **github**.
@@ -135,6 +138,7 @@ resource "codefresh_pipeline" "test" {
 - `disabled` - (Optional) Boolean. If false, trigger will never be activated.
 - `pull_request_allow_fork_events` - (Optional) Boolean. If this trigger is also applicable to Git forks.
 - `contexts` - (Optional) A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be loaded when the trigger is executed
+- `runtime_environment` - (Optional) A collection of `runtime_environment` blocks as documented below.
 ---
 
 `runtime_environment` supports the following:

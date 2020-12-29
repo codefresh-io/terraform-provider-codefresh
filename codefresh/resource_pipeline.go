@@ -8,6 +8,7 @@ import (
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	ghodss "github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"gopkg.in/yaml.v2"
 )
 
@@ -130,9 +131,27 @@ func resourcePipeline() *schema.Resource {
 										Optional: true,
 									},
 									"branch_regex": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/.*/gi",
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "/.*/gi",
+										ValidateFunc: validation.StringIsValidRegExp,
+									},
+									"branch_regex_input": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "regex",
+										ValidateFunc: validation.StringInSlice([]string{"multiselect-exclude", "multiselect", "regex"}, false),
+									},
+									"pull_request_target_branch_regex": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringIsValidRegExp,
+									},
+									"comment_regex": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "/.*/gi",
+										ValidateFunc: validation.StringIsValidRegExp,
 									},
 									"modified_files_glob": {
 										Type:     schema.TypeString,
@@ -175,6 +194,30 @@ func resourcePipeline() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
+										},
+									},
+									"runtime_environment": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"memory": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"cpu": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"dind_storage": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
 										},
 									},
 									"variables": {
@@ -393,6 +436,9 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 		m["contexts"] = trigger.Contexts
 		m["repo"] = trigger.Repo
 		m["branch_regex"] = trigger.BranchRegex
+		m["branch_regex_input"] = trigger.BranchRegexInput
+		m["pull_request_target_branch_regex"] = trigger.PullRequestTargetBranchRegex
+		m["comment_regex"] = trigger.CommentRegex
 		m["modified_files_glob"] = trigger.ModifiedFilesGlob
 		m["disabled"] = trigger.Disabled
 		m["pull_request_allow_fork_events"] = trigger.PullRequestAllowForkEvents
@@ -401,7 +447,9 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 		m["type"] = trigger.Type
 		m["events"] = trigger.Events
 		m["variables"] = convertVariables(trigger.Variables)
-
+		if trigger.RuntimeEnvironment != (cfClient.RuntimeEnvironment{}) {
+			m["runtime_environment"] = flattenSpecRuntimeEnvironment(trigger.RuntimeEnvironment)
+		}
 		res[i] = m
 	}
 	return res
@@ -472,23 +520,34 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 		events := d.Get(fmt.Sprintf("spec.0.trigger.%v.events", idx)).([]interface{})
 		contexts := d.Get(fmt.Sprintf("spec.0.trigger.%v.contexts", idx)).([]interface{})
 		codefreshTrigger := cfClient.Trigger{
-			Name:                       d.Get(fmt.Sprintf("spec.0.trigger.%v.name", idx)).(string),
-			Description:                d.Get(fmt.Sprintf("spec.0.trigger.%v.description", idx)).(string),
-			Type:                       d.Get(fmt.Sprintf("spec.0.trigger.%v.type", idx)).(string),
-			Repo:                       d.Get(fmt.Sprintf("spec.0.trigger.%v.repo", idx)).(string),
-			BranchRegex:                d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex", idx)).(string),
-			ModifiedFilesGlob:          d.Get(fmt.Sprintf("spec.0.trigger.%v.modified_files_glob", idx)).(string),
-			Provider:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.provider", idx)).(string),
-			Disabled:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.disabled", idx)).(bool),
-			PullRequestAllowForkEvents: d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_allow_fork_events", idx)).(bool),
-			CommitStatusTitle:          d.Get(fmt.Sprintf("spec.0.trigger.%v.commit_status_title", idx)).(string),
-			Context:                    d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
-			Contexts:                   convertStringArr(contexts),
-			Events:                     convertStringArr(events),
+			Name:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.name", idx)).(string),
+			Description:                  d.Get(fmt.Sprintf("spec.0.trigger.%v.description", idx)).(string),
+			Type:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.type", idx)).(string),
+			Repo:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.repo", idx)).(string),
+			BranchRegex:                  d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex", idx)).(string),
+			BranchRegexInput:             d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex_input", idx)).(string),
+			PullRequestTargetBranchRegex: d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_target_branch_regex", idx)).(string),
+			CommentRegex:                 d.Get(fmt.Sprintf("spec.0.trigger.%v.comment_regex", idx)).(string),
+			ModifiedFilesGlob:            d.Get(fmt.Sprintf("spec.0.trigger.%v.modified_files_glob", idx)).(string),
+			Provider:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.provider", idx)).(string),
+			Disabled:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.disabled", idx)).(bool),
+			PullRequestAllowForkEvents:   d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_allow_fork_events", idx)).(bool),
+			CommitStatusTitle:            d.Get(fmt.Sprintf("spec.0.trigger.%v.commit_status_title", idx)).(string),
+			Context:                      d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
+			Contexts:                     convertStringArr(contexts),
+			Events:                       convertStringArr(events),
 		}
 		variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
 		codefreshTrigger.SetVariables(variables)
-
+		if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.runtime_environment", idx)); ok {
+			triggerRuntime := cfClient.RuntimeEnvironment{
+				Name:        d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.name", idx)).(string),
+				Memory:      d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.memory", idx)).(string),
+				CPU:         d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.cpu", idx)).(string),
+				DindStorage: d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.dind_storage", idx)).(string),
+			}
+			codefreshTrigger.RuntimeEnvironment = triggerRuntime
+		}
 		pipeline.Spec.Triggers = append(pipeline.Spec.Triggers, codefreshTrigger)
 	}
 	return pipeline

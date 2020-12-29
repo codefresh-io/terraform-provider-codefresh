@@ -206,8 +206,12 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					"master",
 					"git",
 					"commits",
-					"git",
+					"/master/gi",
+					"multiselect",
+					"/master/gi",
+					"/PR comment/gi",
 					"shared_context1",
+					"git",
 					"push.heads",
 					"codefresh-contrib/react-sample-app",
 					"tags",
@@ -222,6 +226,10 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.branch_regex", "/master/gi"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.branch_regex_input", "multiselect"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.pull_request_target_branch_regex", "/master/gi"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.comment_regex", "/PR comment/gi"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.name", "commits"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.name", "tags"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.contexts.0", "shared_context2"),
@@ -240,8 +248,12 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					"master",
 					"git",
 					"commits",
-					"git",
+					"/release/gi",
+					"multiselect-exclude",
+					"/release/gi",
+					"/PR comment2/gi",
 					"shared_context1_update",
+					"git",
 					"push.heads",
 					"codefresh-contrib/react-sample-app",
 					"tags",
@@ -255,6 +267,10 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.branch_regex", "/release/gi"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.branch_regex_input", "multiselect-exclude"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.pull_request_target_branch_regex", "/release/gi"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.comment_regex", "/PR comment2/gi"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.variables.triggerTestVar", "triggerTestValue"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.contexts.0", "shared_context2_update"),
 				),
@@ -493,6 +509,10 @@ func testAccCodefreshPipelineBasicConfigTriggers(
 	revision,
 	context,
 	trigger1Name,
+	trigger1Regex,
+	trigger1RegexInput,
+	trigger1PrTargetBranchRegex,
+	trigger1CommentRegex,
 	trigger1Context,
 	trigger1Contexts,
 	trigger1Event,
@@ -517,16 +537,20 @@ resource "codefresh_pipeline" "test" {
   name = "%s"
 
   spec {
-        spec_template {
-            repo        = %q
-            path        = %q
-            revision    = %q
-            context     = %q
-        }
+	spec_template {
+		repo        = %q
+		path        = %q
+		revision    = %q
+		context     = %q
+	}
 
-        trigger {
+    trigger {
         name = %q
-        branch_regex = "/.*/gi"
+		branch_regex = %q
+		branch_regex_input = %q
+		pull_request_target_branch_regex = %q
+		comment_regex = %q
+		
 		context = %q
 		contexts = [
 			%q
@@ -575,6 +599,10 @@ resource "codefresh_pipeline" "test" {
 		revision,
 		context,
 		trigger1Name,
+		trigger1Regex,
+		trigger1RegexInput,
+		trigger1PrTargetBranchRegex,
+		trigger1CommentRegex,
 		trigger1Context,
 		trigger1Contexts,
 		trigger1Event,
