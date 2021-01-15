@@ -447,8 +447,8 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 		m["type"] = trigger.Type
 		m["events"] = trigger.Events
 		m["variables"] = convertVariables(trigger.Variables)
-		if trigger.RuntimeEnvironment != (cfClient.RuntimeEnvironment{}) {
-			m["runtime_environment"] = flattenSpecRuntimeEnvironment(trigger.RuntimeEnvironment)
+		if trigger.RuntimeEnvironment != nil {
+			m["runtime_environment"] = flattenSpecRuntimeEnvironment(*trigger.RuntimeEnvironment)
 		}
 		res[i] = m
 	}
@@ -546,7 +546,7 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 				CPU:         d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.cpu", idx)).(string),
 				DindStorage: d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.dind_storage", idx)).(string),
 			}
-			codefreshTrigger.RuntimeEnvironment = triggerRuntime
+			codefreshTrigger.RuntimeEnvironment = &triggerRuntime
 		}
 		pipeline.Spec.Triggers = append(pipeline.Spec.Triggers, codefreshTrigger)
 	}

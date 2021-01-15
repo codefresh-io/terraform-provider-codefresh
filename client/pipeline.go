@@ -35,24 +35,24 @@ type SpecTemplate struct {
 }
 
 type Trigger struct {
-	Name                         string             `json:"name,omitempty"`
-	Description                  string             `json:"description,omitempty"`
-	Type                         string             `json:"type,omitempty"`
-	Repo                         string             `json:"repo,omitempty"`
-	Events                       []string           `json:"events,omitempty"`
-	BranchRegex                  string             `json:"branchRegex,omitempty"`
-	BranchRegexInput             string             `json:"branchRegexInput,omitempty"`
-	PullRequestTargetBranchRegex string             `json:"pullRequestTargetBranchRegex,omitempty"`
-	CommentRegex                 string             `json:"commentRegex,omitempty"`
-	ModifiedFilesGlob            string             `json:"modifiedFilesGlob,omitempty"`
-	Provider                     string             `json:"provider,omitempty"`
-	Disabled                     bool               `json:"disabled,omitempty"`
-	PullRequestAllowForkEvents   bool               `json:"pullRequestAllowForkEvents,omitempty"`
-	CommitStatusTitle            string             `json:"commitStatusTitle,omitempty"`
-	Context                      string             `json:"context,omitempty"`
-	Contexts                     []string           `json:"contexts,omitempty"`
-	RuntimeEnvironment           RuntimeEnvironment `json:"runtimeEnvironment,omitempty"`
-	Variables                    []Variable         `json:"variables,omitempty"`
+	Name                         string              `json:"name,omitempty"`
+	Description                  string              `json:"description,omitempty"`
+	Type                         string              `json:"type,omitempty"`
+	Repo                         string              `json:"repo,omitempty"`
+	Events                       []string            `json:"events,omitempty"`
+	BranchRegex                  string              `json:"branchRegex,omitempty"`
+	BranchRegexInput             string              `json:"branchRegexInput,omitempty"`
+	PullRequestTargetBranchRegex string              `json:"pullRequestTargetBranchRegex,omitempty"`
+	CommentRegex                 string              `json:"commentRegex,omitempty"`
+	ModifiedFilesGlob            string              `json:"modifiedFilesGlob,omitempty"`
+	Provider                     string              `json:"provider,omitempty"`
+	Disabled                     bool                `json:"disabled,omitempty"`
+	PullRequestAllowForkEvents   bool                `json:"pullRequestAllowForkEvents,omitempty"`
+	CommitStatusTitle            string              `json:"commitStatusTitle,omitempty"`
+	Context                      string              `json:"context,omitempty"`
+	Contexts                     []string            `json:"contexts,omitempty"`
+	RuntimeEnvironment           *RuntimeEnvironment `json:"runtimeEnvironment,omitempty"`
+	Variables                    []Variable          `json:"variables,omitempty"`
 }
 
 type RuntimeEnvironment struct {
