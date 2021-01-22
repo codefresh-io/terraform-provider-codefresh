@@ -63,16 +63,43 @@ func (t *Trigger) SetVariables(variables map[string]interface{}) {
 }
 
 type Spec struct {
-	Variables          []Variable             `json:"variables,omitempty"`
-	SpecTemplate       *SpecTemplate          `json:"specTemplate,omitempty"`
-	Triggers           []Trigger              `json:"triggers,omitempty"`
-	Priority           int                    `json:"priority,omitempty"`
-	Concurrency        int                    `json:"concurrency,omitempty"`
-	Contexts           []interface{}          `json:"contexts,omitempty"`
-	Steps              map[string]interface{} `json:"steps,omitempty"`
-	Stages             []interface{}          `json:"stages,omitempty"`
-	Mode               string                 `json:"mode,omitempty"`
-	RuntimeEnvironment RuntimeEnvironment     `json:"runtimeEnvironment,omitempty"`
+	Variables          []Variable         `json:"variables,omitempty"`
+	SpecTemplate       *SpecTemplate      `json:"specTemplate,omitempty"`
+	Triggers           []Trigger          `json:"triggers,omitempty"`
+	Priority           int                `json:"priority,omitempty"`
+	Concurrency        int                `json:"concurrency,omitempty"`
+	BranchConcurrency  int                `json:"branchConcurrency,omitempty"`
+	TriggerConcurrency int                `json:"triggerConcurrency,omitempty"`
+	Contexts           []interface{}      `json:"contexts,omitempty"`
+	Steps              *Steps             `json:"steps,omitempty"`
+	Stages             *Stages            `json:"stages,omitempty"`
+	Mode               string             `json:"mode,omitempty"`
+	RuntimeEnvironment RuntimeEnvironment `json:"runtimeEnvironment,omitempty"`
+}
+
+type Steps struct {
+	Steps string
+}
+type Stages struct {
+	Stages string
+}
+
+func (d Steps) MarshalJSON() ([]byte, error) {
+	bytes := []byte(d.Steps)
+	return bytes, nil
+}
+func (d Stages) MarshalJSON() ([]byte, error) {
+	bytes := []byte(d.Stages)
+	return bytes, nil
+}
+
+func (d Steps) UnmarshalJSON(data []byte) error {
+	d.Steps = string(data)
+	return nil
+}
+func (d Stages) UnmarshalJSON(data []byte) error {
+	d.Stages = string(data)
+	return nil
 }
 
 type Pipeline struct {

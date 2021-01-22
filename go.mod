@@ -12,6 +12,7 @@ require (
 	github.com/imdario/mergo v0.3.9
 	github.com/stretchr/objx v0.1.1
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
+	gopkg.in/yaml.v2 v2.2.8
 )
 
 go 1.13

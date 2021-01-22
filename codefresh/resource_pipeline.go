@@ -2,18 +2,14 @@ package codefresh
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
-	"github.com/ghodss/yaml"
+	ghodss "github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"gopkg.in/yaml.v2"
 )
-
-// A OriginalYamlStringAttributesForSpec used to map pipeline attributes to the Spec
-type OriginalYamlStringAttributesForSpec struct {
-	Steps  map[string]interface{} `yaml:"steps"`
-	Stages []interface{}          `yaml:"stages"`
-}
 
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
@@ -411,11 +407,6 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 		},
 	}
 
-	var unmarshalledOriginalYamlString OriginalYamlStringAttributesForSpec
-	yaml.Unmarshal([]byte(originalYamlString), &unmarshalledOriginalYamlString)
-	pipeline.Spec.Steps = unmarshalledOriginalYamlString.Steps
-	pipeline.Spec.Stages = unmarshalledOriginalYamlString.Stages
-
 	if _, ok := d.GetOk("spec.0.spec_template"); ok {
 		pipeline.Spec.SpecTemplate = &cfClient.SpecTemplate{
 			Location: d.Get("spec.0.spec_template.0.location").(string),
@@ -423,6 +414,14 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			Path:     d.Get("spec.0.spec_template.0.path").(string),
 			Revision: d.Get("spec.0.spec_template.0.revision").(string),
 			Context:  d.Get("spec.0.spec_template.0.context").(string),
+		}
+	} else {
+		stages, steps := extractStagesAndSteps(originalYamlString)
+		pipeline.Spec.Steps = &cfClient.Steps{
+			Steps: steps,
+		}
+		pipeline.Spec.Stages = &cfClient.Stages{
+			Stages: stages,
 		}
 	}
 
@@ -464,4 +463,52 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 		pipeline.Spec.Triggers = append(pipeline.Spec.Triggers, codefreshTrigger)
 	}
 	return pipeline
+}
+
+// extractStagesAndSteps extracts the steps and stages from the original yaml string to enable propagation in the `Spec` attribute of the pipeline
+// We cannot leverage on the standard marshal/unmarshal because the steps attribute needs to maintain the order of elements
+// while by default the standard function doesn't do it because in JSON maps are unordered
+func extractStagesAndSteps(originalYamlString string) (stages, steps string) {
+	// Use mapSlice to preserve order of items from the YAML string
+	m := yaml.MapSlice{}
+	err := yaml.Unmarshal([]byte(originalYamlString), &m)
+	if err != nil {
+		log.Fatal("Unable to unmarshall original_yaml_string")
+	}
+
+	stages = "[]"
+	// Dynamically build JSON object for steps using String builder
+	stepsBuilder := strings.Builder{}
+	stepsBuilder.WriteString("{")
+	// Parse elements of the YAML string to extract Steps and Stages if defined
+	for _, item := range m {
+		if item.Key == "steps" {
+			switch x := item.Value.(type) {
+			default:
+				log.Fatalf("unsupported value type: %T", item.Value)
+
+			case yaml.MapSlice:
+				numberOfSteps := len(x)
+				for index, item := range x {
+					// We only need to preserve order at the first level to guarantee order of the steps, hence the child nodes can be marshalled
+					// with the standard library
+					y, _ := yaml.Marshal(item.Value)
+					j2, _ := ghodss.YAMLToJSON(y)
+					stepsBuilder.WriteString("\"" + item.Key.(string) + "\" : " + string(j2))
+					if index < numberOfSteps-1 {
+						stepsBuilder.WriteString(",")
+					}
+				}
+			}
+		}
+		if item.Key == "stages" {
+			// For Stages we don't have ordering issue because it's a list
+			y, _ := yaml.Marshal(item.Value)
+			j2, _ := ghodss.YAMLToJSON(y)
+			stages = string(j2)
+		}
+	}
+	stepsBuilder.WriteString("}")
+	steps = stepsBuilder.String()
+	return
 }
