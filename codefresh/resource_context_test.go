@@ -13,6 +13,33 @@ import (
 
 var contextNamePrefix = "TerraformAccTest_"
 
+func TestAccCodefreshContextConfigWithCharactersToBeEscaped(t *testing.T) {
+	name := contextNamePrefix + "cf ctx/test +?#@ special" + acctest.RandString(10)
+	resourceName := "codefresh_context.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshContextDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshContextConfig(name, "config1", "value1", "config2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshContextExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.config.0.data.config1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.config.0.data.config2", "value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCodefreshContextConfig(t *testing.T) {
 	name := contextNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_context.test"

@@ -32,7 +32,7 @@ func (context *Context) GetID() string {
 }
 
 func (client *Client) GetContext(name string) (*Context, error) {
-	fullPath := fmt.Sprintf("/contexts/%s?decrypt=true", url.QueryEscape(name))
+	fullPath := fmt.Sprintf("/contexts/%s?decrypt=true", url.PathEscape(name))
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "GET",
@@ -91,7 +91,7 @@ func (client *Client) UpdateContext(context *Context) (*Context, error) {
 		return nil, err
 	}
 
-	fullPath := fmt.Sprintf("/contexts/%s", url.QueryEscape(context.Metadata.Name))
+	fullPath := fmt.Sprintf("/contexts/%s", url.PathEscape(context.Metadata.Name))
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "PUT",
@@ -116,7 +116,7 @@ func (client *Client) UpdateContext(context *Context) (*Context, error) {
 
 func (client *Client) DeleteContext(name string) error {
 
-	fullPath := fmt.Sprintf("/contexts/%s", url.QueryEscape(name))
+	fullPath := fmt.Sprintf("/contexts/%s", url.PathEscape(name))
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "DELETE",
