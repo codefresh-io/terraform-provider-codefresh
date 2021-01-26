@@ -3,6 +3,7 @@ package codefresh
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
@@ -11,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"gopkg.in/yaml.v2"
 )
+
+var terminationPolicyOnCreateBranchAttributes = []string{"branchName", "ignoreTrigger", "ignoreBranch"}
 
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
@@ -237,6 +240,43 @@ func resourcePipeline() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
+						"termination_policy": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"on_create_branch": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"branch_name": {
+													Type:          schema.TypeString,
+													Optional:      true,
+													ValidateFunc:  validation.StringIsValidRegExp,
+													ConflictsWith: []string{"spec.0.termination_policy.0.on_create_branch.0.ignore_branch"},
+												},
+												"ignore_trigger": {
+													Optional: true,
+													Type:     schema.TypeBool,
+												},
+												"ignore_branch": {
+													Optional: true,
+													Type:     schema.TypeBool,
+												},
+											},
+										},
+									},
+									"on_terminate_annotation": {
+										Optional: true,
+										Type:     schema.TypeBool,
+										Default:  false,
+									},
+								},
+							},
+						},
 						"runtime_environment": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -391,6 +431,10 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 		m["runtime_environment"] = flattenSpecRuntimeEnvironment(spec.RuntimeEnvironment)
 	}
 
+	if len(spec.TerminationPolicy) > 0 {
+		m["termination_policy"] = flattenSpecTerminationPolicy(spec.TerminationPolicy)
+	}
+
 	m["concurrency"] = spec.Concurrency
 	m["branch_concurrency"] = spec.BranchConcurrency
 	m["trigger_concurrency"] = spec.TriggerConcurrency
@@ -400,6 +444,35 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 	m["contexts"] = spec.Contexts
 
 	res = append(res, m)
+	return res
+}
+
+func flattenSpecTerminationPolicy(terminationPolicy []map[string]interface{}) []map[string]interface{} {
+	var res []map[string]interface{}
+	attribute := make(map[string]interface{})
+	for _, policy := range terminationPolicy {
+		eventName, _ := policy["event"]
+		typeName, _ := policy["type"]
+		attributeName := convertOnCreateBranchAttributeToPipelineFormat(eventName.(string) + "_" + typeName.(string))
+		switch attributeName {
+		case "on_create_branch":
+			var valueList []map[string]interface{}
+			attributeValues := make(map[string]interface{})
+			for _, eventAttribute := range terminationPolicyOnCreateBranchAttributes {
+				if item, ok := policy[eventAttribute]; ok {
+					attributeValues[convertOnCreateBranchAttributeToPipelineFormat(eventAttribute)] = item
+				}
+			}
+			attribute[attributeName] = append(valueList, attributeValues)
+		case "on_terminate_annotation":
+			if value, ok := policy["key"]; ok && value == "cf_predecessor" {
+				attribute[attributeName] = true
+			}
+		default:
+			log.Fatal("Unsupported event found in TerminationPolicy")
+		}
+	}
+	res = append(res, attribute)
 	return res
 }
 
@@ -550,6 +623,28 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 		}
 		pipeline.Spec.Triggers = append(pipeline.Spec.Triggers, codefreshTrigger)
 	}
+
+	var codefreshTerminationPolicy []map[string]interface{}
+
+	if _, ok := d.GetOk("spec.0.termination_policy.0.on_create_branch"); ok {
+		var onCreatBranchPolicy = make(map[string]interface{})
+		onCreatBranchPolicy = getSupportedTerminationPolicyAttributes("on_create_branch")
+		for _, attribute := range terminationPolicyOnCreateBranchAttributes {
+			if attributeValue, ok := d.GetOk(fmt.Sprintf("spec.0.termination_policy.0.on_create_branch.0.%s", convertOnCreateBranchAttributeToPipelineFormat(attribute))); ok {
+				onCreatBranchPolicy[attribute] = attributeValue
+			}
+		}
+		codefreshTerminationPolicy = append(codefreshTerminationPolicy, onCreatBranchPolicy)
+	}
+	if _, ok := d.GetOk("spec.0.termination_policy.0.on_terminate_annotation"); ok {
+		var onTerminateAnnotationPolicy = make(map[string]interface{})
+		onTerminateAnnotationPolicy = getSupportedTerminationPolicyAttributes("on_terminate_annotation")
+		onTerminateAnnotationPolicy["key"] = "cf_predecessor"
+		codefreshTerminationPolicy = append(codefreshTerminationPolicy, onTerminateAnnotationPolicy)
+	}
+
+	pipeline.Spec.TerminationPolicy = codefreshTerminationPolicy
+
 	return pipeline
 }
 
@@ -599,4 +694,30 @@ func extractStagesAndSteps(originalYamlString string) (stages, steps string) {
 	stepsBuilder.WriteString("}")
 	steps = stepsBuilder.String()
 	return
+}
+
+func getSupportedTerminationPolicyAttributes(policy string) map[string]interface{} {
+	switch policy {
+	case "on_create_branch":
+		return map[string]interface{}{"event": "onCreate", "type": "branch"}
+	case "on_terminate_annotation":
+		return map[string]interface{}{"event": "onTerminate", "type": "annotation"}
+	default:
+		log.Fatal("Invalid termination policy selected: ", policy)
+	}
+	return nil
+}
+
+func convertOnCreateBranchAttributeToResourceFormat(src string) string {
+	var re = regexp.MustCompile(`_[a-z]`)
+	return re.ReplaceAllStringFunc(src, func(w string) string {
+		return strings.ToUpper(strings.ReplaceAll(w, "_", ""))
+	})
+}
+
+func convertOnCreateBranchAttributeToPipelineFormat(src string) string {
+	var re = regexp.MustCompile(`[A-Z]`)
+	return re.ReplaceAllStringFunc(src, func(w string) string {
+		return "_" + strings.ToLower(w)
+	})
 }

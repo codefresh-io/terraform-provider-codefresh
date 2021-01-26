@@ -311,6 +311,40 @@ func TestAccCodefreshPipeline_Revision(t *testing.T) {
 	})
 }
 
+func TestAccCodefreshPipelineOnCreateBranchIgnoreTrigger(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineOnCreateBranchIgnoreTrigger(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.termination_policy.0.on_create_branch.0.ignore_trigger", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodefreshPipelineBasicConfig(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckNoResourceAttr(resourceName, "spec.0.termination_policy.0.on_create_branch"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCodefreshPipelineExists(resource string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 
@@ -697,4 +731,63 @@ func TestAccCodefreshPipeline_Contexts(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCodefreshPipelineOnCreateBranchIgnoreTrigger(rName, repo, path, revision, context string, ignoreTrigger bool) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
+  name = "%s"
+
+  spec {
+	spec_template {
+    	repo        = %q
+    	path        = %q
+    	revision    = %q
+    	context     = %q
+	}
+	termination_policy {
+		on_create_branch {
+			ignore_trigger = %t
+		}
+	}
+  }
+}
+`, rName, repo, path, revision, context, ignoreTrigger)
+}
+
+func testAccCodefreshPipelineOnCreateBranchIgnoreTriggerWithBranchName(rName, repo, path, revision, context, branchName string, ignoreTrigger bool) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
+  name = "%s"
+
+  spec {
+	spec_template {
+    	repo        = %q
+    	path        = %q
+    	revision    = %q
+    	context     = %q
+	}
+	termination_policy {
+		on_create_branch {
+			branch_nane = %q
+			ignore_trigger = %t
+		}
+	}
+  }
+}
+`, rName, repo, path, revision, context, branchName, ignoreTrigger)
 }

@@ -69,18 +69,19 @@ func (t *Trigger) SetVariables(variables map[string]interface{}) {
 }
 
 type Spec struct {
-	Variables          []Variable         `json:"variables,omitempty"`
-	SpecTemplate       *SpecTemplate      `json:"specTemplate,omitempty"`
-	Triggers           []Trigger          `json:"triggers,omitempty"`
-	Priority           int                `json:"priority,omitempty"`
-	Concurrency        int                `json:"concurrency,omitempty"`
-	BranchConcurrency  int                `json:"branchConcurrency,omitempty"`
-	TriggerConcurrency int                `json:"triggerConcurrency,omitempty"`
-	Contexts           []interface{}      `json:"contexts,omitempty"`
-	Steps              *Steps             `json:"steps,omitempty"`
-	Stages             *Stages            `json:"stages,omitempty"`
-	Mode               string             `json:"mode,omitempty"`
-	RuntimeEnvironment RuntimeEnvironment `json:"runtimeEnvironment,omitempty"`
+	Variables          []Variable               `json:"variables,omitempty"`
+	SpecTemplate       *SpecTemplate            `json:"specTemplate,omitempty"`
+	Triggers           []Trigger                `json:"triggers,omitempty"`
+	Priority           int                      `json:"priority,omitempty"`
+	Concurrency        int                      `json:"concurrency,omitempty"`
+	BranchConcurrency  int                      `json:"branchConcurrency,omitempty"`
+	TriggerConcurrency int                      `json:"triggerConcurrency,omitempty"`
+	Contexts           []interface{}            `json:"contexts,omitempty"`
+	Steps              *Steps                   `json:"steps,omitempty"`
+	Stages             *Stages                  `json:"stages,omitempty"`
+	Mode               string                   `json:"mode,omitempty"`
+	RuntimeEnvironment RuntimeEnvironment       `json:"runtimeEnvironment,omitempty"`
+	TerminationPolicy  []map[string]interface{} `json:"terminationPolicy,omitempty"`
 }
 
 type Steps struct {

@@ -106,6 +106,7 @@ resource "codefresh_pipeline" "test" {
 - `spec_template` - (Optional) A collection of `spec_template` blocks as documented below.
 - `runtime_environment` - (Optional) A collection of `runtime_environment` blocks as documented below.
 - `contexts` - (Optional) A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be configured for the pipeline
+- `termination_policy` - (Optional) A `termination_policy` block as documented below.
 
 ---
 
@@ -147,6 +148,35 @@ resource "codefresh_pipeline" "test" {
 - `cpu` - (Optional) A required amount of CPU.
 - `memory` - (Optional) A required amount of memory.
 - `dind_storage` - (Optional) A pipeline shared storage.
+
+---
+
+`termination_policy` supports the following:
+
+- `on_create_branch` - (Optional) A `on_create_branch` block as documented below.
+- `on_terminate_annotation` - (Optional) Boolean. Enables the policy `Once a build is terminated, terminate all child builds initiated from it`. Default false.
+
+---
+
+`on_create_branch` supports the following:
+
+- `branch_name` - (Optional) A regular expression to filter the branches on with the termination policy applies.
+- `ignore_trigger` - (Optional) Boolean. See table below for usage.
+- `ignore_branch` - (Optional) Boolean. See table below for usage.
+
+The following table presents how to configure this block based on the options available in the UI:
+| Option Description                                                            | Value Selected           | on_create_branch | branch_name | ignore_trigger | ignore_branch |
+| ----------------------------------------------------------------------------- |:------------------------:|:----------------:|:-----------:|---------------:| -------------:|
+| Once a build is created terminate previous builds from the same branch        | Disabled                 |        Omit      |     N/A     |       N/A      |      N/A      |
+| Once a build is created terminate previous builds from the same branch        | From the SAME trigger    |       Defined    |     N/A     |      false     |      N/A      |
+| Once a build is created terminate previous builds from the same branch        | From ANY trigger         |       Defined    |     N/A     |      true      |      N/A      |
+| Once a build is created terminate previous builds only from a specific branch | Disabled                 |        Omit      |     N/A     |       N/A      |      N/A      |
+| Once a build is created terminate previous builds only from a specific branch | From the SAME trigger    |       Defined    |    Regex    |      false     |      N/A      |
+| Once a build is created terminate previous builds only from a specific branch | From ANY trigger         |       Defined    |    Regex    |      true      |      N/A      |
+| Once a build is created, terminate all other running builds                   | Disabled                 |        Omit      |     N/A     |       N/A      |      N/A      |
+| Once a build is created, terminate all other running builds                   | From the SAME trigger    |       Defined    |     N/A     |      false     |      true     |
+| Once a build is created, terminate all other running builds                   | From ANY trigger         |       Defined    |     N/A     |      true      |      true     |
+
 
 ## Attributes Reference
 
