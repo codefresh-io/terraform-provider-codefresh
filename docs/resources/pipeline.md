@@ -26,7 +26,10 @@ resource "codefresh_pipeline" "test" {
   ]
 
   spec {
-    concurrency = 1
+    concurrency         = 1
+    branch_concurrency  = 1
+    trigger_concurrency = 1
+
     priority    = 5
 
     spec_template {
@@ -65,6 +68,7 @@ resource "codefresh_pipeline" "test" {
         "push.tags"
       ]
       modified_files_glob = ""
+      commit_status_title = "tags-trigger"
       name                = "tags"
       provider            = "github"
       repo                = "codefresh-contrib/react-sample-app"
@@ -94,12 +98,15 @@ resource "codefresh_pipeline" "test" {
 `spec` supports the following:
 
 - `concurrency` - (Optional) The maximum amount of concurrent builds.
+- `branch_concurrency` - (Optional) The maximum amount of concurrent builds that may run for each branch
+- `trigger_concurrency` - (Optional) The maximum amount of concurrent builds that may run for each trigger.
 - `priority` - (optional) Helps to organize the order of builds execution in case of reaching the concurrency limit.
 - `variables` - (Optional) Pipeline variables.
 - `trigger` - (Optional) A collection of `trigger` blocks as documented below. Triggers [documentation](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/triggers/git-triggers/).
 - `spec_template` - (Optional) A collection of `spec_template` blocks as documented below.
 - `runtime_environment` - (Optional) A collection of `runtime_environment` blocks as documented below.
 - `contexts` - (Optional) A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be configured for the pipeline
+- `termination_policy` - (Optional) A `termination_policy` block as documented below.
 
 ---
 
@@ -120,14 +127,19 @@ resource "codefresh_pipeline" "test" {
 - `type` - (Optional) The trigger type. Default value - **git**.
 - `repo` - (Optional) The GitHub `account/repo_name`.
 - `branch_regex` - (Optional) A regular expression and will only trigger for branches that match this naming pattern.
+- `branch_regex_input` - (Optional) Flag to manage how the `branch_regex` field is interpreted. Possible values: "multiselect-exclude", "multiselect", "regex". Default: "regex"
+- `pull_request_target_branch_regex` - (Optional) A regular expression and will only trigger for pull requests to branches that match this naming pattern.
+- `comment_regex` - (Optional) A regular expression and will only trigger for pull requests where a comment matches this naming pattern.
 - `modified_files_glob` - (Optional) Allows to constrain the build and trigger it only if the modified files from the commit match this glob expression.
 - `events` - (Optional) A list of GitHub events for which a Pipeline is triggered. Default value - **push.heads**.
 - `provider` - (Optional) Default value - **github**.
 - `context` - (Optional) Codefresh Git context.
+- `commit_status_title` - (Optional) The commit status title pushed to the GIT version control system.
 - `variables` - (Optional) Trigger variables.
 - `disabled` - (Optional) Boolean. If false, trigger will never be activated.
 - `pull_request_allow_fork_events` - (Optional) Boolean. If this trigger is also applicable to Git forks.
-
+- `contexts` - (Optional) A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be loaded when the trigger is executed
+- `runtime_environment` - (Optional) A collection of `runtime_environment` blocks as documented below.
 ---
 
 `runtime_environment` supports the following:
@@ -136,6 +148,35 @@ resource "codefresh_pipeline" "test" {
 - `cpu` - (Optional) A required amount of CPU.
 - `memory` - (Optional) A required amount of memory.
 - `dind_storage` - (Optional) A pipeline shared storage.
+
+---
+
+`termination_policy` supports the following:
+
+- `on_create_branch` - (Optional) A `on_create_branch` block as documented below.
+- `on_terminate_annotation` - (Optional) Boolean. Enables the policy `Once a build is terminated, terminate all child builds initiated from it`. Default false.
+
+---
+
+`on_create_branch` supports the following:
+
+- `branch_name` - (Optional) A regular expression to filter the branches on with the termination policy applies.
+- `ignore_trigger` - (Optional) Boolean. See table below for usage.
+- `ignore_branch` - (Optional) Boolean. See table below for usage.
+
+The following table presents how to configure this block based on the options available in the UI:
+| Option Description                                                            | Value Selected           | on_create_branch | branch_name | ignore_trigger | ignore_branch |
+| ----------------------------------------------------------------------------- |:------------------------:|:----------------:|:-----------:|---------------:| -------------:|
+| Once a build is created terminate previous builds from the same branch        | Disabled                 |        Omit      |     N/A     |       N/A      |      N/A      |
+| Once a build is created terminate previous builds from the same branch        | From the SAME trigger    |       Defined    |     N/A     |      false     |      N/A      |
+| Once a build is created terminate previous builds from the same branch        | From ANY trigger         |       Defined    |     N/A     |      true      |      N/A      |
+| Once a build is created terminate previous builds only from a specific branch | Disabled                 |        Omit      |     N/A     |       N/A      |      N/A      |
+| Once a build is created terminate previous builds only from a specific branch | From the SAME trigger    |       Defined    |    Regex    |      false     |      N/A      |
+| Once a build is created terminate previous builds only from a specific branch | From ANY trigger         |       Defined    |    Regex    |      true      |      N/A      |
+| Once a build is created, terminate all other running builds                   | Disabled                 |        Omit      |     N/A     |       N/A      |      N/A      |
+| Once a build is created, terminate all other running builds                   | From the SAME trigger    |       Defined    |     N/A     |      false     |      true     |
+| Once a build is created, terminate all other running builds                   | From ANY trigger         |       Defined    |     N/A     |      true      |      true     |
+
 
 ## Attributes Reference
 

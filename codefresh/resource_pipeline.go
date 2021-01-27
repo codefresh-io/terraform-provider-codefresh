@@ -3,13 +3,17 @@ package codefresh
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	ghodss "github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"gopkg.in/yaml.v2"
 )
+
+var terminationPolicyOnCreateBranchAttributes = []string{"branchName", "ignoreTrigger", "ignoreBranch"}
 
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
@@ -56,6 +60,16 @@ func resourcePipeline() *schema.Resource {
 							Default:  0,
 						},
 						"concurrency": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0, // zero is unlimited
+						},
+						"branch_concurrency": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0, // zero is unlimited
+						},
+						"trigger_concurrency": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  0, // zero is unlimited
@@ -120,9 +134,27 @@ func resourcePipeline() *schema.Resource {
 										Optional: true,
 									},
 									"branch_regex": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/.*/gi",
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "/.*/gi",
+										ValidateFunc: validation.StringIsValidRegExp,
+									},
+									"branch_regex_input": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "regex",
+										ValidateFunc: validation.StringInSlice([]string{"multiselect-exclude", "multiselect", "regex"}, false),
+									},
+									"pull_request_target_branch_regex": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringIsValidRegExp,
+									},
+									"comment_regex": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "/.*/gi",
+										ValidateFunc: validation.StringIsValidRegExp,
 									},
 									"modified_files_glob": {
 										Type:     schema.TypeString,
@@ -151,10 +183,45 @@ func resourcePipeline() *schema.Resource {
 										Optional: true,
 										Default:  false,
 									},
+									"commit_status_title": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 									"context": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "github",
+									},
+									"contexts": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"runtime_environment": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"memory": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"cpu": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"dind_storage": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
 									},
 									"variables": {
 										Type:     schema.TypeMap,
@@ -171,6 +238,43 @@ func resourcePipeline() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
+							},
+						},
+						"termination_policy": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"on_create_branch": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"branch_name": {
+													Type:          schema.TypeString,
+													Optional:      true,
+													ValidateFunc:  validation.StringIsValidRegExp,
+													ConflictsWith: []string{"spec.0.termination_policy.0.on_create_branch.0.ignore_branch"},
+												},
+												"ignore_trigger": {
+													Optional: true,
+													Type:     schema.TypeBool,
+												},
+												"ignore_branch": {
+													Optional: true,
+													Type:     schema.TypeBool,
+												},
+											},
+										},
+									},
+									"on_terminate_annotation": {
+										Optional: true,
+										Type:     schema.TypeBool,
+										Default:  false,
+									},
+								},
 							},
 						},
 						"runtime_environment": {
@@ -327,13 +431,48 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 		m["runtime_environment"] = flattenSpecRuntimeEnvironment(spec.RuntimeEnvironment)
 	}
 
+	if len(spec.TerminationPolicy) > 0 {
+		m["termination_policy"] = flattenSpecTerminationPolicy(spec.TerminationPolicy)
+	}
+
 	m["concurrency"] = spec.Concurrency
+	m["branch_concurrency"] = spec.BranchConcurrency
+	m["trigger_concurrency"] = spec.TriggerConcurrency
 
 	m["priority"] = spec.Priority
 
 	m["contexts"] = spec.Contexts
 
 	res = append(res, m)
+	return res
+}
+
+func flattenSpecTerminationPolicy(terminationPolicy []map[string]interface{}) []map[string]interface{} {
+	var res []map[string]interface{}
+	attribute := make(map[string]interface{})
+	for _, policy := range terminationPolicy {
+		eventName, _ := policy["event"]
+		typeName, _ := policy["type"]
+		attributeName := convertOnCreateBranchAttributeToPipelineFormat(eventName.(string) + "_" + typeName.(string))
+		switch attributeName {
+		case "on_create_branch":
+			var valueList []map[string]interface{}
+			attributeValues := make(map[string]interface{})
+			for _, eventAttribute := range terminationPolicyOnCreateBranchAttributes {
+				if item, ok := policy[eventAttribute]; ok {
+					attributeValues[convertOnCreateBranchAttributeToPipelineFormat(eventAttribute)] = item
+				}
+			}
+			attribute[attributeName] = append(valueList, attributeValues)
+		case "on_terminate_annotation":
+			if value, ok := policy["key"]; ok && value == "cf_predecessor" {
+				attribute[attributeName] = true
+			}
+		default:
+			log.Fatal("Unsupported event found in TerminationPolicy")
+		}
+	}
+	res = append(res, attribute)
 	return res
 }
 
@@ -367,16 +506,23 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 		m["name"] = trigger.Name
 		m["description"] = trigger.Description
 		m["context"] = trigger.Context
+		m["contexts"] = trigger.Contexts
 		m["repo"] = trigger.Repo
 		m["branch_regex"] = trigger.BranchRegex
+		m["branch_regex_input"] = trigger.BranchRegexInput
+		m["pull_request_target_branch_regex"] = trigger.PullRequestTargetBranchRegex
+		m["comment_regex"] = trigger.CommentRegex
 		m["modified_files_glob"] = trigger.ModifiedFilesGlob
 		m["disabled"] = trigger.Disabled
 		m["pull_request_allow_fork_events"] = trigger.PullRequestAllowForkEvents
+		m["commit_status_title"] = trigger.CommitStatusTitle
 		m["provider"] = trigger.Provider
 		m["type"] = trigger.Type
 		m["events"] = trigger.Events
 		m["variables"] = convertVariables(trigger.Variables)
-
+		if trigger.RuntimeEnvironment != nil {
+			m["runtime_environment"] = flattenSpecRuntimeEnvironment(*trigger.RuntimeEnvironment)
+		}
 		res[i] = m
 	}
 	return res
@@ -402,8 +548,10 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			OriginalYamlString: originalYamlString,
 		},
 		Spec: cfClient.Spec{
-			Priority:    d.Get("spec.0.priority").(int),
-			Concurrency: d.Get("spec.0.concurrency").(int),
+			Priority:           d.Get("spec.0.priority").(int),
+			Concurrency:        d.Get("spec.0.concurrency").(int),
+			BranchConcurrency:  d.Get("spec.0.branch_concurrency").(int),
+			TriggerConcurrency: d.Get("spec.0.trigger_concurrency").(int),
 		},
 	}
 
@@ -443,25 +591,60 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 	triggers := d.Get("spec.0.trigger").([]interface{})
 	for idx := range triggers {
 		events := d.Get(fmt.Sprintf("spec.0.trigger.%v.events", idx)).([]interface{})
-
+		contexts := d.Get(fmt.Sprintf("spec.0.trigger.%v.contexts", idx)).([]interface{})
 		codefreshTrigger := cfClient.Trigger{
-			Name:                       d.Get(fmt.Sprintf("spec.0.trigger.%v.name", idx)).(string),
-			Description:                d.Get(fmt.Sprintf("spec.0.trigger.%v.description", idx)).(string),
-			Type:                       d.Get(fmt.Sprintf("spec.0.trigger.%v.type", idx)).(string),
-			Repo:                       d.Get(fmt.Sprintf("spec.0.trigger.%v.repo", idx)).(string),
-			BranchRegex:                d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex", idx)).(string),
-			ModifiedFilesGlob:          d.Get(fmt.Sprintf("spec.0.trigger.%v.modified_files_glob", idx)).(string),
-			Provider:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.provider", idx)).(string),
-			Disabled:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.disabled", idx)).(bool),
-			PullRequestAllowForkEvents: d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_allow_fork_events", idx)).(bool),
-			Context:                    d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
-			Events:                     convertStringArr(events),
+			Name:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.name", idx)).(string),
+			Description:                  d.Get(fmt.Sprintf("spec.0.trigger.%v.description", idx)).(string),
+			Type:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.type", idx)).(string),
+			Repo:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.repo", idx)).(string),
+			BranchRegex:                  d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex", idx)).(string),
+			BranchRegexInput:             d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex_input", idx)).(string),
+			PullRequestTargetBranchRegex: d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_target_branch_regex", idx)).(string),
+			CommentRegex:                 d.Get(fmt.Sprintf("spec.0.trigger.%v.comment_regex", idx)).(string),
+			ModifiedFilesGlob:            d.Get(fmt.Sprintf("spec.0.trigger.%v.modified_files_glob", idx)).(string),
+			Provider:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.provider", idx)).(string),
+			Disabled:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.disabled", idx)).(bool),
+			PullRequestAllowForkEvents:   d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_allow_fork_events", idx)).(bool),
+			CommitStatusTitle:            d.Get(fmt.Sprintf("spec.0.trigger.%v.commit_status_title", idx)).(string),
+			Context:                      d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
+			Contexts:                     convertStringArr(contexts),
+			Events:                       convertStringArr(events),
 		}
 		variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
 		codefreshTrigger.SetVariables(variables)
-
+		if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.runtime_environment", idx)); ok {
+			triggerRuntime := cfClient.RuntimeEnvironment{
+				Name:        d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.name", idx)).(string),
+				Memory:      d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.memory", idx)).(string),
+				CPU:         d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.cpu", idx)).(string),
+				DindStorage: d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.dind_storage", idx)).(string),
+			}
+			codefreshTrigger.RuntimeEnvironment = &triggerRuntime
+		}
 		pipeline.Spec.Triggers = append(pipeline.Spec.Triggers, codefreshTrigger)
 	}
+
+	var codefreshTerminationPolicy []map[string]interface{}
+
+	if _, ok := d.GetOk("spec.0.termination_policy.0.on_create_branch"); ok {
+		var onCreatBranchPolicy = make(map[string]interface{})
+		onCreatBranchPolicy = getSupportedTerminationPolicyAttributes("on_create_branch")
+		for _, attribute := range terminationPolicyOnCreateBranchAttributes {
+			if attributeValue, ok := d.GetOk(fmt.Sprintf("spec.0.termination_policy.0.on_create_branch.0.%s", convertOnCreateBranchAttributeToPipelineFormat(attribute))); ok {
+				onCreatBranchPolicy[attribute] = attributeValue
+			}
+		}
+		codefreshTerminationPolicy = append(codefreshTerminationPolicy, onCreatBranchPolicy)
+	}
+	if _, ok := d.GetOk("spec.0.termination_policy.0.on_terminate_annotation"); ok {
+		var onTerminateAnnotationPolicy = make(map[string]interface{})
+		onTerminateAnnotationPolicy = getSupportedTerminationPolicyAttributes("on_terminate_annotation")
+		onTerminateAnnotationPolicy["key"] = "cf_predecessor"
+		codefreshTerminationPolicy = append(codefreshTerminationPolicy, onTerminateAnnotationPolicy)
+	}
+
+	pipeline.Spec.TerminationPolicy = codefreshTerminationPolicy
+
 	return pipeline
 }
 
@@ -511,4 +694,30 @@ func extractStagesAndSteps(originalYamlString string) (stages, steps string) {
 	stepsBuilder.WriteString("}")
 	steps = stepsBuilder.String()
 	return
+}
+
+func getSupportedTerminationPolicyAttributes(policy string) map[string]interface{} {
+	switch policy {
+	case "on_create_branch":
+		return map[string]interface{}{"event": "onCreate", "type": "branch"}
+	case "on_terminate_annotation":
+		return map[string]interface{}{"event": "onTerminate", "type": "annotation"}
+	default:
+		log.Fatal("Invalid termination policy selected: ", policy)
+	}
+	return nil
+}
+
+func convertOnCreateBranchAttributeToResourceFormat(src string) string {
+	var re = regexp.MustCompile(`_[a-z]`)
+	return re.ReplaceAllStringFunc(src, func(w string) string {
+		return strings.ToUpper(strings.ReplaceAll(w, "_", ""))
+	})
+}
+
+func convertOnCreateBranchAttributeToPipelineFormat(src string) string {
+	var re = regexp.MustCompile(`[A-Z]`)
+	return re.ReplaceAllStringFunc(src, func(w string) string {
+		return "_" + strings.ToLower(w)
+	})
 }
