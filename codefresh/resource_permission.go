@@ -2,9 +2,10 @@ package codefresh
 
 import (
 	"fmt"
+	"log"
+
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func resourcePermission() *schema.Resource {
@@ -42,8 +43,8 @@ func resourcePermission() *schema.Resource {
 				Required: true,
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
-					if v != "create" && v != "read" && v != "update" && v != "delete" && v != "run" && v != "approve" {
-						errs = append(errs, fmt.Errorf("%q must be between one of create,read,update,delete,approve, got: %s", key, v))
+					if v != "create" && v != "read" && v != "update" && v != "delete" && v != "run" && v != "approve" && v != "debug" {
+						errs = append(errs, fmt.Errorf("%q must be between one of create,read,update,delete,approve,debug got: %s", key, v))
 					}
 					return
 				},
