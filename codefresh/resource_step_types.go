@@ -55,8 +55,12 @@ func resourceStepTypesRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
+	var stepTypesGetVersion cfClient.StepTypes
+	stepTypesYaml := d.Get("step_types_yaml")
+	yaml.Unmarshal([]byte(stepTypesYaml.(string)), &stepTypesGetVersion)
+	version := stepTypesGetVersion.Metadata["version"].(string)
 
-	stepTypes, err := client.GetStepTypes(stepTypesIdentifier)
+	stepTypes, err := client.GetStepTypes(stepTypesIdentifier + ":" + version)
 	// Remove transient attributes from metadata
 	for _, attribute := range []string{"created_at", "accountId", "id", "updated_at", "latest"} {
 		if _, ok := stepTypes.Metadata[attribute]; ok {
@@ -122,6 +126,7 @@ func resourceStepTypesDelete(d *schema.ResourceData, meta interface{}) error {
 func mapStepTypesToResource(stepTypes cfClient.StepTypes, d *schema.ResourceData) error {
 
 	stepTypesYaml, err := yaml.Marshal(stepTypes)
+	log.Printf("[DEBUG] Marshalled Step Types yaml = %v", string(stepTypesYaml))
 	if err != nil {
 		log.Printf("[DEBUG] Failed to Marshal Step Types yaml = %v", stepTypes)
 		return err

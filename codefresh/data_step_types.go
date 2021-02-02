@@ -16,6 +16,10 @@ func dataSourceStepTypes() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"version": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"step_types_yaml": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -29,12 +33,13 @@ func dataSourceStepTypesRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfClient.Client)
 	var stepTypes *cfClient.StepTypes
 	var err error
+	identifier := d.Get("name").(string)
+	version, versionOk := d.GetOk("version")
 
-	if name, nameOk := d.GetOk("name"); nameOk {
-		stepTypes, err = client.GetStepTypes(name.(string))
-	} else {
-		return fmt.Errorf("data.codefresh_step_types - must specify name")
+	if versionOk {
+		identifier = identifier + ":" + version.(string)
 	}
+	stepTypes, err = client.GetStepTypes(identifier)
 	if err != nil {
 		return err
 	}

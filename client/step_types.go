@@ -6,6 +6,15 @@ import (
 	"net/url"
 )
 
+type StepTypesVersions struct {
+	Name     string
+	Versions []StepTypesVersion
+}
+type StepTypesVersion struct {
+	VersionNumber string
+	StepTypes     StepTypes
+}
+
 type StepTypes struct {
 	Version  string                 `json:"version,omitempty"`
 	Kind     string                 `json:"kind,omitempty"`
@@ -76,7 +85,7 @@ func (client *Client) CreateStepTypes(stepTypes *StepTypes) (*StepTypes, error) 
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] Response step types: %q", resp)
+
 	var respStepTypes StepTypes
 	err = DecodeResponseInto(resp, &respStepTypes)
 	if err != nil {
@@ -96,7 +105,7 @@ func (client *Client) UpdateStepTypes(stepTypes *StepTypes) (*StepTypes, error) 
 		return nil, err
 	}
 
-	fullPath := fmt.Sprintf("/step-types/%s", url.PathEscape(stepTypes.GetID()+":"+stepTypes.Metadata["version"].(string)))
+	fullPath := fmt.Sprintf("/step-types/%s", url.PathEscape(stepTypes.Metadata["name"].(string)+":"+stepTypes.Metadata["version"].(string)))
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "PUT",

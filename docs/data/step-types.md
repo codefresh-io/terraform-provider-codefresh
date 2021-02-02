@@ -9,7 +9,7 @@ data "codefresh_step_types" "freestyle" {
 }
 
 output "test" {
-  # Value is return as YAML  
+  # Value is return as YAML
   value = yamldecode(data.codefresh_step_types.freestyle.step_types_yaml).metadata.updated_at
 }
 
@@ -18,6 +18,7 @@ output "test" {
 ## Argument Reference
 
 * `name` - (Required) Name of the step-types to be retrieved
+* `version` - (Optional) Version to be retrieved. If not specified, the latest published will be returned
 
 ## Attributes Reference
 
