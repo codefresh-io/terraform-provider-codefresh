@@ -311,6 +311,38 @@ func TestAccCodefreshPipeline_Revision(t *testing.T) {
 	})
 }
 
+func TestAccCodefreshPipeline_IsPublic(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineBasicConfig(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "is_public", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodefreshPipelineIsPublic(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "development", "git", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "is_public", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCodefreshPipelineOnCreateBranchIgnoreTrigger(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
@@ -584,7 +616,7 @@ resource "codefresh_pipeline" "test" {
 		branch_regex_input = %q
 		pull_request_target_branch_regex = %q
 		comment_regex = %q
-		
+
 		context = %q
 		contexts = [
 			%q
@@ -790,4 +822,31 @@ resource "codefresh_pipeline" "test" {
   }
 }
 `, rName, repo, path, revision, context, branchName, ignoreTrigger)
+}
+
+func testAccCodefreshPipelineIsPublic(rName, repo, path, revision, context string, isPublic bool) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
+  name = "%s"
+
+  spec {
+	spec_template {
+    	repo        = %q
+    	path        = %q
+    	revision    = %q
+    	context     = %q
+    }
+  }
+
+  is_public = %t
+
+}
+`, rName, repo, path, revision, context, isPublic)
 }

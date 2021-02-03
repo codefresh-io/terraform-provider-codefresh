@@ -37,6 +37,11 @@ func resourcePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"is_public": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"revision": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -392,6 +397,11 @@ func mapPipelineToResource(pipeline cfClient.Pipeline, d *schema.ResourceData) e
 		return err
 	}
 
+	err = d.Set("is_public", pipeline.Metadata.IsPublic)
+	if err != nil {
+		return err
+	}
+
 	err = d.Set("spec", flattenSpec(pipeline.Spec))
 	if err != nil {
 		return err
@@ -542,6 +552,7 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			Name:      d.Get("name").(string),
 			Revision:  d.Get("revision").(int),
 			ProjectId: d.Get("project_id").(string),
+			IsPublic:  d.Get("is_public").(bool),
 			Labels: cfClient.Labels{
 				Tags: convertStringArr(tags),
 			},
