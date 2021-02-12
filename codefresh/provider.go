@@ -14,12 +14,6 @@ func Provider() *schema.Provider {
 			"api_url": {
 				Type:     schema.TypeString,
 				Optional: true,
-				DefaultFunc: func() (interface{}, error) {
-					if url := os.Getenv("CODEFRESH_API_URL"); url != "" {
-						return url, nil
-					}
-					return "https://g.codefresh.io/api", nil
-				},
 			},
 			"token": {
 				Type:     schema.TypeString,
@@ -53,10 +47,17 @@ func Provider() *schema.Provider {
 
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
 
-	apiURL := d.Get("api_url").(string)
-	token := d.Get("token").(string)
+	apiURL := os.Getenv("CODEFRESH_API_URL")
+	if apiURL == "" {
+		apiURL = d.Get("api_url").(string)
+	}
+	if apiURL == "" {
+		apiURL = "https://g.codefresh.io/api"
+	}
+
+	token := os.Getenv("CODEFRESH_API_KEY")
 	if token == "" {
-		token = os.Getenv("CODEFRESH_API_KEY")
+		token = d.Get("token").(string)
 	}
 	return cfClient.NewClient(apiURL, token, ""), nil
 }
