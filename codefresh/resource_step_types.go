@@ -38,7 +38,7 @@ func resourceStepTypesCreate(d *schema.ResourceData, meta interface{}) error {
 	stepTypes := *mapResourceToStepTypes(d)
 	resp, err := client.CreateStepTypes(&stepTypes)
 	if err != nil {
-		log.Printf("[DEBUG] Error while creating step types. Error = %v", err)
+		log.Printf("[DEBUG] Error while creating step types for resource_step_types. Error = %v", err)
 		return err
 	}
 
@@ -145,6 +145,9 @@ func mapResourceToStepTypes(d *schema.ResourceData) *cfClient.StepTypes {
 	var stepTypes cfClient.StepTypes
 	stepTypesYaml := d.Get("step_types_yaml")
 	yaml.Unmarshal([]byte(stepTypesYaml.(string)), &stepTypes)
+	if stepTypes.Spec.Steps != nil {
+		stepTypes.Spec.Steps = extractSteps(stepTypesYaml.(string))
+	}
 
 	return &stepTypes
 }

@@ -3,16 +3,20 @@ package codefresh
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"sort"
+	"strings"
 
 	"github.com/Masterminds/semver"
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
-	"github.com/ghodss/yaml"
+	ghodss "github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/iancoleman/orderedmap"
+	"gopkg.in/yaml.v2"
 )
 
 func resourceStepTypesVersions() *schema.Resource {
@@ -67,15 +71,17 @@ func normalizeYamlStringStepTypes(yamlString interface{}) (string, error) {
 	}
 
 	s := yamlString.(string)
-	err := yaml.Unmarshal([]byte(s), &j)
+	err := ghodss.Unmarshal([]byte(s), &j)
 	metadataMap := j["metadata"].(map[string]interface{})
 	//Removing "latest" attribute from metadata since it's transient based on the version
 	delete(metadataMap, "latest")
+	delete(metadataMap, "name")
+	delete(metadataMap, "version")
 	if err != nil {
 		return s, err
 	}
 
-	bytes, _ := yaml.Marshal(j)
+	bytes, _ := ghodss.Marshal(j)
 	return string(bytes[:]), nil
 }
 
@@ -104,7 +110,7 @@ func resourceStepTypesVersionCreate(ctx context.Context, d *schema.ResourceData,
 	orderedVersions := sortVersions(versions)
 	for _, version := range orderedVersions {
 		step := mapVersion[version.String()]
-		log.Printf("[DEBUG] Version for create: %q", version)
+		log.Printf("[DEBUG] Version for create: %q. StepSpec: %v", version, step.Spec.Steps)
 		_, err := client.CreateStepTypes(&step)
 		if err != nil {
 			return diag.Errorf("[DEBUG] Error while creating step types OnCreate. Error = %v", err)
@@ -316,10 +322,10 @@ func resourceStepTypesVersionsConfigHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s", m["version_number"].(string)))
 	var stepTypes cfClient.StepTypes
 	stepTypesYaml := m["step_types_yaml"].(string)
-	yaml.Unmarshal([]byte(stepTypesYaml), &stepTypes)
+	ghodss.Unmarshal([]byte(stepTypesYaml), &stepTypes)
 	// Remove runtime attributes, name and version to avoid discrepancies when comparing hashes
 	cleanUpStepFromTransientValues(&stepTypes, "", "")
-	stepTypesYamlByteArray, _ := yaml.Marshal(stepTypes)
+	stepTypesYamlByteArray, _ := ghodss.Marshal(stepTypes)
 	buf.WriteString(fmt.Sprintf("%s", string(stepTypesYamlByteArray)))
 	hash := hashcode.String(buf.String())
 	return hash
@@ -332,11 +338,15 @@ func flattenVersions(name string, versions []cfClient.StepTypesVersion) *schema.
 		m := make(map[string]interface{})
 		m["version_number"] = version.VersionNumber
 		cleanUpStepFromTransientValues(&version.StepTypes, name, version.VersionNumber)
-		stepTypesYaml, _ := yaml.Marshal(version.StepTypes)
+		stepTypesYaml, err := ghodss.Marshal(version.StepTypes)
+		log.Printf("[DEBUG] Flattened StepTypes %v", version.StepTypes.Spec)
+		if err != nil {
+			log.Fatalf("Error while flattening Versions: %v. Errv=%s", version.StepTypes, err)
+		}
 		m["step_types_yaml"] = string(stepTypesYaml)
 		stepVersions = append(stepVersions, m)
 	}
-
+	log.Printf("[DEBUG] Flattened Versions %s", stepVersions)
 	return schema.NewSet(resourceStepTypesVersionsConfigHash, stepVersions)
 }
 
@@ -350,11 +360,19 @@ func mapResourceToStepTypesVersions(d *schema.ResourceData) *cfClient.StepTypesV
 		if version != "" {
 			var stepTypes cfClient.StepTypes
 			stepTypesYaml := step.(map[string]interface{})["step_types_yaml"].(string)
-			yaml.Unmarshal([]byte(stepTypesYaml), &stepTypes)
+
+			err := ghodss.Unmarshal([]byte(stepTypesYaml), &stepTypes)
+			if err != nil {
+				log.Fatalf("[DEBUG] Unable to mapResourceToStepTypesVersions for version %s. Err= %s", version, err)
+			}
+
 			cleanUpStepFromTransientValues(&stepTypes, stepTypesVersions.Name, version)
 			stepVersion := cfClient.StepTypesVersion{
 				VersionNumber: version,
 				StepTypes:     stepTypes,
+			}
+			if stepVersion.StepTypes.Spec.Steps != nil {
+				stepVersion.StepTypes.Spec.Steps = extractSteps(stepTypesYaml)
 			}
 
 			stepTypesVersions.Versions = append(stepTypesVersions.Versions, stepVersion)
@@ -362,4 +380,53 @@ func mapResourceToStepTypesVersions(d *schema.ResourceData) *cfClient.StepTypesV
 	}
 
 	return &stepTypesVersions
+}
+
+// extractStagesAndSteps extracts the steps and stages from the original yaml string to enable propagation in the `Spec` attribute of the pipeline
+// We cannot leverage on the standard marshal/unmarshal because the steps attribute needs to maintain the order of elements
+// while by default the standard function doesn't do it because in JSON maps are unordered
+func extractSteps(stepTypesYaml string) (steps *orderedmap.OrderedMap) {
+	// Use mapSlice to preserve order of items from the YAML string
+	m := yaml.MapSlice{}
+	err := yaml.Unmarshal([]byte(stepTypesYaml), &m)
+	if err != nil {
+		log.Fatal("Unable to unmarshall stepTypesYaml")
+	}
+	steps = orderedmap.New()
+	// Dynamically build JSON object for steps using String builder
+	stepsBuilder := strings.Builder{}
+	stepsBuilder.WriteString("{")
+	// Parse elements of the YAML string to extract Steps and Stages if defined
+	for _, item := range m {
+		if item.Key == "spec" {
+			for _, specItem := range item.Value.(yaml.MapSlice) {
+				if specItem.Key == "steps" {
+					switch x := specItem.Value.(type) {
+					default:
+						log.Fatalf("unsupported value type: %T", specItem.Value)
+
+					case yaml.MapSlice:
+						numberOfSteps := len(x)
+						for index, item := range x {
+							// We only need to preserve order at the first level to guarantee order of the steps, hence the child nodes can be marshalled
+							// with the standard library
+							y, _ := yaml.Marshal(item.Value)
+							j2, _ := ghodss.YAMLToJSON(y)
+							stepsBuilder.WriteString("\"" + item.Key.(string) + "\" : " + string(j2))
+							if index < numberOfSteps-1 {
+								stepsBuilder.WriteString(",")
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	stepsBuilder.WriteString("}")
+	err = json.Unmarshal([]byte(stepsBuilder.String()), &steps)
+	if err != nil {
+		log.Fatalf("[DEBUG] Unable to parse steps. ")
+	}
+
+	return
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+
+	"github.com/iancoleman/orderedmap"
 )
 
 type StepTypesVersions struct {
@@ -19,7 +21,15 @@ type StepTypes struct {
 	Version  string                 `json:"version,omitempty"`
 	Kind     string                 `json:"kind,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-	Spec     map[string]interface{} `json:"spec,omitempty"`
+	Spec     SpecStepTypes          `json:"spec,omitempty"`
+}
+
+type SpecStepTypes struct {
+	Arguments     string                 `json:"arguments,omitempty"`
+	Delimiters    map[string]interface{} `json:"delimiters,omitempty"`
+	Returns       string                 `json:"returns,omitempty"`
+	Steps         *orderedmap.OrderedMap `json:"steps,omitempty"`
+	StepsTemplate string                 `json:"stepsTemplate,omitempty"`
 }
 
 func (stepTypes *StepTypes) GetID() string {
@@ -89,10 +99,9 @@ func (client *Client) CreateStepTypes(stepTypes *StepTypes) (*StepTypes, error) 
 	var respStepTypes StepTypes
 	err = DecodeResponseInto(resp, &respStepTypes)
 	if err != nil {
-		log.Printf("[DEBUG] Error while decoding step types. Error = %v, Response: %q", err, respStepTypes)
+		log.Printf("[DEBUG] Error while decoding step types. Error = %v, Response: %v", err, respStepTypes)
 		return nil, err
 	}
-	log.Printf("[DEBUG] Decoded step types response: %q", respStepTypes.Metadata["name"])
 	return &respStepTypes, nil
 
 }
