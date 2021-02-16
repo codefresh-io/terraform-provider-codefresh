@@ -87,6 +87,7 @@ resource "codefresh_pipeline" "test" {
 
 - `name` - (Required) The display name for the pipeline.
 - `revision` - (Optional) The pipeline's revision. Should be added to the **lifecycle/ignore_changes** or incremented mannually each update.
+- `is_public` - (Optional) Boolean that specifies if the build logs are publicly accessible. Default: false
 - `tags` - (Optional) A list of tags to mark a project for easy management and access control.
 - `spec` - (Required) A collection of `spec` blocks as documented below.
 - `original_yaml_string` - (Optional) A string with original yaml pipeline.

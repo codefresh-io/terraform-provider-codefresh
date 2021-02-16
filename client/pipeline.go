@@ -19,6 +19,7 @@ type Labels struct {
 type Metadata struct {
 	Name               string `json:"name,omitempty"`
 	ID                 string `json:"id,omitempty"`
+	IsPublic           bool   `json:"isPublic,omitempty"`
 	Labels             Labels `json:"labels,omitempty"`
 	OriginalYamlString string `json:"originalYamlString,omitempty"`
 	Project            string `json:"project,omitempty"`
