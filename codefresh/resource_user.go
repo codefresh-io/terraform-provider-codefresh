@@ -92,22 +92,6 @@ func resourceUser() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// "credentials": {
-						// 	Type:     schema.TypeList,
-						// 	Optional: true,
-						// 	MaxItems:    1,
-						// 	Elem: &schema.Resource{
-						// 		Schema: map[string]*schema.Schema{
-						// 			"permissions": {
-						// 				Type:     schema.TypeList,
-						// 				Optional: true,
-						// 				Elem: &schema.Schema{
-						// 					Type: schema.TypeString,
-						// 				},
-						// 			},
-						// 		},
-						// 	},
-						// },
 						"idp_id": {
 							Type:     schema.TypeString,
 							Optional: true,
