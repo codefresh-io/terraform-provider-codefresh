@@ -1,0 +1,6 @@
+spec:
+  steps:
+    first_message:
+      name: firstMessage
+    check_second_message_order_maintained:
+      name: secondMessage
