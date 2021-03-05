@@ -1,5 +1,5 @@
 # Data Source: codefresh_step_types_versions
-This data source allows to retrieve the latest published version of a step-types
+This data source allows to retrieve the list of published versions of a step-types
 
 ## Example Usage
 
