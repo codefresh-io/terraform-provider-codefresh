@@ -1,0 +1,32 @@
+kind: step-type
+metadata:
+  description: Testing stepsTemplate
+  examples:
+  - description: test
+    workflow:
+      steps:
+        test_step:
+          title: Test stepsTemplate
+          type: test/stepsTemplate
+      version: "1.0"
+  isPublic: false
+  official: false
+  stage: incubating
+spec:
+  delimiters:
+    left: '[['
+    right: ']]'
+  stepsTemplate: |-
+    first_message:
+      name: firstMessage
+      title: Info message
+      image: alpine
+      commands:
+        - echo "Message first step"
+    check_second_message_is_maintain_in_order:
+      name: secondMessage
+      title: Info message
+      image: alpine
+      commands:
+        - echo "Message second step"
+version: "1.0"

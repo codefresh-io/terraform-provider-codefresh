@@ -1,0 +1,29 @@
+kind: step-type
+metadata:
+  description: Testing step
+  examples:
+  - description: test
+    workflow:
+      steps:
+        test_step:
+          title: Test step
+          type: test/steps
+      version: "1.0"
+  isPublic: false
+  official: false
+  stage: incubating
+spec:
+  steps:
+    first_message:
+      commands:
+      - echo "Message first step"
+      image: alpine
+      name: firstMessage
+      title: Info message
+    second_message:
+      commands:
+      - echo "Message second step"
+      image: alpine
+      name: secondMessage
+      title: Info message
+version: "1.0"
