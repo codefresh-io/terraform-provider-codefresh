@@ -1,5 +1,5 @@
 # Data Source: codefresh_step_types
-This data source allows to retrieve the latest published version of a step-types
+This data source allows to retrieve the published versions of a step-types
 
 ## Example Usage
 
@@ -8,9 +8,13 @@ data "codefresh_step_types" "freestyle" {
     name = "freestyle"
 }
 
+local {
+  freestyle_map = { for step_definition in data.codefresh_step_types.freestyle.version: step_definition.version_number => step_definition }
+}
+
 output "test" {
   # Value is return as YAML
-  value = yamldecode(data.codefresh_step_types.freestyle.step_types_yaml).metadata.updated_at
+  value = local.freestyle_map[keys(local.freestyle_map)[0]].version_number
 }
 
 ```
@@ -18,8 +22,13 @@ output "test" {
 ## Argument Reference
 
 * `name` - (Required) Name of the step-types to be retrieved
-* `version` - (Optional) Version to be retrieved. If not specified, the latest published will be returned
 
 ## Attributes Reference
 
-* `step_types_yaml` - The yaml string representing the custom plugin (step-types).
+- `version` -  A Set of `version` blocks as documented below.
+
+---
+
+`version` provides the following:
+- `version_number` - String representing the semVer for the step
+- `step_types_yaml` - YAML String containing the definition of a typed plugin

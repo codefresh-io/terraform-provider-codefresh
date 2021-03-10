@@ -2,9 +2,9 @@ package codefresh
 
 import (
 	"fmt"
+	"log"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
-	"github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -17,12 +17,20 @@ func dataSourceStepTypes() *schema.Resource {
 				Required: true,
 			},
 			"version": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"step_types_yaml": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeSet,
 				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"version_number": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"step_types_yaml": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -31,40 +39,39 @@ func dataSourceStepTypes() *schema.Resource {
 func dataSourceStepTypesRead(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
-	var stepTypes *cfClient.StepTypes
 	var err error
-	identifier := d.Get("name").(string)
-	version, versionOk := d.GetOk("version")
+	var versions []string
+	stepTypesIdentifier := d.Get("name").(string)
 
-	if versionOk {
-		identifier = identifier + ":" + version.(string)
-	}
-	stepTypes, err = client.GetStepTypes(identifier)
-	if err != nil {
-		return err
+	d.SetId(stepTypesIdentifier)
+	if versions, err = client.GetStepTypesVersions(stepTypesIdentifier); err == nil {
+		var stepVersions cfClient.StepTypesVersions
+		stepVersions.Name = stepTypesIdentifier
+		d.Set("versions", versions)
+		for _, version := range versions {
+			stepTypes, err := client.GetStepTypes(stepTypesIdentifier + ":" + version)
+			if err != nil {
+				log.Printf("[DEBUG] Skipping version %v due to error %v", version, err)
+			} else {
+				stepVersion := cfClient.StepTypesVersion{
+					VersionNumber: version,
+					StepTypes:     *stepTypes,
+				}
+				stepVersions.Versions = append(stepVersions.Versions, stepVersion)
+			}
+		}
+		return mapStepTypesVersionsToResource(stepVersions, d)
 	}
 
-	if stepTypes == nil {
-		return fmt.Errorf("data.codefresh_step_types - cannot find step-types")
-	}
+	return fmt.Errorf("data.codefresh_step_types - was unable to retrieve the versions for step_type %s", stepTypesIdentifier)
 
-	return mapDataSetTypesToResource(stepTypes, d)
 }
 
-func mapDataSetTypesToResource(stepTypes *cfClient.StepTypes, d *schema.ResourceData) error {
-
-	if stepTypes == nil || stepTypes.Metadata["name"].(string) == "" {
-		return fmt.Errorf("data.codefresh_step_types - failed to mapDataSetTypesToResource")
-	}
-	d.SetId(stepTypes.Metadata["name"].(string))
-
-	d.Set("name", d.Id())
-
-	stepTypesYaml, err := yaml.Marshal(stepTypes)
+func mapDataSetTypesToResource(stepTypesVersions cfClient.StepTypesVersions, d *schema.ResourceData) error {
+	err := d.Set("name", stepTypesVersions.Name)
 	if err != nil {
 		return err
 	}
-	d.Set("step_types_yaml", string(stepTypesYaml))
-
-	return nil
+	err = d.Set("version", flattenVersions(stepTypesVersions.Name, stepTypesVersions.Versions))
+	return err
 }
