@@ -278,6 +278,18 @@ func (client *Client) DeleteUserFromAccount(accountId, userId string) error {
 	return nil
 }
 
+func ToSlimAccount(account Account) Account {
+	return Account{ID: account.ID}
+}
+
+func ToSlimAccounts(accounts []Account) []Account {
+	var result []Account
+	for i := 0; i < len(accounts); i++ {
+		result = append(result, ToSlimAccount(accounts[i]))
+	}
+	return result
+}
+
 func (client *Client) UpdateUserAccounts(userId string, accounts []Account) error {
 
 	// API call '/accounts/{accountId}/{userId}/adduser' doesn't work
@@ -287,9 +299,11 @@ func (client *Client) UpdateUserAccounts(userId string, accounts []Account) erro
 		return err
 	}
 
+	var _accounts = ToSlimAccounts(accounts)
+
 	postUser := UserAccounts{
 		UserName: user.UserName,
-		Account:  accounts,
+		Account:  _accounts,
 	}
 
 	body, err := EncodeToJSON(postUser)
