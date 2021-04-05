@@ -142,7 +142,7 @@ func resourcePipeline() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/.*/gi",
-										ValidateFunc: validation.StringIsValidRegExp,
+										ValidateFunc: stringIsValidRe2RegExp,
 									},
 									"branch_regex_input": {
 										Type:         schema.TypeString,
@@ -153,13 +153,13 @@ func resourcePipeline() *schema.Resource {
 									"pull_request_target_branch_regex": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringIsValidRegExp,
+										ValidateFunc: stringIsValidRe2RegExp,
 									},
 									"comment_regex": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/.*/gi",
-										ValidateFunc: validation.StringIsValidRegExp,
+										ValidateFunc: stringIsValidRe2RegExp,
 									},
 									"modified_files_glob": {
 										Type:     schema.TypeString,
@@ -260,7 +260,7 @@ func resourcePipeline() *schema.Resource {
 												"branch_name": {
 													Type:          schema.TypeString,
 													Optional:      true,
-													ValidateFunc:  validation.StringIsValidRegExp,
+													ValidateFunc:  stringIsValidRe2RegExp,
 													ConflictsWith: []string{"spec.0.termination_policy.0.on_create_branch.0.ignore_branch"},
 												},
 												"ignore_trigger": {
