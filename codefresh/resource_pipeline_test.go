@@ -165,7 +165,7 @@ func TestAccCodefreshPipeline_RuntimeEnvironment(t *testing.T) {
 func TestAccCodefreshPipeline_OriginalYamlString(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	originalYamlString := "version: \"1.0\"\nsteps:\n  test:\n    image: alpine:latest\n    commands:\n      - echo \"ACC tests\""
+	originalYamlString := "version: \"1.0\"\nfail_fast: false\nmode: parallel\nsteps:\n  test:\n    image: alpine:latest\n    commands:\n      - echo \"ACC tests\""
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
