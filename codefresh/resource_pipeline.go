@@ -661,7 +661,7 @@ func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipe
 	m := yaml.MapSlice{}
 	err := yaml.Unmarshal([]byte(originalYamlString), &m)
 	if err != nil {
-		log.Fatal("Unable to unmarshall original_yaml_string")
+		log.Fatalf("Unable to unmarshall original_yaml_string. Error: %v", err)
 	}
 
 	stages := "[]"
@@ -699,6 +699,51 @@ func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipe
 			y, _ := yaml.Marshal(item.Value)
 			j2, _ := ghodss.YAMLToJSON(y)
 			stages = string(j2)
+		case "hooks":
+			switch hooks := item.Value.(type) {
+			default:
+				log.Fatalf("unsupported value type: %T", item.Value)
+
+			case yaml.MapSlice:
+				numberOfHooks := len(hooks)
+				for indexHook, hook := range hooks {
+					// E.g. on_finish
+					hooksBuilder.WriteString("\"" + hook.Key.(string) + "\" : {")
+					numberOfAttributes := len(hook.Value.(yaml.MapSlice))
+					for indexAttribute, hookAttribute := range hook.Value.(yaml.MapSlice) {
+						attribute := hookAttribute.Key.(string)
+						switch attribute {
+						case "steps":
+							hooksBuilder.WriteString("\"steps\" : {")
+							numberOfSteps := len(hookAttribute.Value.(yaml.MapSlice))
+							for indexStep, step := range hookAttribute.Value.(yaml.MapSlice) {
+								// We only need to preserve order at the first level to guarantee order of the steps, hence the child nodes can be marshalled
+								// with the standard library
+								y, _ := yaml.Marshal(step.Value)
+								j2, _ := ghodss.YAMLToJSON(y)
+								hooksBuilder.WriteString("\"" + step.Key.(string) + "\" : " + string(j2))
+								if indexStep < numberOfSteps-1 {
+									hooksBuilder.WriteString(",")
+								}
+							}
+							hooksBuilder.WriteString("}")
+						default:
+							// For Other elements we don't need to preserve order
+							y, _ := yaml.Marshal(hookAttribute.Value)
+							j2, _ := ghodss.YAMLToJSON(y)
+							hooksBuilder.WriteString("\"" + hookAttribute.Key.(string) + "\" : " + string(j2))
+						}
+
+						if indexAttribute < numberOfAttributes-1 {
+							hooksBuilder.WriteString(",")
+						}
+					}
+					hooksBuilder.WriteString("}")
+					if indexHook < numberOfHooks-1 {
+						hooksBuilder.WriteString(",")
+					}
+				}
+			}
 		case "mode":
 			pipeline.Spec.Mode = item.Value.(string)
 		case "fail_fast":
@@ -708,12 +753,17 @@ func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipe
 		}
 	}
 	stepsBuilder.WriteString("}")
+	hooksBuilder.WriteString("}")
 	steps := stepsBuilder.String()
+	hooks := hooksBuilder.String()
 	pipeline.Spec.Steps = &cfClient.Steps{
 		Steps: steps,
 	}
 	pipeline.Spec.Stages = &cfClient.Stages{
 		Stages: stages,
+	}
+	pipeline.Spec.Hooks = &cfClient.Hooks{
+		Hooks: hooks,
 	}
 
 }
