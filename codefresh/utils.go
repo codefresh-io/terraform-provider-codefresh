@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/dlclark/regexp2"
 	"github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -96,4 +97,22 @@ func suppressEquivalentYamlDiffs(k, old, new string, d *schema.ResourceData) boo
 	}
 
 	return normalizedOld == normalizedNew
+}
+
+// This function has the same structure of StringIsValidRegExp from the terraform plugin SDK
+// https://github.com/hashicorp/terraform-plugin-sdk/blob/695f0c7b92e26444786b8963e00c665f1b4ef400/helper/validation/strings.go#L225
+// It has been modified to use the library https://github.com/dlclark/regexp2 instead of the standard regex golang package
+// in order to support complex regular expressions including perl regex syntax
+func stringIsValidRe2RegExp(i interface{}, k string) (warnings []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return warnings, errors
+	}
+
+	if _, err := regexp2.Compile(v, regexp2.RE2); err != nil {
+		errors = append(errors, fmt.Errorf("%q: %s", k, err))
+	}
+
+	return warnings, errors
 }
