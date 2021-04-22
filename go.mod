@@ -5,6 +5,8 @@ require (
 	github.com/aws/aws-sdk-go v1.30.12 // indirect
 	github.com/bflad/tfproviderdocs v0.6.0
 	github.com/bflad/tfproviderlint v0.14.0
+	github.com/cenkalti/backoff v2.2.1+incompatible
+	github.com/cenkalti/backoff/v4 v4.1.0
 	github.com/client9/misspell v0.3.4
 	github.com/dlclark/regexp2 v1.4.0
 	github.com/ghodss/yaml v1.0.0

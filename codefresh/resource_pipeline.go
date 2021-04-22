@@ -575,13 +575,7 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			Context:  d.Get("spec.0.spec_template.0.context").(string),
 		}
 	} else {
-		stages, steps := extractStagesAndSteps(originalYamlString)
-		pipeline.Spec.Steps = &cfClient.Steps{
-			Steps: steps,
-		}
-		pipeline.Spec.Stages = &cfClient.Stages{
-			Stages: stages,
-		}
+		extractSpecAttributesFromOriginalYamlString(originalYamlString, pipeline)
 	}
 
 	if _, ok := d.GetOk("spec.0.runtime_environment"); ok {
@@ -659,24 +653,30 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 	return pipeline
 }
 
-// extractStagesAndSteps extracts the steps and stages from the original yaml string to enable propagation in the `Spec` attribute of the pipeline
+// extractSpecAttributesFromOriginalYamlString extracts the steps and stages from the original yaml string to enable propagation in the `Spec` attribute of the pipeline
 // We cannot leverage on the standard marshal/unmarshal because the steps attribute needs to maintain the order of elements
 // while by default the standard function doesn't do it because in JSON maps are unordered
-func extractStagesAndSteps(originalYamlString string) (stages, steps string) {
+func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfClient.Pipeline) {
 	// Use mapSlice to preserve order of items from the YAML string
 	m := yaml.MapSlice{}
 	err := yaml.Unmarshal([]byte(originalYamlString), &m)
 	if err != nil {
-		log.Fatal("Unable to unmarshall original_yaml_string")
+		log.Fatalf("Unable to unmarshall original_yaml_string. Error: %v", err)
 	}
 
-	stages = "[]"
+	stages := "[]"
 	// Dynamically build JSON object for steps using String builder
 	stepsBuilder := strings.Builder{}
 	stepsBuilder.WriteString("{")
+	// Dynamically build JSON object for steps using String builder
+	hooksBuilder := strings.Builder{}
+	hooksBuilder.WriteString("{")
+
 	// Parse elements of the YAML string to extract Steps and Stages if defined
 	for _, item := range m {
-		if item.Key == "steps" {
+		key := item.Key.(string)
+		switch key {
+		case "steps":
 			switch x := item.Value.(type) {
 			default:
 				log.Fatalf("unsupported value type: %T", item.Value)
@@ -694,17 +694,78 @@ func extractStagesAndSteps(originalYamlString string) (stages, steps string) {
 					}
 				}
 			}
-		}
-		if item.Key == "stages" {
+		case "stages":
 			// For Stages we don't have ordering issue because it's a list
 			y, _ := yaml.Marshal(item.Value)
 			j2, _ := ghodss.YAMLToJSON(y)
 			stages = string(j2)
+		case "hooks":
+			switch hooks := item.Value.(type) {
+			default:
+				log.Fatalf("unsupported value type: %T", item.Value)
+
+			case yaml.MapSlice:
+				numberOfHooks := len(hooks)
+				for indexHook, hook := range hooks {
+					// E.g. on_finish
+					hooksBuilder.WriteString("\"" + hook.Key.(string) + "\" : {")
+					numberOfAttributes := len(hook.Value.(yaml.MapSlice))
+					for indexAttribute, hookAttribute := range hook.Value.(yaml.MapSlice) {
+						attribute := hookAttribute.Key.(string)
+						switch attribute {
+						case "steps":
+							hooksBuilder.WriteString("\"steps\" : {")
+							numberOfSteps := len(hookAttribute.Value.(yaml.MapSlice))
+							for indexStep, step := range hookAttribute.Value.(yaml.MapSlice) {
+								// We only need to preserve order at the first level to guarantee order of the steps, hence the child nodes can be marshalled
+								// with the standard library
+								y, _ := yaml.Marshal(step.Value)
+								j2, _ := ghodss.YAMLToJSON(y)
+								hooksBuilder.WriteString("\"" + step.Key.(string) + "\" : " + string(j2))
+								if indexStep < numberOfSteps-1 {
+									hooksBuilder.WriteString(",")
+								}
+							}
+							hooksBuilder.WriteString("}")
+						default:
+							// For Other elements we don't need to preserve order
+							y, _ := yaml.Marshal(hookAttribute.Value)
+							j2, _ := ghodss.YAMLToJSON(y)
+							hooksBuilder.WriteString("\"" + hookAttribute.Key.(string) + "\" : " + string(j2))
+						}
+
+						if indexAttribute < numberOfAttributes-1 {
+							hooksBuilder.WriteString(",")
+						}
+					}
+					hooksBuilder.WriteString("}")
+					if indexHook < numberOfHooks-1 {
+						hooksBuilder.WriteString(",")
+					}
+				}
+			}
+		case "mode":
+			pipeline.Spec.Mode = item.Value.(string)
+		case "fail_fast":
+			pipeline.Spec.FailFast = item.Value.(bool)
+		default:
+			log.Printf("Unsupported entry %s", key)
 		}
 	}
 	stepsBuilder.WriteString("}")
-	steps = stepsBuilder.String()
-	return
+	hooksBuilder.WriteString("}")
+	steps := stepsBuilder.String()
+	hooks := hooksBuilder.String()
+	pipeline.Spec.Steps = &cfClient.Steps{
+		Steps: steps,
+	}
+	pipeline.Spec.Stages = &cfClient.Stages{
+		Stages: stages,
+	}
+	pipeline.Spec.Hooks = &cfClient.Hooks{
+		Hooks: hooks,
+	}
+
 }
 
 func getSupportedTerminationPolicyAttributes(policy string) map[string]interface{} {

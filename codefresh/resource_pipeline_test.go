@@ -2,6 +2,7 @@ package codefresh
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"testing"
 
@@ -165,7 +166,56 @@ func TestAccCodefreshPipeline_RuntimeEnvironment(t *testing.T) {
 func TestAccCodefreshPipeline_OriginalYamlString(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	originalYamlString := "version: \"1.0\"\nsteps:\n  test:\n    image: alpine:latest\n    commands:\n      - echo \"ACC tests\""
+	originalYamlString := `version: 1.0
+fail_fast: false
+stages:
+  - test
+mode: parallel
+hooks: 
+  on_finish:
+    steps:
+      secondmycleanup:
+        commands:
+          - echo echo cleanup step
+        image: alpine:3.9
+      firstmynotification:
+        commands:
+          - echo Notify slack
+        image: cloudposse/slack-notifier
+  on_elected:
+    exec:
+      commands:
+       - echo 'Creating an adhoc test environment'
+      image: alpine:3.9
+    annotations:
+      set:
+        - annotations:
+            - my_annotation_example1: 10.45
+            - my_string_annotation: Hello World
+          entity_type: build
+steps:
+  zz_firstStep:
+    stage: test
+    image: alpine
+    commands:
+      - echo Hello World First Step
+  aa_secondStep:
+    stage: test
+    image: alpine
+    commands:
+      - echo Hello World Second Step`
+
+	expectedSpecAttributes := &cfClient.Spec{
+		Steps: &cfClient.Steps{
+			Steps: `{"zz_firstStep":{"commands":["echo Hello World First Step"],"image":"alpine","stage":"test"},"aa_secondStep":{"commands":["echo Hello World Second Step"],"image":"alpine","stage":"test"}}`,
+		},
+		Stages: &cfClient.Stages{
+			Stages: `["test"]`,
+		},
+		Hooks: &cfClient.Hooks{
+			Hooks: `{"on_finish":{"steps":{"secondmycleanup":{"commands":["echo echo cleanup step"],"image":"alpine:3.9"},"firstmynotification":{"commands":["echo Notify slack"],"image":"cloudposse/slack-notifier"}}},"on_elected":{"exec":{"commands":["echo 'Creating an adhoc test environment'"],"image":"alpine:3.9"},"annotations":{"set":[{"annotations":[{"my_annotation_example1":10.45},{"my_string_annotation":"Hello World"}],"entity_type":"build"}]}}}`,
+		},
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -178,6 +228,7 @@ func TestAccCodefreshPipeline_OriginalYamlString(t *testing.T) {
 
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "original_yaml_string", originalYamlString),
+					testAccCheckCodefreshPipelineOriginalYamlStringAttributePropagation(resourceName, expectedSpecAttributes),
 				),
 			},
 			{
@@ -424,6 +475,38 @@ func testAccCheckCodefreshPipelineDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckCodefreshPipelineOriginalYamlStringAttributePropagation(resource string, spec *cfClient.Spec) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+
+		rs, ok := state.RootModule().Resources[resource]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resource)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Record ID is set")
+		}
+
+		pipelineID := rs.Primary.ID
+
+		apiClient := testAccProvider.Meta().(*cfClient.Client)
+		pipeline, err := apiClient.GetPipeline(pipelineID)
+
+		if !reflect.DeepEqual(pipeline.Spec.Steps, spec.Steps) {
+			return fmt.Errorf("Expected Step %v. Got %v", spec.Steps, pipeline.Spec.Steps)
+		}
+		if !reflect.DeepEqual(pipeline.Spec.Stages, spec.Stages) {
+			return fmt.Errorf("Expected Stages %v. Got %v", spec.Stages, pipeline.Spec.Stages)
+		}
+		if !reflect.DeepEqual(pipeline.Spec.Hooks, spec.Hooks) {
+			return fmt.Errorf("Expected Hooks %v. Got %v", spec.Hooks, pipeline.Spec.Hooks)
+		}
+		if err != nil {
+			return fmt.Errorf("error fetching pipeline with resource %s. %s", resource, err)
+		}
+		return nil
+	}
 }
 
 // CONFIGS
