@@ -747,7 +747,10 @@ func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipe
 		case "mode":
 			pipeline.Spec.Mode = item.Value.(string)
 		case "fail_fast":
-			pipeline.Spec.FailFast = item.Value.(bool)
+			ff, ok := item.Value.(bool)
+			if ok {
+				pipeline.Spec.FailFast = &ff
+			}
 		default:
 			log.Printf("Unsupported entry %s", key)
 		}
