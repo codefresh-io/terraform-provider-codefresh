@@ -81,7 +81,7 @@ type Spec struct {
 	Steps              *Steps                   `json:"steps,omitempty"`
 	Stages             *Stages                  `json:"stages,omitempty"`
 	Mode               string                   `json:"mode,omitempty"`
-	FailFast           bool                     `json:"fail_fast,omitempty"`
+	FailFast           *bool                    `json:"fail_fast,omitempty"`
 	RuntimeEnvironment RuntimeEnvironment       `json:"runtimeEnvironment,omitempty"`
 	TerminationPolicy  []map[string]interface{} `json:"terminationPolicy,omitempty"`
 	Hooks              *Hooks                   `json:"hooks,omitempty"`
