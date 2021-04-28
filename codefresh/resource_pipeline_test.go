@@ -77,6 +77,31 @@ func TestAccCodefreshPipeline_Concurrency(t *testing.T) {
 	})
 }
 
+func TestAccCodefreshPipeline_PackId(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineBasicConfigPackId(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.packId", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCodefreshPipeline_Tags(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
@@ -585,7 +610,7 @@ resource "codefresh_pipeline" "test" {
 `, rName, repo, path, revision, context)
 }
 
-func testAccCodefreshPipelineBasicConfigTags(rName, repo, path, revision, context, tag1, tag2 string) string {
+func testAccCodefreshPipelineBasicConfigPackId(rName, repo, path, revision, context, packId string) string {
 	return fmt.Sprintf(`
 resource "codefresh_pipeline" "test" {
 
@@ -603,6 +628,31 @@ resource "codefresh_pipeline" "test" {
     	path        = %q
     	revision    = %q
     	context     = %q
+		packId      = %q
+    }
+  }
+}
+`, rName, repo, path, revision, context, packId)
+}
+
+func testAccCodefreshPipelineBasicConfigTags(rName, repo, path, revision, context, tag1, tag2 string) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
+  name = "%s"
+
+  spec {
+	spec_template {
+        repo        = %q
+        path        = %q
+        revision    = %q
+        context     = %q
     }
   }
 
