@@ -2,7 +2,6 @@ version: '1.0'
 stages:
   - clone
   - test
-  - pakcages
   - release
 steps:
   main_clone:
