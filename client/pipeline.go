@@ -85,6 +85,7 @@ type Spec struct {
 	RuntimeEnvironment RuntimeEnvironment       `json:"runtimeEnvironment,omitempty"`
 	TerminationPolicy  []map[string]interface{} `json:"terminationPolicy,omitempty"`
 	Hooks              *Hooks                   `json:"hooks,omitempty"`
+	PackId             string                   `json:"packId,omitempty"`
 }
 
 type Steps struct {
