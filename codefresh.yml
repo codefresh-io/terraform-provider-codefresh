@@ -2,6 +2,7 @@ version: '1.0'
 stages:
   - clone
   - test
+  - pakcages
   - release
 steps:
   main_clone:
@@ -10,7 +11,7 @@ steps:
     type: git-clone
     repo: "${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}"
     revision: "${{CF_REVISION}}"
-    git: cf_github
+    git: github
 
   go_fmt:
     title: 'Formatting'
@@ -23,9 +24,15 @@ steps:
     title: 'Preparing environment variables...'
     stage: release
     image: codefreshio/ci-helpers
+    environment:
+      - GPG_FINGERPRINT=${{GPG_FINGERPRINT}}
+      - SIGNINGKEY=${{SIGNINGKEY}}
     commands:
       - source /get-token/get-gh-token.sh
       - cf_export GITHUB_TOKEN
+      - cf_export GPG_FINGERPRINT
+      - cf_export SIGNINGKEY
+      - cf_export PRIVATE_KEY_PATH
     when:
       condition:
         all:
@@ -35,7 +42,18 @@ steps:
     title: Create release in Github
     image:  goreleaser/goreleaser:v0.133
     stage: release
+    environment:
+      - GPG_FINGERPRINT=${{GPG_FINGERPRINT}}
+      - SIGNINGKEY=${{SIGNINGKEY}}
+      - PRIVATE_KEY_PATH=${{PRIVATE_KEY_PATH}}
     commands:
+      - apk update
+      - apk fetch gnupg
+      - apk add gnupg
+      - wget ${PRIVATE_KEY_PATH} -O /tmp/private.key
+      - gpg --import /tmp/private.key
+      - git config user.signingkey ${GPG_FINGERPRINT}
+      - git clean -fdx
       - goreleaser release --rm-dist
     when:
       condition:
