@@ -2,6 +2,7 @@ version: '1.0'
 stages:
   - clone
   - test
+  - pakcages
   - release
 steps:
   main_clone:
@@ -10,7 +11,7 @@ steps:
     type: git-clone
     repo: "${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}"
     revision: "${{CF_REVISION}}"
-    git: cf_github
+    git: github
 
   go_fmt:
     title: 'Formatting'
@@ -31,7 +32,7 @@ steps:
       - cf_export GITHUB_TOKEN
       - cf_export GPG_FINGERPRINT
       - cf_export SIGNINGKEY
-      - cf_export PRIVATE_KEY_PATH
+      - cf_export GPG_PRIVATE
     when:
       condition:
         all:
@@ -44,12 +45,12 @@ steps:
     environment:
       - GPG_FINGERPRINT=${{GPG_FINGERPRINT}}
       - SIGNINGKEY=${{SIGNINGKEY}}
-      - PRIVATE_KEY_PATH=${{PRIVATE_KEY_PATH}}
+      - GPG_PRIVATE=${{GPG_PRIVATE}}
     commands:
       - apk update
       - apk fetch gnupg
       - apk add gnupg
-      - wget ${PRIVATE_KEY_PATH} -O /tmp/private.key
+      - echo ${GPG_PRIVATE} | base64 -d > /tmp/private.key
       - gpg --import /tmp/private.key
       - git config user.signingkey ${GPG_FINGERPRINT}
       - git clean -fdx
