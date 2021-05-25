@@ -1,6 +1,5 @@
 # Terraform provider for Codefresh
 
-
 This provider was initialized by [LightStep](https://lightstep.com/) and will be maintained as the official Terraform provider for Codefresh.
 
 The provider is still under development, and can be used as a terraform [third-party plugin](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) only.
