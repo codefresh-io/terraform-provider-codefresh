@@ -428,6 +428,41 @@ func TestAccCodefreshPipelineOnCreateBranchIgnoreTrigger(t *testing.T) {
 	})
 }
 
+func TestAccCodefreshPipelineOptions(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineOptions(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.options.0.keep_pvcs_for_pending_approval", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.options.0.pending_approval_concurrency_applied", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodefreshPipelineBasicConfig(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckNoResourceAttr(resourceName, "spec.0.options"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCodefreshPipelineExists(resource string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 
@@ -846,6 +881,34 @@ func TestAccCodefreshPipeline_Contexts(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCodefreshPipelineOptions(rName, repo, path, revision, context string, keepPVCsForPendingApproval, pendingApprovalConcurrencyApplied bool) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
+  name = "%s"
+
+  spec {
+	spec_template {
+    	repo        = %q
+    	path        = %q
+    	revision    = %q
+    	context     = %q
+	}
+	options {
+		keep_pvcs_for_pending_approval = %t
+		pending_approval_concurrency_applied = %t
+	}
+  }
+}
+`, rName, repo, path, revision, context, keepPVCsForPendingApproval, pendingApprovalConcurrencyApplied)
 }
 
 func testAccCodefreshPipelineOnCreateBranchIgnoreTrigger(rName, repo, path, revision, context string, ignoreTrigger bool) string {

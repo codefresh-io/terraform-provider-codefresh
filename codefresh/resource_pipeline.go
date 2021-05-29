@@ -306,6 +306,23 @@ func resourcePipeline() *schema.Resource {
 								},
 							},
 						},
+						"options": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"keep_pvcs_for_pending_approval": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"pending_approval_concurrency_applied": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -443,6 +460,21 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 
 	if len(spec.TerminationPolicy) > 0 {
 		m["termination_policy"] = flattenSpecTerminationPolicy(spec.TerminationPolicy)
+	}
+
+	if len(spec.Options) > 0 {
+		var resOptions []map[string]bool
+		options := map[string]bool{}
+		for keyOption, valueOption := range spec.Options {
+			switch {
+			case keyOption == "keepPVCsForPendingApproval":
+				options["keep_pvcs_for_pending_approval"] = valueOption
+			case keyOption == "pendingApprovalConcurrencyApplied":
+				options["pending_approval_concurrency_applied"] = valueOption
+			}
+		}
+		resOptions = append(resOptions, options)
+		m["options"] = resOptions
 	}
 
 	m["concurrency"] = spec.Concurrency
@@ -646,6 +678,18 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 		onTerminateAnnotationPolicy = getSupportedTerminationPolicyAttributes("on_terminate_annotation")
 		onTerminateAnnotationPolicy["key"] = "cf_predecessor"
 		codefreshTerminationPolicy = append(codefreshTerminationPolicy, onTerminateAnnotationPolicy)
+	}
+	if _, ok := d.GetOk("spec.0.options"); ok {
+		pipelineSpecOption := make(map[string]bool)
+		if keepPVCs, ok := d.GetOkExists("spec.0.options.0.keep_pvcs_for_pending_approval"); ok {
+			pipelineSpecOption["keepPVCsForPendingApproval"] = keepPVCs.(bool)
+		}
+		if pendingApprovalConcurrencyApplied, ok := d.GetOkExists("spec.0.options.0.pending_approval_concurrency_applied"); ok {
+			pipelineSpecOption["pendingApprovalConcurrencyApplied"] = pendingApprovalConcurrencyApplied.(bool)
+		}
+		pipeline.Spec.Options = pipelineSpecOption
+	} else {
+		pipeline.Spec.Options = nil
 	}
 
 	pipeline.Spec.TerminationPolicy = codefreshTerminationPolicy

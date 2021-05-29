@@ -108,6 +108,7 @@ resource "codefresh_pipeline" "test" {
 - `runtime_environment` - (Optional) A collection of `runtime_environment` blocks as documented below.
 - `contexts` - (Optional) A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be configured for the pipeline
 - `termination_policy` - (Optional) A `termination_policy` block as documented below.
+- `options` - (Optional) A `options` block as documented below.
 
 ---
 
@@ -178,6 +179,18 @@ The following table presents how to configure this block based on the options av
 | Once a build is created, terminate all other running builds                   | From the SAME trigger    |       Defined    |     N/A     |      false     |      true     |
 | Once a build is created, terminate all other running builds                   | From ANY trigger         |       Defined    |     N/A     |      true      |      true     |
 
+---
+
+`options` supports the following:
+
+- `keep_pvcs_for_pending_approval` - (Optional) Boolean for the Settings under pending approval: `When build enters "Pending Approval" state, volume should`:
+    * Default (attribute not specified): "Use Setting accounts"
+    * true: "Remain (build remains active)"
+    * false: "Be removed"
+- `pending_approval_concurrency_applied` - (Optional) Boolean for the Settings under pending approval: `Pipeline concurrency policy: Builds on "Pending Approval" state should be`:
+    * Default (attribute not specified): "Use Setting accounts"
+    * true: "Included in concurrency"
+    * false: "Not included in concurrency"
 
 ## Attributes Reference
 
