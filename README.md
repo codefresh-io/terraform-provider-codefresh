@@ -79,7 +79,7 @@ export CODEFRESH_API_KEY='xyz'
 
 ## License
 
-Copyright 2020 Codefresh.
+Copyright 2021 Codefresh.
 
 The Codefresh Provider is available under [MPL2.0 license](./LICENSE).
 
