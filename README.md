@@ -4,7 +4,7 @@ This provider was initialized by [LightStep](https://lightstep.com/) and will be
 
 The provider is still under development, and can be used as a terraform [third-party plugin](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) only.
 
-## Requirements
+## Requirements last
 
 - [Terraform](https://www.terraform.io/downloads.html) 0.12+ ;
 - [Go](https://golang.org/doc/install) 1.12+ (to build the provider plugin).
