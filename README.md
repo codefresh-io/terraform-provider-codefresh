@@ -6,7 +6,7 @@ The provider is still under development, and can be used as a terraform [third-p
 
 ## Requirements
 
-- [Terraform](https://www.terraform.io/downloads.html) 0.12+ ;
+- [Terraform](https://www.terraform.io/downloads.html) 0.13+ ;
 - [Go](https://golang.org/doc/install) 1.12+ (to build the provider plugin).
 
 ## Download Provider
