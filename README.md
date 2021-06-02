@@ -72,7 +72,7 @@ Get an API key from [Codefresh](https://g.codefresh.io/user/settings) and set th
 - View
 
 ```bash
-export CODEFRESH_API_KEY='xyz'
+export CODEFRESH_API_KEY='xyzd'
 ```
 
 ## Testing the Provider
