@@ -1,7 +1,6 @@
 package client
 
 import (
-	"errors"
 	"fmt"
 	"log"
 )
@@ -234,18 +233,27 @@ func (client *Client) GetAllUsers() (*[]User, error) {
 
 func (client *Client) GetUserByID(userId string) (*User, error) {
 
-	users, err := client.GetAllUsers()
+	opts := RequestOptions{
+		Path:   fmt.Sprintf("/admin/user/id/%s", userId),
+		Method: "GET",
+	}
+
+	resp, err := client.RequestAPI(&opts)
+
 	if err != nil {
 		return nil, err
 	}
 
-	for _, user := range *users {
-		if user.ID == userId {
-			return &user, nil
-		}
+	var user User
+
+	err = DecodeResponseInto(resp, &user)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, errors.New(fmt.Sprintf("[ERROR] User with ID %s wasn't found.", userId))
+	return &user, nil
+
 }
 
 func (client *Client) DeleteUser(userName string) error {
