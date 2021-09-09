@@ -23,7 +23,7 @@ resource "random_string" "random" {
 
 resource "codefresh_api_key" "new" {
   account_id = codefresh_account.test.id
-
+  user_id = data.codefresh_account.test_account_user.user_id
   name = "tfkey_${random_string.random.result}"
 
   scopes = [
@@ -66,7 +66,8 @@ resource "codefresh_team" "team_1" {
 ## Argument Reference
 
 - `name` - (Required) The display name for the API key.
-- `account_id` - (Required) The ID of account than should own the new API key.
+- `account_id` - (Required) The ID of account in which the API key will be created.
+- `user_id` - (Required) The ID of a user within the above account that will own the API key. 
 - `scopes` - (Optional) A list of access scopes, that can be targeted. The possible values:
   - `agent`
   - `agents`
