@@ -67,7 +67,7 @@ resource "codefresh_team" "team_1" {
 
 - `name` - (Required) The display name for the API key.
 - `account_id` - (Required) The ID of account in which the API key will be created.
-- `user_id` - (Required) The ID of a user within the above account that will own the API key. 
+- `user_id` - (Required) The ID of a user within the referenced `account_id` that will own the API key. 
 - `scopes` - (Optional) A list of access scopes, that can be targeted. The possible values:
   - `agent`
   - `agents`
