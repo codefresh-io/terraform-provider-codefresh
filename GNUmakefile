@@ -5,7 +5,7 @@ HOSTNAME=codefresh.io
 PKG_NAME=codefresh
 NAMESPACE=codefresh-io
 BINARY=terraform-provider-${PKG_NAME}
-VERSION=0.0.1
+VERSION=0.1.0
 OS_ARCH=darwin_amd64
 
 default: build
