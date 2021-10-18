@@ -1,5 +1,6 @@
 terraform-provider-codefresh
 dist/
+.vscode/
 
 **/.terraform
 **/terraform.tfstate

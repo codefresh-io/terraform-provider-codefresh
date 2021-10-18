@@ -1,13 +1,13 @@
 package codefresh
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
 	"strings"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
-	ghodss "github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"gopkg.in/yaml.v2"
@@ -701,23 +701,18 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 // We cannot leverage on the standard marshal/unmarshal because the steps attribute needs to maintain the order of elements
 // while by default the standard function doesn't do it because in JSON maps are unordered
 func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfClient.Pipeline) {
-	// Use mapSlice to preserve order of items from the YAML string
-	m := yaml.MapSlice{}
-	err := yaml.Unmarshal([]byte(originalYamlString), &m)
+	ms := OrderedMapSlice{}
+	err := yaml.Unmarshal([]byte(originalYamlString), &ms)
 	if err != nil {
 		log.Fatalf("Unable to unmarshall original_yaml_string. Error: %v", err)
 	}
 
 	stages := "[]"
-	// Dynamically build JSON object for steps using String builder
-	stepsBuilder := strings.Builder{}
-	stepsBuilder.WriteString("{")
-	// Dynamically build JSON object for steps using String builder
-	hooksBuilder := strings.Builder{}
-	hooksBuilder.WriteString("{")
+	steps := "{}"
+	hooks := "{}"
 
-	// Parse elements of the YAML string to extract Steps and Stages if defined
-	for _, item := range m {
+	// Parse elements of the YAML string to extract Steps, Hooks and Stages if defined
+	for _, item := range ms {
 		key := item.Key.(string)
 		switch key {
 		case "steps":
@@ -725,68 +720,22 @@ func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipe
 			default:
 				log.Fatalf("unsupported value type: %T", item.Value)
 
-			case yaml.MapSlice:
-				numberOfSteps := len(x)
-				for index, item := range x {
-					// We only need to preserve order at the first level to guarantee order of the steps, hence the child nodes can be marshalled
-					// with the standard library
-					y, _ := yaml.Marshal(item.Value)
-					j2, _ := ghodss.YAMLToJSON(y)
-					stepsBuilder.WriteString("\"" + item.Key.(string) + "\" : " + string(j2))
-					if index < numberOfSteps-1 {
-						stepsBuilder.WriteString(",")
-					}
-				}
+			case OrderedMapSlice:
+				s, _ := json.Marshal(x)
+				steps = string(s)
 			}
 		case "stages":
-			// For Stages we don't have ordering issue because it's a list
-			y, _ := yaml.Marshal(item.Value)
-			j2, _ := ghodss.YAMLToJSON(y)
-			stages = string(j2)
+			s, _ := json.Marshal(item.Value)
+			stages = string(s)
+
 		case "hooks":
-			switch hooks := item.Value.(type) {
+			switch x := item.Value.(type) {
 			default:
 				log.Fatalf("unsupported value type: %T", item.Value)
 
-			case yaml.MapSlice:
-				numberOfHooks := len(hooks)
-				for indexHook, hook := range hooks {
-					// E.g. on_finish
-					hooksBuilder.WriteString("\"" + hook.Key.(string) + "\" : {")
-					numberOfAttributes := len(hook.Value.(yaml.MapSlice))
-					for indexAttribute, hookAttribute := range hook.Value.(yaml.MapSlice) {
-						attribute := hookAttribute.Key.(string)
-						switch attribute {
-						case "steps":
-							hooksBuilder.WriteString("\"steps\" : {")
-							numberOfSteps := len(hookAttribute.Value.(yaml.MapSlice))
-							for indexStep, step := range hookAttribute.Value.(yaml.MapSlice) {
-								// We only need to preserve order at the first level to guarantee order of the steps, hence the child nodes can be marshalled
-								// with the standard library
-								y, _ := yaml.Marshal(step.Value)
-								j2, _ := ghodss.YAMLToJSON(y)
-								hooksBuilder.WriteString("\"" + step.Key.(string) + "\" : " + string(j2))
-								if indexStep < numberOfSteps-1 {
-									hooksBuilder.WriteString(",")
-								}
-							}
-							hooksBuilder.WriteString("}")
-						default:
-							// For Other elements we don't need to preserve order
-							y, _ := yaml.Marshal(hookAttribute.Value)
-							j2, _ := ghodss.YAMLToJSON(y)
-							hooksBuilder.WriteString("\"" + hookAttribute.Key.(string) + "\" : " + string(j2))
-						}
-
-						if indexAttribute < numberOfAttributes-1 {
-							hooksBuilder.WriteString(",")
-						}
-					}
-					hooksBuilder.WriteString("}")
-					if indexHook < numberOfHooks-1 {
-						hooksBuilder.WriteString(",")
-					}
-				}
+			case OrderedMapSlice:
+				h, _ := json.Marshal(x)
+				hooks = string(h)
 			}
 		case "mode":
 			pipeline.Spec.Mode = item.Value.(string)
@@ -799,10 +748,7 @@ func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipe
 			log.Printf("Unsupported entry %s", key)
 		}
 	}
-	stepsBuilder.WriteString("}")
-	hooksBuilder.WriteString("}")
-	steps := stepsBuilder.String()
-	hooks := hooksBuilder.String()
+
 	pipeline.Spec.Steps = &cfClient.Steps{
 		Steps: steps,
 	}
