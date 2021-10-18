@@ -239,7 +239,7 @@ func flattenContextSpec(spec cfClient.ContextSpec) []interface{} {
 	case contextYaml, contextSecretYaml:
 		m[normalizeFieldName(currentContextType)] = flattenContextYaml(spec)
 	case contextGoogleStorage:
-		m[normalizeFieldName(currentContextType)] = flattenStorageContextConfig(spec)
+		m[normalizeFieldName(currentContextType)] = context.FlattenStorageContextConfig(spec)
 	default:
 		log.Printf("[DEBUG] Invalid context type = %v", currentContextType)
 		return nil
@@ -257,40 +257,6 @@ func flattenContextConfig(spec cfClient.ContextSpec) []interface{} {
 	return res
 }
 
-func flattenStorageContextConfig(spec cfClient.ContextSpec) []interface{} {
-	//google.[0].data[0].auth[0].[type, json]
-
-	var res = make([]interface{}, 0)
-	m := make(map[string]interface{})
-
-	dataList := make([]interface{}, 0)
-	data := make(map[string]interface{})
-
-	auth := make(map[string]interface{})
-	auth["json_config"] = spec.Data["auth"].(map[string]interface{})["jsonConfig"]
-	auth["type"] = spec.Data["type"]
-
-	authList := make([]interface{}, 0)
-	authList = append(authList, auth)
-
-	data["auth"] = authList
-
-	dataList = append(dataList, data)
-
-	m["data"] = dataList
-	res = append(res, m)
-	return res
-
-	//contextData := context[0].(map[string]interface{})
-	//contextAuth := contextData["auth"].([]interface{})[0].(map[string]interface{})
-	//data := make(map[string]interface{})
-	//auth := make(map[string]interface{})
-	//auth["type"] = contextAuth["type"]
-	//auth["jsonConfig"] = contextAuth["json_config"]
-	//data["auth"] = auth
-	//return data
-}
-
 func flattenContextYaml(spec cfClient.ContextSpec) []interface{} {
 	var res = make([]interface{}, 0)
 	m := make(map[string]interface{})
@@ -303,24 +269,10 @@ func flattenContextYaml(spec cfClient.ContextSpec) []interface{} {
 	return res
 }
 
-func convertStorageContext(context []interface{}) map[string]interface{} {
-	contextData := context[0].(map[string]interface{})
-	contextAuth := contextData["auth"].([]interface{})[0].(map[string]interface{})
-	data := make(map[string]interface{})
-	auth := make(map[string]interface{})
-	auth["type"] = contextAuth["type"]
-	auth["jsonConfig"] = contextAuth["json_config"]
-	data["auth"] = auth
-	return data
-}
-
 func mapResourceToContext(d *schema.ResourceData) *cfClient.Context {
 
 	var normalizedContextType string
 	var normalizedContextData map[string]interface{}
-
-	spec := d.Get("spec")
-	log.Println(spec)
 
 	if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextConfig) + ".0.data"); ok {
 		normalizedContextType = contextConfig
@@ -330,16 +282,16 @@ func mapResourceToContext(d *schema.ResourceData) *cfClient.Context {
 		normalizedContextData = data.(map[string]interface{})
 	} else if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextYaml) + ".0.data"); ok {
 		normalizedContextType = contextYaml
-		yaml.Unmarshal([]byte(data.(string)), &normalizedContextData)
+		_ = yaml.Unmarshal([]byte(data.(string)), &normalizedContextData)
 	} else if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextSecretYaml) + ".0.data"); ok {
 		normalizedContextType = contextSecretYaml
-		yaml.Unmarshal([]byte(data.(string)), &normalizedContextData)
+		_ = yaml.Unmarshal([]byte(data.(string)), &normalizedContextData)
 	} else if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextGoogleStorage) + ".0.data"); ok {
 		normalizedContextType = contextGoogleStorage
-		normalizedContextData = convertStorageContext(data.([]interface{}))
+		normalizedContextData = context.ConvertStorageContext(data.([]interface{}))
 	}
 
-	context := &cfClient.Context{
+	return &cfClient.Context{
 		Metadata: cfClient.ContextMetadata{
 			Name: d.Get("name").(string),
 		},
@@ -348,6 +300,4 @@ func mapResourceToContext(d *schema.ResourceData) *cfClient.Context {
 			Data: normalizedContextData,
 		},
 	}
-
-	return context
 }
