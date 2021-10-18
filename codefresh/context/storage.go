@@ -5,28 +5,38 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func ConvertStorageContext(context []interface{}) map[string]interface{} {
-	contextData := context[0].(map[string]interface{})
-	contextAuth := contextData["auth"].([]interface{})[0].(map[string]interface{})
+func convertStorageContext(context []interface{}, auth map[string]interface{}) map[string]interface{} {
 	data := make(map[string]interface{})
-	auth := make(map[string]interface{})
-	auth["type"] = contextAuth["type"]
-	auth["jsonConfig"] = contextAuth["json_config"]
 	data["auth"] = auth
 	return data
 }
 
-func FlattenStorageContextConfig(spec cfClient.ContextSpec) []interface{} {
+func ConvertJsonConfigStorageContext(context []interface{}) map[string]interface{} {
+	contextData := context[0].(map[string]interface{})
+	contextAuth := contextData["auth"].([]interface{})[0].(map[string]interface{})
+	auth := make(map[string]interface{})
+	auth["type"] = contextAuth["type"]
+	auth["jsonConfig"] = contextAuth["json_config"]
+	return convertStorageContext(context, auth)
+}
+
+func ConvertAzureStorageContext(context []interface{}) map[string]interface{} {
+	contextData := context[0].(map[string]interface{})
+	contextAuth := contextData["auth"].([]interface{})[0].(map[string]interface{})
+	auth := make(map[string]interface{})
+	auth["type"] = contextAuth["type"]
+	auth["account_name"] = contextAuth["account_name"]
+	auth["account_key"] = contextAuth["account_key"]
+	return convertStorageContext(context, auth)
+}
+
+func flattenStorageContextConfig(spec cfClient.ContextSpec, auth map[string]interface{}) []interface{} {
 
 	var res = make([]interface{}, 0)
 	m := make(map[string]interface{})
 
 	dataList := make([]interface{}, 0)
 	data := make(map[string]interface{})
-
-	auth := make(map[string]interface{})
-	auth["json_config"] = spec.Data["auth"].(map[string]interface{})["jsonConfig"]
-	auth["type"] = spec.Data["type"]
 
 	authList := make([]interface{}, 0)
 	authList = append(authList, auth)
@@ -39,6 +49,22 @@ func FlattenStorageContextConfig(spec cfClient.ContextSpec) []interface{} {
 	res = append(res, m)
 	return res
 
+}
+
+func FlattenJsonConfigStorageContextConfig(spec cfClient.ContextSpec) []interface{} {
+	auth := make(map[string]interface{})
+	auth["json_config"] = spec.Data["auth"].(map[string]interface{})["jsonConfig"]
+	auth["type"] = spec.Data["type"]
+	return flattenStorageContextConfig(spec, auth)
+}
+
+func FlattenAzureStorageContextConfig(spec cfClient.ContextSpec) []interface{} {
+	auth := make(map[string]interface{})
+	authParams := spec.Data["auth"].(map[string]interface{})
+	auth["account_name"] = authParams["account_name"]
+	auth["account_key"] = authParams["account_key"]
+	auth["type"] = spec.Data["type"]
+	return flattenStorageContextConfig(spec, auth)
 }
 
 func storageSchema(authSchema *schema.Schema) *schema.Schema {
