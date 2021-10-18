@@ -1,6 +1,7 @@
 package codefresh
 
 import (
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/context"
 	"log"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
@@ -136,43 +137,7 @@ func resourceContext() *schema.Resource {
 								},
 							},
 						},
-						normalizeFieldName(contextGoogleStorage): {
-							Type:          schema.TypeList,
-							Optional:      true,
-							ForceNew:      true,
-							MaxItems:      1,
-							ConflictsWith: getConflictingContexts(contextGoogleStorage),
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"data": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"auth": {
-													Type:     schema.TypeList,
-													Required: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"type": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"json_config": {
-																Type:     schema.TypeMap,
-																Required: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
+						normalizeFieldName(contextGoogleStorage): context.GcsSchema(),
 					},
 				},
 			},
@@ -257,10 +222,6 @@ func mapContextToResource(context cfClient.Context, d *schema.ResourceData) erro
 	err = d.Set("spec", flattenContextSpec(context.Spec))
 	if err != nil {
 		log.Printf("[DEBUG] Failed to flatten Context spec = %v", context.Spec)
-		return err
-	}
-
-	if err != nil {
 		return err
 	}
 

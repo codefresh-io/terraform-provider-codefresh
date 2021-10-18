@@ -5,3 +5,7 @@ dist/
 **/terraform.tfstate
 **/terraform.tfstate.backup
 tests/
+
+.idea
+**/*.lock.hcl
+**/*.backup
