@@ -1,7 +1,7 @@
 package codefresh
 
 import (
-	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/context"
+	storageContext "github.com/codefresh-io/terraform-provider-codefresh/codefresh/context"
 	"log"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
@@ -15,6 +15,7 @@ const (
 	contextYaml          = "yaml"
 	contextSecretYaml    = "secret-yaml"
 	contextGoogleStorage = "storage.gc"
+	contextS3Storage     = "storage.s3"
 )
 
 var supportedContextType = []string{
@@ -137,7 +138,8 @@ func resourceContext() *schema.Resource {
 								},
 							},
 						},
-						normalizeFieldName(contextGoogleStorage): context.GcsSchema(),
+						normalizeFieldName(contextGoogleStorage): storageContext.GcsSchema(),
+						normalizeFieldName(contextS3Storage):     storageContext.S3Schema(),
 					},
 				},
 			},
@@ -148,8 +150,7 @@ func resourceContext() *schema.Resource {
 func resourceContextCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
-	context := *mapResourceToContext(d)
-	resp, err := client.CreateContext(&context)
+	resp, err := client.CreateContext(mapResourceToContext(d))
 	if err != nil {
 		log.Printf("[DEBUG] Error while creating context. Error = %v", err)
 		return err
@@ -238,8 +239,8 @@ func flattenContextSpec(spec cfClient.ContextSpec) []interface{} {
 		m[normalizeFieldName(currentContextType)] = flattenContextConfig(spec)
 	case contextYaml, contextSecretYaml:
 		m[normalizeFieldName(currentContextType)] = flattenContextYaml(spec)
-	case contextGoogleStorage:
-		m[normalizeFieldName(currentContextType)] = context.FlattenStorageContextConfig(spec)
+	case contextGoogleStorage, contextS3Storage:
+		m[normalizeFieldName(currentContextType)] = storageContext.FlattenStorageContextConfig(spec)
 	default:
 		log.Printf("[DEBUG] Invalid context type = %v", currentContextType)
 		return nil
@@ -288,7 +289,10 @@ func mapResourceToContext(d *schema.ResourceData) *cfClient.Context {
 		_ = yaml.Unmarshal([]byte(data.(string)), &normalizedContextData)
 	} else if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextGoogleStorage) + ".0.data"); ok {
 		normalizedContextType = contextGoogleStorage
-		normalizedContextData = context.ConvertStorageContext(data.([]interface{}))
+		normalizedContextData = storageContext.ConvertStorageContext(data.([]interface{}))
+	} else if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextS3Storage) + ".0.data"); ok {
+		normalizedContextType = contextS3Storage
+		normalizedContextData = storageContext.ConvertStorageContext(data.([]interface{}))
 	}
 
 	return &cfClient.Context{

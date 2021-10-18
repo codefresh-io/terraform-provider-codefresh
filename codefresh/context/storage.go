@@ -41,7 +41,7 @@ func FlattenStorageContextConfig(spec cfClient.ContextSpec) []interface{} {
 
 }
 
-func GcsSchema() *schema.Schema {
+func storageSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -78,4 +78,12 @@ func GcsSchema() *schema.Schema {
 			},
 		},
 	}
+}
+
+func GcsSchema() *schema.Schema {
+	return storageSchema()
+}
+
+func S3Schema() *schema.Schema {
+	return storageSchema()
 }
