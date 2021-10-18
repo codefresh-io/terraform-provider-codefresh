@@ -41,7 +41,7 @@ func FlattenStorageContextConfig(spec cfClient.ContextSpec) []interface{} {
 
 }
 
-func storageSchema() *schema.Schema {
+func storageSchema(authSchema *schema.Schema) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -55,23 +55,7 @@ func storageSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"auth": {
-								Type:     schema.TypeList,
-								Required: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"type": {
-											Type:     schema.TypeString,
-											Required: true,
-										},
-										"json_config": {
-											Type:     schema.TypeMap,
-											Required: true,
-										},
-									},
-								},
-							},
+							"auth": authSchema,
 						},
 					},
 				},
@@ -81,9 +65,68 @@ func storageSchema() *schema.Schema {
 }
 
 func GcsSchema() *schema.Schema {
-	return storageSchema()
+	sch := &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"type": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"json_config": {
+					Type:     schema.TypeMap,
+					Required: true,
+				},
+			},
+		},
+	}
+	return storageSchema(sch)
 }
 
 func S3Schema() *schema.Schema {
-	return storageSchema()
+	sch := &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"type": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"json_config": {
+					Type:     schema.TypeMap,
+					Required: true,
+				},
+			},
+		},
+	}
+	return storageSchema(sch)
+}
+
+func AzureStorage() *schema.Schema {
+	sch := &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"type": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"account_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"account_key": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			},
+		},
+	}
+	return storageSchema(sch)
 }

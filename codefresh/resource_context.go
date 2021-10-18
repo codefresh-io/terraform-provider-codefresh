@@ -16,6 +16,7 @@ const (
 	contextSecretYaml    = "secret-yaml"
 	contextGoogleStorage = "storage.gc"
 	contextS3Storage     = "storage.s3"
+	contextAzureStorage  = "storage.azuref"
 )
 
 var supportedContextType = []string{
@@ -140,6 +141,7 @@ func resourceContext() *schema.Resource {
 						},
 						normalizeFieldName(contextGoogleStorage): storageContext.GcsSchema(),
 						normalizeFieldName(contextS3Storage):     storageContext.S3Schema(),
+						normalizeFieldName(contextAzureStorage):  storageContext.AzureStorage(),
 					},
 				},
 			},
@@ -239,7 +241,7 @@ func flattenContextSpec(spec cfClient.ContextSpec) []interface{} {
 		m[normalizeFieldName(currentContextType)] = flattenContextConfig(spec)
 	case contextYaml, contextSecretYaml:
 		m[normalizeFieldName(currentContextType)] = flattenContextYaml(spec)
-	case contextGoogleStorage, contextS3Storage:
+	case contextGoogleStorage, contextS3Storage, contextAzureStorage:
 		m[normalizeFieldName(currentContextType)] = storageContext.FlattenStorageContextConfig(spec)
 	default:
 		log.Printf("[DEBUG] Invalid context type = %v", currentContextType)
@@ -292,6 +294,9 @@ func mapResourceToContext(d *schema.ResourceData) *cfClient.Context {
 		normalizedContextData = storageContext.ConvertStorageContext(data.([]interface{}))
 	} else if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextS3Storage) + ".0.data"); ok {
 		normalizedContextType = contextS3Storage
+		normalizedContextData = storageContext.ConvertStorageContext(data.([]interface{}))
+	} else if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextAzureStorage) + ".0.data"); ok {
+		normalizedContextType = contextAzureStorage
 		normalizedContextData = storageContext.ConvertStorageContext(data.([]interface{}))
 	}
 
