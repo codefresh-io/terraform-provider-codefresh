@@ -41,6 +41,7 @@ func Provider() *schema.Provider {
 			"codefresh_account_admins": resourceAccountAdmins(),
 			"codefresh_api_key":        resourceApiKey(),
 			"codefresh_context":        resourceContext(),
+			"codefresh_registry":       resourceRegistry(),
 			"codefresh_idp_accounts":   resourceIDPAccounts(),
 			"codefresh_permission":     resourcePermission(),
 			"codefresh_pipeline":       resourcePipeline(),
