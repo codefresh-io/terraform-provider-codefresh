@@ -25,8 +25,8 @@ func ConvertAzureStorageContext(context []interface{}) map[string]interface{} {
 	contextAuth := contextData["auth"].([]interface{})[0].(map[string]interface{})
 	auth := make(map[string]interface{})
 	auth["type"] = contextAuth["type"]
-	auth["account_name"] = contextAuth["account_name"]
-	auth["account_key"] = contextAuth["account_key"]
+	auth["accountName"] = contextAuth["account_name"]
+	auth["accountKey"] = contextAuth["account_key"]
 	return convertStorageContext(context, auth)
 }
 
@@ -61,8 +61,8 @@ func FlattenJsonConfigStorageContextConfig(spec cfClient.ContextSpec) []interfac
 func FlattenAzureStorageContextConfig(spec cfClient.ContextSpec) []interface{} {
 	auth := make(map[string]interface{})
 	authParams := spec.Data["auth"].(map[string]interface{})
-	auth["account_name"] = authParams["account_name"]
-	auth["account_key"] = authParams["account_key"]
+	auth["account_name"] = authParams["accountName"]
+	auth["account_key"] = authParams["accountKey"]
 	auth["type"] = spec.Data["type"]
 	return flattenStorageContextConfig(spec, auth)
 }
