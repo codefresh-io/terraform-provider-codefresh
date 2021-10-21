@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/codefresh-io/terraform-provider-codefresh/codefresh"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 	"log"
 	"os"
+
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 	//"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
