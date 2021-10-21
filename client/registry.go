@@ -7,17 +7,37 @@ import (
 )
 
 type Registry struct {
-	Id                  string `json:"_id,omitempty"`
-	Name                string `json:"name,omitempty"`
-	Kind                string `json:"kind,omitempty"`
-	Provider            string `json:"provider,omitempty"`
-	Domain              string `json:"domain,omitempty"`
-	Username            string `json:"username,omitempty"`
-	Password            string `json:"password,omitempty"`
-	Default             bool   `json:"default,omitempty"`
-	Primary             bool   `json:"primary,omitempty"`
-	BehindFirewall      bool   `json:"behindFirewall,omitempty"`
-	DenyCompositeDomain bool   `json:"denyCompositeDomain,omitempty"`
+	// common
+	Id               string `json:"_id,omitempty"`
+	Name             string `json:"name,omitempty"`
+	Kind             string `json:"kind,omitempty"`
+	Default          bool   `json:"default,omitempty"`
+	Primary          bool   `json:"primary,omitempty"`
+	BehindFirewall   bool   `json:"behindFirewall,omitempty"`
+	FallbackRegistry string `json:"fallbackRegistry,omitempty"`
+	RepositoryPrefix string `json:"repositoryPrefix,omitempty"`
+	Provider         string `json:"provider,omitempty"`
+
+	// mostly all
+	Domain   string `json:"domain,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+
+	// bintray
+	Token string `json:"token,omitempty"`
+
+	// ecr
+	AccessKeyId     string `json:"accessKeyId,omitempty"`
+	SecretAccessKey string `json:"secretAccessKey,omitempty"`
+	Region          string `json:"region,omitempty"`
+
+	// gcr, gar
+	Keyfile string `json:"keyfile,omitempty"`
+
+	// acr
+	ClientId     string `json:"clientId,omitempty"`
+	ClientSecret string `json:"clientSecret,omitempty"`
+	//DenyCompositeDomain bool   `json:"denyCompositeDomain,omitempty"`
 }
 
 func (registry *Registry) GetID() string {
@@ -25,7 +45,7 @@ func (registry *Registry) GetID() string {
 }
 
 func (client *Client) GetRegistry(name string) (*Registry, error) {
-	fullPath := fmt.Sprintf("/registries/%s", url.PathEscape(name))
+	fullPath := fmt.Sprintf("/registries/%s?includePrivate=true", url.PathEscape(name))
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "GET",
