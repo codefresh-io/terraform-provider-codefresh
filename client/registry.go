@@ -44,8 +44,9 @@ func (registry *Registry) GetID() string {
 	return registry.Id
 }
 
-func (client *Client) GetRegistry(name string) (*Registry, error) {
-	fullPath := fmt.Sprintf("/registries/%s?includePrivate=true", url.PathEscape(name))
+// GetRegistry identifier is ObjectId or name
+func (client *Client) GetRegistry(identifier string) (*Registry, error) {
+	fullPath := fmt.Sprintf("/registries/%s", url.PathEscape(identifier))
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "GET",

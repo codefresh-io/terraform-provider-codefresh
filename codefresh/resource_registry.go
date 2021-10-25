@@ -256,6 +256,7 @@ func resourceRegistry() *schema.Resource {
 									"behind_firewall": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										Default:  false,
 										ForceNew: true,
 									},
 								},
