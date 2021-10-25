@@ -132,7 +132,7 @@ func resourceRegistry() *schema.Resource {
 							ConflictsWith: getConflictingProviders(providers, providerGar),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"domain": {
+									"location": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -378,7 +378,7 @@ func mapResourceToRegistry(d *schema.ResourceData) *cfClient.Registry {
 	providerKey = "spec.0." + providerGar
 	if _, ok := d.GetOk(providerKey); ok {
 		registry.Provider = providerGar
-		registry.Domain = d.Get(providerKey + ".0.domain").(string)
+		registry.Domain = d.Get(providerKey + ".0.location").(string)
 		registry.Keyfile = d.Get(providerKey + ".0.keyfile").(string)
 		registry.RepositoryPrefix = d.Get(providerKey + ".0.repository_prefix").(string)
 		return registry
@@ -452,7 +452,7 @@ func mapRegistryToResource(registry cfClient.Registry, d *schema.ResourceData) e
 
 	if registry.Provider == providerGar {
 		d.Set(fmt.Sprintf("spec.0.%v.0", providerGcr), map[string]interface{}{
-			"domain":            registry.Domain,
+			"location":          registry.Domain,
 			"keyfile":           registry.Keyfile,
 			"repository_prefix": registry.RepositoryPrefix,
 		})
