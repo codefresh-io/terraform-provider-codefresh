@@ -28,3 +28,28 @@ The following arguments are supported:
 * Create teams using [teams module](modules/teams.md)
 * Create permissions - [see example](../examples/permissions)
 
+
+## Resources
+* [account](resources/account.md)
+* [account-admins](resources/account-admins.md)
+* [api-key](resources/api-key.md)
+* [context](resources/context.md)
+* [idp-accounts](resources/idp-accounts.md)
+* [permissions](resources/permissions.md)
+* [pipeline](resources/pipeline.md)
+* [project](resources/project.md)
+* [registry](resources/registry.md)
+* [step-types](resources/step-types.md)
+* [team](resources/team.md)
+* [user](resources/user.md)
+
+
+## Data sources
+* [account](data/account.md)
+* [context](data/context.md)
+* [idps](data/idps.md)
+* [registry](data/registry.md)
+* [step-types](data/step-types.md)
+* [team](data/team.md)
+* [user](data/user.md)
+
