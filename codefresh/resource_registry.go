@@ -8,9 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// todo: 1) add data definitions
-// todo: 2) add tests
-
 const (
 	providerOther     = "other"
 	providerGcr       = "gcr"
