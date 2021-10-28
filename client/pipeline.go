@@ -58,10 +58,10 @@ type Trigger struct {
 }
 
 type TriggerOptions struct {
-	NoCache             string `json:"noCache,omitempty"`
-	NoCfCache           string `json:"noCfCache,omitempty"`
-	ResetVolume         string `json:"resetVolume,omitempty"`
-	EnableNotifications string `json:"enableNotifications,omitempty"`
+	NoCache             bool `json:"noCache,omitempty"`
+	NoCfCache           bool `json:"noCfCache,omitempty"`
+	ResetVolume         bool `json:"resetVolume,omitempty"`
+	EnableNotifications bool `json:"enableNotifications,omitempty"`
 }
 
 type RuntimeEnvironment struct {
