@@ -23,7 +23,7 @@ func TestAccCodefreshPipeline_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshPipelineBasicConfig(name, "My pipeline", "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
+				Config: testAccCodefreshPipelineBasicConfig(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -289,7 +289,7 @@ func TestAccCodefreshPipeline_Revision(t *testing.T) {
 		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshPipelineBasicConfig(name, "My pipeline", "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
+				Config: testAccCodefreshPipelineBasicConfig(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "revision", "0"),
@@ -301,7 +301,7 @@ func TestAccCodefreshPipeline_Revision(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCodefreshPipelineBasicConfig(name, "My pipeline", "codefresh-contrib/react-sample-app", "./codefresh.yml", "development", "git"),
+				Config: testAccCodefreshPipelineBasicConfig(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "development", "git"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
@@ -321,7 +321,7 @@ func TestAccCodefreshPipeline_IsPublic(t *testing.T) {
 		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshPipelineBasicConfig(name, "My pipeline","codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
+				Config: testAccCodefreshPipelineBasicConfig(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "is_public", "false"),
@@ -366,7 +366,7 @@ func TestAccCodefreshPipelineOnCreateBranchIgnoreTrigger(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCodefreshPipelineBasicConfig(name, "My pipeline", "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
+				Config: testAccCodefreshPipelineBasicConfig(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -427,7 +427,7 @@ func testAccCheckCodefreshPipelineDestroy(s *terraform.State) error {
 }
 
 // CONFIGS
-func testAccCodefreshPipelineBasicConfig(rName, repo, description, path, revision, context string) string {
+func testAccCodefreshPipelineBasicConfig(rName, repo, path, revision, context string) string {
 	return fmt.Sprintf(`
 resource "codefresh_pipeline" "test" {
 
@@ -440,7 +440,6 @@ resource "codefresh_pipeline" "test" {
   name = "%s"
 
   spec {
-	description = "%s"
 	spec_template {
     	repo        = %q
     	path        = %q
@@ -449,7 +448,7 @@ resource "codefresh_pipeline" "test" {
     }
   }
 }
-`, rName, description, repo, path, revision, context)
+`, rName, repo, path, revision, context)
 }
 
 func testAccCodefreshPipelineBasicConfigTags(rName, repo, path, revision, context, tag1, tag2 string) string {
@@ -730,6 +729,57 @@ resource "codefresh_pipeline" "test" {
 
 }
 `, rName, originalYamlString)
+}
+
+func testAccCodefreshPipelineBasicConfigDescription(rName, repo, path, revision, context, description string) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
+  name = "%s"
+
+  spec {
+	spec_template {
+		repo        = %q
+		path        = %q
+		revision    = %q
+		context     = %q
+	}
+
+	description = "%s"
+  }
+}
+`, rName, repo, path, revision, context, description)
+}
+
+func TestAccCodefreshPipeline_Description(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineBasicConfigDescription(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "This is my pipeline, there are many like it but this one is mine"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.description", "This is my pipeline, there are many like it but this one is mine"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func TestAccCodefreshPipeline_Contexts(t *testing.T) {
