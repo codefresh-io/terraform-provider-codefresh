@@ -106,6 +106,10 @@ func resourcePipeline() *schema.Resource {
 										Optional: true,
 										Default:  "github",
 									},
+									"description": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 								},
 							},
 						},
