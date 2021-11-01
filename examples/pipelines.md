@@ -34,6 +34,7 @@ resource "codefresh_pipeline" "test" {
   spec {
     concurrency = 1
     priority    = 5
+    description = "This is my pipeline, there are many like it, but this one is mine."
 
     spec_template {
       repo        = "codefresh-contrib/react-sample-app"
