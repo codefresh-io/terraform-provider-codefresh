@@ -693,10 +693,10 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 		codefreshTrigger.SetVariables(variables)
 		if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.options", idx)); ok {
 			options := cfClient.TriggerOptions{
-				NoCache:             d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cache", idx)).(string),
-				NoCfCache:           d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cf_cache", idx)).(string),
-				ResetVolume:         d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.reset_volume", idx)).(string),
-				EnableNotifications: d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.enable_notifications", idx)).(string),
+				NoCache:             d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cache", idx)).(bool),
+				NoCfCache:           d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cf_cache", idx)).(bool),
+				ResetVolume:         d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.reset_volume", idx)).(bool),
+				EnableNotifications: d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.enable_notifications", idx)).(bool),
 			}
 			codefreshTrigger.Options = &options
 		}
