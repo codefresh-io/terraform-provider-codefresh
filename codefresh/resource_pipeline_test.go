@@ -2,6 +2,7 @@ package codefresh
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"testing"
 
@@ -165,7 +166,56 @@ func TestAccCodefreshPipeline_RuntimeEnvironment(t *testing.T) {
 func TestAccCodefreshPipeline_OriginalYamlString(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	originalYamlString := "version: \"1.0\"\nsteps:\n  test:\n    image: alpine:latest\n    commands:\n      - echo \"ACC tests\""
+	originalYamlString := `version: 1.0
+fail_fast: false
+stages:
+  - test
+mode: parallel
+hooks: 
+  on_finish:
+    steps:
+      secondmycleanup:
+        commands:
+          - echo echo cleanup step
+        image: alpine:3.9
+      firstmynotification:
+        commands:
+          - echo Notify slack
+        image: cloudposse/slack-notifier
+  on_elected:
+    exec:
+      commands:
+       - echo 'Creating an adhoc test environment'
+      image: alpine:3.9
+    annotations:
+      set:
+        - annotations:
+            - my_annotation_example1: 10.45
+            - my_string_annotation: Hello World
+          entity_type: build
+steps:
+  zz_firstStep:
+    stage: test
+    image: alpine
+    commands:
+      - echo Hello World First Step
+  aa_secondStep:
+    stage: test
+    image: alpine
+    commands:
+      - echo Hello World Second Step`
+
+	expectedSpecAttributes := &cfClient.Spec{
+		Steps: &cfClient.Steps{
+			Steps: `{"zz_firstStep":{"commands":["echo Hello World First Step"],"image":"alpine","stage":"test"},"aa_secondStep":{"commands":["echo Hello World Second Step"],"image":"alpine","stage":"test"}}`,
+		},
+		Stages: &cfClient.Stages{
+			Stages: `["test"]`,
+		},
+		Hooks: &cfClient.Hooks{
+			Hooks: `{"on_finish":{"steps":{"secondmycleanup":{"commands":["echo echo cleanup step"],"image":"alpine:3.9"},"firstmynotification":{"commands":["echo Notify slack"],"image":"cloudposse/slack-notifier"}}},"on_elected":{"exec":{"commands":["echo 'Creating an adhoc test environment'"],"image":"alpine:3.9"},"annotations":{"set":[{"annotations":[{"my_annotation_example1":10.45},{"my_string_annotation":"Hello World"}],"entity_type":"build"}]}}}`,
+		},
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -178,6 +228,7 @@ func TestAccCodefreshPipeline_OriginalYamlString(t *testing.T) {
 
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "original_yaml_string", originalYamlString),
+					testAccCheckCodefreshPipelineOriginalYamlStringAttributePropagation(resourceName, expectedSpecAttributes),
 				),
 			},
 			{
@@ -206,10 +257,10 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					"master",
 					"git",
 					"commits",
-					"/master/gi",
+					"/^(?!(master)$).*/gi",
 					"multiselect",
-					"/master/gi",
-					"/PR comment/gi",
+					"/^(?!(master)$).*/gi",
+					"/^PR comment$/gi",
 					"shared_context1",
 					"git",
 					"push.heads",
@@ -217,6 +268,10 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					"tags",
 					"git",
 					"shared_context2",
+					true,
+					true,
+					true,
+					true,
 					"push.tags",
 					"codefresh-contrib/react-sample-app",
 					"triggerTestVar",
@@ -226,13 +281,17 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.branch_regex", "/master/gi"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.branch_regex", "/^(?!(master)$).*/gi"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.branch_regex_input", "multiselect"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.pull_request_target_branch_regex", "/master/gi"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.comment_regex", "/PR comment/gi"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.pull_request_target_branch_regex", "/^(?!(master)$).*/gi"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.comment_regex", "/^PR comment$/gi"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.name", "commits"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.name", "tags"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.contexts.0", "shared_context2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.options.0.no_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.options.0.no_cf_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.options.0.reset_volume", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.options.0.enable_notifications", "true"),
 				),
 			},
 			{
@@ -259,6 +318,10 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					"tags",
 					"git",
 					"shared_context2_update",
+					true,
+					true,
+					false,
+					false,
 					"push.tags",
 					"codefresh-contrib/react-sample-app",
 					"triggerTestVar",
@@ -273,6 +336,10 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.comment_regex", "/PR comment2/gi"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.variables.triggerTestVar", "triggerTestValue"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.contexts.0", "shared_context2_update"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.options.0.no_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.options.0.no_cf_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.options.0.reset_volume", "false"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.options.0.enable_notifications", "false"),
 				),
 			},
 		},
@@ -377,6 +444,41 @@ func TestAccCodefreshPipelineOnCreateBranchIgnoreTrigger(t *testing.T) {
 	})
 }
 
+func TestAccCodefreshPipelineOptions(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineOptions(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.options.0.keep_pvcs_for_pending_approval", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.options.0.pending_approval_concurrency_applied", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodefreshPipelineBasicConfig(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckNoResourceAttr(resourceName, "spec.0.options"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCodefreshPipelineExists(resource string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 
@@ -424,6 +526,38 @@ func testAccCheckCodefreshPipelineDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckCodefreshPipelineOriginalYamlStringAttributePropagation(resource string, spec *cfClient.Spec) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+
+		rs, ok := state.RootModule().Resources[resource]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resource)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Record ID is set")
+		}
+
+		pipelineID := rs.Primary.ID
+
+		apiClient := testAccProvider.Meta().(*cfClient.Client)
+		pipeline, err := apiClient.GetPipeline(pipelineID)
+
+		if !reflect.DeepEqual(pipeline.Spec.Steps, spec.Steps) {
+			return fmt.Errorf("Expected Step %v. Got %v", spec.Steps, pipeline.Spec.Steps)
+		}
+		if !reflect.DeepEqual(pipeline.Spec.Stages, spec.Stages) {
+			return fmt.Errorf("Expected Stages %v. Got %v", spec.Stages, pipeline.Spec.Stages)
+		}
+		if !reflect.DeepEqual(pipeline.Spec.Hooks, spec.Hooks) {
+			return fmt.Errorf("Expected Hooks %v. Got %v", spec.Hooks, pipeline.Spec.Hooks)
+		}
+		if err != nil {
+			return fmt.Errorf("error fetching pipeline with resource %s. %s", resource, err)
+		}
+		return nil
+	}
 }
 
 // CONFIGS
@@ -585,12 +719,17 @@ func testAccCodefreshPipelineBasicConfigTriggers(
 	trigger1Repo,
 	trigger2Name,
 	trigger2Context,
-	trigger2Contexts,
+	trigger2Contexts string,
+	trigger2NoCache,
+	trigger2NoCfCache,
+	trigger2ResetVolume,
+	trigger2EnableNotifications bool,
 	trigger2Event,
 	trigger2Repo,
 	trigger2VarName,
 	trigger2VarValue,
-	trigger2CommitStatusTitle string) string {
+	trigger2CommitStatusTitle string,
+) string {
 	return fmt.Sprintf(`
 resource "codefresh_pipeline" "test" {
 
@@ -635,12 +774,18 @@ resource "codefresh_pipeline" "test" {
     trigger {
         name = %q
         branch_regex = "/.*/gi"
-		context = %q
-		contexts = [
-			%q
-		]
+        context = %q
+        contexts = [
+            %q
+        ]
         description = ""
         disabled = false
+        options = {
+            no_cache             = %t
+            no_cf_cache          = %t
+            reset_volume         = %t
+            enable_notifications = %t
+        }
         events = [
           %q
         ]
@@ -676,6 +821,10 @@ resource "codefresh_pipeline" "test" {
 		trigger2Name,
 		trigger2Context,
 		trigger2Contexts,
+		trigger2NoCache,
+		trigger2NoCfCache,
+		trigger2ResetVolume,
+		trigger2EnableNotifications,
 		trigger2Event,
 		trigger2Repo,
 		trigger2VarName,
@@ -763,6 +912,34 @@ func TestAccCodefreshPipeline_Contexts(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCodefreshPipelineOptions(rName, repo, path, revision, context string, keepPVCsForPendingApproval, pendingApprovalConcurrencyApplied bool) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
+  name = "%s"
+
+  spec {
+	spec_template {
+    	repo        = %q
+    	path        = %q
+    	revision    = %q
+    	context     = %q
+	}
+	options {
+		keep_pvcs_for_pending_approval = %t
+		pending_approval_concurrency_applied = %t
+	}
+  }
+}
+`, rName, repo, path, revision, context, keepPVCsForPendingApproval, pendingApprovalConcurrencyApplied)
 }
 
 func testAccCodefreshPipelineOnCreateBranchIgnoreTrigger(rName, repo, path, revision, context string, ignoreTrigger bool) string {

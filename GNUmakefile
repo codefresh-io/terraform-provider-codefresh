@@ -1,7 +1,12 @@
 TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
+HOSTNAME=codefresh.io
 PKG_NAME=codefresh
+NAMESPACE=app
+BINARY=terraform-provider-${PKG_NAME}
+VERSION=0.1.0
+OS_ARCH=darwin_amd64
 
 default: build
 
@@ -12,6 +17,11 @@ tools:
 
 build: fmtcheck
 	go install
+	go build -o ${BINARY}
+
+install: build
+	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${PKG_NAME}/${VERSION}/${OS_ARCH}
+	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${PKG_NAME}/${VERSION}/${OS_ARCH}
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."

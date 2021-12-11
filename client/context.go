@@ -67,7 +67,7 @@ func (client *Client) CreateContext(context *Context) (*Context, error) {
 	}
 
 	resp, err := client.RequestAPI(&opts)
-	log.Printf("[DEBUG] Called API for context with Body %v", body)
+
 	if err != nil {
 		log.Printf("[DEBUG] Call to API for context creation failed with Error = %v for Body %v", err, body)
 		return nil, err

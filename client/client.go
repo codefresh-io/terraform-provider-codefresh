@@ -72,7 +72,8 @@ func (client *Client) RequestAPI(opt *RequestOptions) ([]byte, error) {
 		return nil, fmt.Errorf("Failed to read body %v %v", resp.StatusCode, resp.Status)
 	}
 
-	if resp.StatusCode != 200 {
+	// todo: maybe other 2**?
+	if resp.StatusCode != 200 && resp.StatusCode != 201 {
 		return nil, fmt.Errorf("%v, %s", resp.Status, string(body))
 	}
 	return body, nil

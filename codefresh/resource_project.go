@@ -1,6 +1,10 @@
 package codefresh
 
 import (
+	"log"
+	"time"
+
+	"github.com/cenkalti/backoff"
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -90,8 +94,17 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfClient.Client)
-
-	err := client.DeleteProject(d.Id())
+	// Adding a Retry backoff to address eventual consistency for the API
+	expBackoff := backoff.NewExponentialBackOff()
+	expBackoff.MaxElapsedTime = 2 * time.Second
+	err := backoff.Retry(
+		func() error {
+			err := client.DeleteProject(d.Id())
+			if err != nil {
+				log.Printf("Unable to destroy Project due to error %v", err)
+			}
+			return err
+		}, expBackoff)
 	if err != nil {
 		return err
 	}

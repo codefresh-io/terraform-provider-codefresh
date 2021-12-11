@@ -40,7 +40,7 @@ terraform {
 
   required_providers {
     codefresh = {
-      versions = ["0.1.0"]
+      version = "0.1.0"
       source = "codefresh.io/app/codefresh"
     }
   }
@@ -82,3 +82,4 @@ export CODEFRESH_API_KEY='xyz'
 Copyright 2020 Codefresh.
 
 The Codefresh Provider is available under [MPL2.0 license](./LICENSE).
+

@@ -1,13 +1,13 @@
 package codefresh
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
 	"strings"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
-	ghodss "github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"gopkg.in/yaml.v2"
@@ -142,7 +142,7 @@ func resourcePipeline() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/.*/gi",
-										ValidateFunc: validation.StringIsValidRegExp,
+										ValidateFunc: stringIsValidRe2RegExp,
 									},
 									"branch_regex_input": {
 										Type:         schema.TypeString,
@@ -153,13 +153,13 @@ func resourcePipeline() *schema.Resource {
 									"pull_request_target_branch_regex": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringIsValidRegExp,
+										ValidateFunc: stringIsValidRe2RegExp,
 									},
 									"comment_regex": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/.*/gi",
-										ValidateFunc: validation.StringIsValidRegExp,
+										ValidateFunc: stringIsValidRe2RegExp,
 									},
 									"modified_files_glob": {
 										Type:     schema.TypeString,
@@ -182,6 +182,34 @@ func resourcePipeline() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  false,
+									},
+									"options": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"no_cache": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+												"no_cf_cache": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+												"reset_volume": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+												"enable_notifications": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+											},
+										},
 									},
 									"pull_request_allow_fork_events": {
 										Type:     schema.TypeBool,
@@ -260,7 +288,7 @@ func resourcePipeline() *schema.Resource {
 												"branch_name": {
 													Type:          schema.TypeString,
 													Optional:      true,
-													ValidateFunc:  validation.StringIsValidRegExp,
+													ValidateFunc:  stringIsValidRe2RegExp,
 													ConflictsWith: []string{"spec.0.termination_policy.0.on_create_branch.0.ignore_branch"},
 												},
 												"ignore_trigger": {
@@ -301,6 +329,23 @@ func resourcePipeline() *schema.Resource {
 									},
 									"dind_storage": {
 										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"options": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"keep_pvcs_for_pending_approval": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"pending_approval_concurrency_applied": {
+										Type:     schema.TypeBool,
 										Optional: true,
 									},
 								},
@@ -445,6 +490,21 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 		m["termination_policy"] = flattenSpecTerminationPolicy(spec.TerminationPolicy)
 	}
 
+	if len(spec.Options) > 0 {
+		var resOptions []map[string]bool
+		options := map[string]bool{}
+		for keyOption, valueOption := range spec.Options {
+			switch {
+			case keyOption == "keepPVCsForPendingApproval":
+				options["keep_pvcs_for_pending_approval"] = valueOption
+			case keyOption == "pendingApprovalConcurrencyApplied":
+				options["pending_approval_concurrency_applied"] = valueOption
+			}
+		}
+		resOptions = append(resOptions, options)
+		m["options"] = resOptions
+	}
+
 	m["concurrency"] = spec.Concurrency
 	m["branch_concurrency"] = spec.BranchConcurrency
 	m["trigger_concurrency"] = spec.TriggerConcurrency
@@ -509,6 +569,17 @@ func flattenSpecRuntimeEnvironment(spec cfClient.RuntimeEnvironment) []map[strin
 	}
 }
 
+func flattenTriggerOptions(options cfClient.TriggerOptions) []map[string]interface{} {
+	return []map[string]interface{}{
+		{
+			"no_cache":             options.NoCache,
+			"no_cf_cache":          options.NoCfCache,
+			"reset_volume":         options.ResetVolume,
+			"enable_notifications": options.EnableNotifications,
+		},
+	}
+}
+
 func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 	var res = make([]map[string]interface{}, len(triggers))
 	for i, trigger := range triggers {
@@ -524,6 +595,9 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 		m["comment_regex"] = trigger.CommentRegex
 		m["modified_files_glob"] = trigger.ModifiedFilesGlob
 		m["disabled"] = trigger.Disabled
+		if trigger.Options != nil {
+			m["options"] = flattenTriggerOptions(*trigger.Options)
+		}
 		m["pull_request_allow_fork_events"] = trigger.PullRequestAllowForkEvents
 		m["commit_status_title"] = trigger.CommitStatusTitle
 		m["provider"] = trigger.Provider
@@ -575,13 +649,7 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			Context:  d.Get("spec.0.spec_template.0.context").(string),
 		}
 	} else {
-		stages, steps := extractStagesAndSteps(originalYamlString)
-		pipeline.Spec.Steps = &cfClient.Steps{
-			Steps: steps,
-		}
-		pipeline.Spec.Stages = &cfClient.Stages{
-			Stages: stages,
-		}
+		extractSpecAttributesFromOriginalYamlString(originalYamlString, pipeline)
 	}
 
 	if _, ok := d.GetOk("spec.0.runtime_environment"); ok {
@@ -623,6 +691,15 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 		}
 		variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
 		codefreshTrigger.SetVariables(variables)
+		if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.options", idx)); ok {
+			options := cfClient.TriggerOptions{
+				NoCache:             d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cache", idx)).(bool),
+				NoCfCache:           d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cf_cache", idx)).(bool),
+				ResetVolume:         d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.reset_volume", idx)).(bool),
+				EnableNotifications: d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.enable_notifications", idx)).(bool),
+			}
+			codefreshTrigger.Options = &options
+		}
 		if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.runtime_environment", idx)); ok {
 			triggerRuntime := cfClient.RuntimeEnvironment{
 				Name:        d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.name", idx)).(string),
@@ -653,58 +730,86 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 		onTerminateAnnotationPolicy["key"] = "cf_predecessor"
 		codefreshTerminationPolicy = append(codefreshTerminationPolicy, onTerminateAnnotationPolicy)
 	}
+	if _, ok := d.GetOk("spec.0.options"); ok {
+		pipelineSpecOption := make(map[string]bool)
+		if keepPVCs, ok := d.GetOkExists("spec.0.options.0.keep_pvcs_for_pending_approval"); ok {
+			pipelineSpecOption["keepPVCsForPendingApproval"] = keepPVCs.(bool)
+		}
+		if pendingApprovalConcurrencyApplied, ok := d.GetOkExists("spec.0.options.0.pending_approval_concurrency_applied"); ok {
+			pipelineSpecOption["pendingApprovalConcurrencyApplied"] = pendingApprovalConcurrencyApplied.(bool)
+		}
+		pipeline.Spec.Options = pipelineSpecOption
+	} else {
+		pipeline.Spec.Options = nil
+	}
 
 	pipeline.Spec.TerminationPolicy = codefreshTerminationPolicy
 
 	return pipeline
 }
 
-// extractStagesAndSteps extracts the steps and stages from the original yaml string to enable propagation in the `Spec` attribute of the pipeline
+// extractSpecAttributesFromOriginalYamlString extracts the steps and stages from the original yaml string to enable propagation in the `Spec` attribute of the pipeline
 // We cannot leverage on the standard marshal/unmarshal because the steps attribute needs to maintain the order of elements
 // while by default the standard function doesn't do it because in JSON maps are unordered
-func extractStagesAndSteps(originalYamlString string) (stages, steps string) {
-	// Use mapSlice to preserve order of items from the YAML string
-	m := yaml.MapSlice{}
-	err := yaml.Unmarshal([]byte(originalYamlString), &m)
+func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfClient.Pipeline) {
+	ms := OrderedMapSlice{}
+	err := yaml.Unmarshal([]byte(originalYamlString), &ms)
 	if err != nil {
-		log.Fatal("Unable to unmarshall original_yaml_string")
+		log.Fatalf("Unable to unmarshall original_yaml_string. Error: %v", err)
 	}
 
-	stages = "[]"
-	// Dynamically build JSON object for steps using String builder
-	stepsBuilder := strings.Builder{}
-	stepsBuilder.WriteString("{")
-	// Parse elements of the YAML string to extract Steps and Stages if defined
-	for _, item := range m {
-		if item.Key == "steps" {
+	stages := "[]"
+	steps := "{}"
+	hooks := "{}"
+
+	// Parse elements of the YAML string to extract Steps, Hooks and Stages if defined
+	for _, item := range ms {
+		key := item.Key.(string)
+		switch key {
+		case "steps":
 			switch x := item.Value.(type) {
 			default:
 				log.Fatalf("unsupported value type: %T", item.Value)
 
-			case yaml.MapSlice:
-				numberOfSteps := len(x)
-				for index, item := range x {
-					// We only need to preserve order at the first level to guarantee order of the steps, hence the child nodes can be marshalled
-					// with the standard library
-					y, _ := yaml.Marshal(item.Value)
-					j2, _ := ghodss.YAMLToJSON(y)
-					stepsBuilder.WriteString("\"" + item.Key.(string) + "\" : " + string(j2))
-					if index < numberOfSteps-1 {
-						stepsBuilder.WriteString(",")
-					}
-				}
+			case OrderedMapSlice:
+				s, _ := json.Marshal(x)
+				steps = string(s)
 			}
-		}
-		if item.Key == "stages" {
-			// For Stages we don't have ordering issue because it's a list
-			y, _ := yaml.Marshal(item.Value)
-			j2, _ := ghodss.YAMLToJSON(y)
-			stages = string(j2)
+		case "stages":
+			s, _ := json.Marshal(item.Value)
+			stages = string(s)
+
+		case "hooks":
+			switch x := item.Value.(type) {
+			default:
+				log.Fatalf("unsupported value type: %T", item.Value)
+
+			case OrderedMapSlice:
+				h, _ := json.Marshal(x)
+				hooks = string(h)
+			}
+		case "mode":
+			pipeline.Spec.Mode = item.Value.(string)
+		case "fail_fast":
+			ff, ok := item.Value.(bool)
+			if ok {
+				pipeline.Spec.FailFast = &ff
+			}
+		default:
+			log.Printf("Unsupported entry %s", key)
 		}
 	}
-	stepsBuilder.WriteString("}")
-	steps = stepsBuilder.String()
-	return
+
+	pipeline.Spec.Steps = &cfClient.Steps{
+		Steps: steps,
+	}
+	pipeline.Spec.Stages = &cfClient.Stages{
+		Stages: stages,
+	}
+	pipeline.Spec.Hooks = &cfClient.Hooks{
+		Hooks: hooks,
+	}
+
 }
 
 func getSupportedTerminationPolicyAttributes(policy string) map[string]interface{} {

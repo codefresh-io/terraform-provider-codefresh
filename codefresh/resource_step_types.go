@@ -382,7 +382,7 @@ func mapResourceToStepTypesVersions(d *schema.ResourceData) *cfClient.StepTypesV
 	return &stepTypesVersions
 }
 
-// extractStagesAndSteps extracts the steps and stages from the original yaml string to enable propagation in the `Spec` attribute of the pipeline
+// extractSteps extracts the steps and stages from the original yaml string to enable propagation in the `Spec` attribute of the pipeline
 // We cannot leverage on the standard marshal/unmarshal because the steps attribute needs to maintain the order of elements
 // while by default the standard function doesn't do it because in JSON maps are unordered
 func extractSteps(stepTypesYaml string) (steps *orderedmap.OrderedMap) {
