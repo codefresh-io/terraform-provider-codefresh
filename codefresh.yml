@@ -16,7 +16,7 @@ steps:
   go_fmt:
     title: 'Formatting'
     stage: test
-    image:  goreleaser/goreleaser:v0.133
+    image:  goreleaser/goreleaser:v1.6.3
     commands:
       - go fmt
 
@@ -40,7 +40,7 @@ steps:
 
   release_binaries:
     title: Create release in Github
-    image:  goreleaser/goreleaser:v0.133
+    image:  goreleaser/goreleaser:v1.6.3
     stage: release
     environment:
       - GPG_FINGERPRINT=${{GPG_FINGERPRINT}}
