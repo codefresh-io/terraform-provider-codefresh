@@ -92,6 +92,7 @@ type Spec struct {
 	FailFast           *bool                    `json:"fail_fast,omitempty"`
 	RuntimeEnvironment RuntimeEnvironment       `json:"runtimeEnvironment,omitempty"`
 	TerminationPolicy  []map[string]interface{} `json:"terminationPolicy,omitempty"`
+	PackId             string                   `json:"packId,omitempty"`
 	Hooks              *Hooks                   `json:"hooks,omitempty"`
 	Options            map[string]bool          `json:"options,omitempty"`
 }
