@@ -106,6 +106,7 @@ resource "codefresh_pipeline" "test" {
 - `trigger` - (Optional) A collection of `trigger` blocks as documented below. Triggers [documentation](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/triggers/git-triggers/).
 - `spec_template` - (Optional) A collection of `spec_template` blocks as documented below.
 - `runtime_environment` - (Optional) A collection of `runtime_environment` blocks as documented below.
+- `pack_id` - (Optional) SAAS pack (`5cd1746617313f468d669013` for Small; `5cd1746717313f468d669014` for Medium; `5cd1746817313f468d669015` for Large; `5cd1746817313f468d669017` for XL; `5cd1746817313f468d669018` for XXL)
 - `contexts` - (Optional) A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be configured for the pipeline
 - `termination_policy` - (Optional) A `termination_policy` block as documented below.
 - `options` - (Optional) A `options` block as documented below.
