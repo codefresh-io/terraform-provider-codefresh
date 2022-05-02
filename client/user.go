@@ -264,15 +264,15 @@ func (client *Client) DeleteUser(userName string) error {
 		Method: "DELETE",
 	}
 
-    // The API will return a 500 error if the user cannot be found	
-    // In this case the DeleteUser function should not return an error.
-    // Return error only if the body of the return message does not contain "User does not exist"
-    res, err := client.RequestAPI(&opts)
-    if err != nil {
-        if !strings.Contains(string(res), "User does not exist"){
-            return err
+        // The API will return a 500 error if the user cannot be found	
+        // In this case the DeleteUser function should not return an error.
+        // Return error only if the body of the return message does not contain "User does not exist"
+        res, err := client.RequestAPI(&opts)
+        if err != nil {
+            if !strings.Contains(string(res), "User does not exist") {
+                return err
+            }
         }
-    }
 
 	return nil
 }
