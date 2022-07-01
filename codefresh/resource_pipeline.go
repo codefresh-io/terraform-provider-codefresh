@@ -352,6 +352,10 @@ func resourcePipeline() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
+									"enable_notifications": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
 								},
 							},
 						},
@@ -503,6 +507,8 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 				options["keep_pvcs_for_pending_approval"] = valueOption
 			case keyOption == "pendingApprovalConcurrencyApplied":
 				options["pending_approval_concurrency_applied"] = valueOption
+			case keyOption == "enableNotifications":
+				options["enable_notifications"] = valueOption
 			}
 		}
 		resOptions = append(resOptions, options)
@@ -743,6 +749,9 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 		}
 		if pendingApprovalConcurrencyApplied, ok := d.GetOkExists("spec.0.options.0.pending_approval_concurrency_applied"); ok {
 			pipelineSpecOption["pendingApprovalConcurrencyApplied"] = pendingApprovalConcurrencyApplied.(bool)
+		}
+		if enableNotifications, ok := d.GetOkExists("spec.0.options.0.enable_notifications"); ok {
+			pipelineSpecOption["enableNotifications"] = enableNotifications.(bool)
 		}
 		pipeline.Spec.Options = pipelineSpecOption
 	} else {

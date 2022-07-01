@@ -454,12 +454,13 @@ func TestAccCodefreshPipelineOptions(t *testing.T) {
 		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshPipelineOptions(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", true, false),
+				Config: testAccCodefreshPipelineOptions(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", true, false, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.options.0.keep_pvcs_for_pending_approval", "true"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.options.0.pending_approval_concurrency_applied", "false"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.options.0.enable_notifications", "false"),
 				),
 			},
 			{
@@ -914,7 +915,7 @@ func TestAccCodefreshPipeline_Contexts(t *testing.T) {
 	})
 }
 
-func testAccCodefreshPipelineOptions(rName, repo, path, revision, context string, keepPVCsForPendingApproval, pendingApprovalConcurrencyApplied bool) string {
+func testAccCodefreshPipelineOptions(rName, repo, path, revision, context string, keepPVCsForPendingApproval, pendingApprovalConcurrencyApplied, enableNotifications bool) string {
 	return fmt.Sprintf(`
 resource "codefresh_pipeline" "test" {
 
@@ -936,10 +937,11 @@ resource "codefresh_pipeline" "test" {
 	options {
 		keep_pvcs_for_pending_approval = %t
 		pending_approval_concurrency_applied = %t
+		enable_notifications = %t
 	}
   }
 }
-`, rName, repo, path, revision, context, keepPVCsForPendingApproval, pendingApprovalConcurrencyApplied)
+`, rName, repo, path, revision, context, keepPVCsForPendingApproval, pendingApprovalConcurrencyApplied, enableNotifications)
 }
 
 func testAccCodefreshPipelineOnCreateBranchIgnoreTrigger(rName, repo, path, revision, context string, ignoreTrigger bool) string {
