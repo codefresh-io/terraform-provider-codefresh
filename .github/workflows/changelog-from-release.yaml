@@ -1,0 +1,14 @@
+name: "Changelog from Release"
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update_changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: rhysd/changelog-from-release/action@v3
+        with:
+          file: CHANGELOG.md
+          github_token: ${{ secrets.GITHUB_TOKEN }}
