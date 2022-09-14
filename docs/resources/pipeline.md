@@ -139,7 +139,7 @@ resource "codefresh_pipeline" "test" {
 - `context` - (Optional) Codefresh Git context.
 - `commit_status_title` - (Optional) The commit status title pushed to the GIT version control system.
 - `variables` - (Optional) Trigger variables.
-- `disabled` - (Optional) Boolean. If false, trigger will never be activated.
+- `disabled` - (Optional) Boolean. If true, trigger will never be activated.
 - `pull_request_allow_fork_events` - (Optional) Boolean. If this trigger is also applicable to Git forks.
 - `contexts` - (Optional) A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be loaded when the trigger is executed
 - `runtime_environment` - (Optional) A collection of `runtime_environment` blocks as documented below.
