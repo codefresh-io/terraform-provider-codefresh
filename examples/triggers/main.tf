@@ -11,6 +11,6 @@ module "pipeline" {
 
 resource "codefresh_pipeline_cron_trigger" default {
   pipeline = module.pipeline.id
-  schedule = "0 0 2 ? * MON-FRI"
+  expression = "0 0 2 ? * MON-FRI"
   message  = "Triggered by cron"
 }

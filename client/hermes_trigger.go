@@ -20,14 +20,13 @@ type EventData struct {
 
 func (client *Client) GetHermesTriggerByEventAndPipeline(event string, pipeline string) (*HermesTrigger, error) {
 
-	fullPath := fmt.Sprintf("/hermes/triggers/%s", event)
+	fullPath := fmt.Sprintf("/hermes/triggers/event/%s", UriEncodeEvent(event))
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "GET",
 	}
 
 	resp, err := client.RequestAPI(&opts)
-
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +50,7 @@ func (client *Client) GetHermesTriggerByEventAndPipeline(event string, pipeline 
 
 func (client *Client) CreateHermesTriggerByEventAndPipeline(event string, pipeline string) error {
 
-	fullPath := fmt.Sprintf("/hermes/triggers/%s/%s", event, pipeline)
+	fullPath := fmt.Sprintf("/hermes/triggers/%s/%s", UriEncodeEvent(event), pipeline)
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "POST",
@@ -62,7 +61,7 @@ func (client *Client) CreateHermesTriggerByEventAndPipeline(event string, pipeli
 }
 
 func (client *Client) DeleteHermesTriggerByEventAndPipeline(event string, pipeline string) error {
-	fullPath := fmt.Sprintf("/hermes/triggers/%s/%s", event, pipeline)
+	fullPath := fmt.Sprintf("/hermes/triggers/%s/%s", UriEncodeEvent(event), pipeline)
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "DELETE",

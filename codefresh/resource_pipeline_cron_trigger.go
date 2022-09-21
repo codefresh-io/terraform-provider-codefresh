@@ -1,7 +1,6 @@
 package codefresh
 
 import (
-	"fmt"
 	"log"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
@@ -18,7 +17,7 @@ func resourcePipelineCronTrigger() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"schedule": {
+			"expression": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -37,14 +36,27 @@ func resourcePipelineCronTrigger() *schema.Resource {
 func resourcePipelineCronTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfClient.Client)
 
-	hermesTrigger := *mapResourceToPipelineCronTrigger(d)
-
-	err := client.CreateHermesTriggerByEventAndPipeline(hermesTrigger.Event, hermesTrigger.Pipeline)
+	eventString, err := client.CreateHermesTriggerEvent(&cfClient.HermesTriggerEvent{
+		Type:   "cron",
+		Kind:   "codefresh",
+		Secret: "!generate",
+		Values: map[string]string{
+			"expression": d.Get("expression").(string),
+			"message":    d.Get("message").(string),
+		},
+	})
 	if err != nil {
 		return err
 	}
 
-	d.SetId(hermesTrigger.Event)
+	hermesTrigger := *mapResourceToPipelineCronTrigger(d)
+
+	err = client.CreateHermesTriggerByEventAndPipeline(eventString, hermesTrigger.Pipeline)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(eventString)
 
 	return nil
 }
@@ -89,23 +101,18 @@ func resourcePipelineCronTriggerDelete(d *schema.ResourceData, meta interface{})
 func mapPipelineCronTriggerToResource(hermesTrigger *cfClient.HermesTrigger, d *schema.ResourceData) error {
 
 	d.SetId(hermesTrigger.Event)
+	d.Set("pipeline", hermesTrigger.Pipeline)
+
 	return nil
 }
 
 func mapResourceToPipelineCronTrigger(d *schema.ResourceData) *cfClient.HermesTrigger {
 
 	triggerId := d.Id()
-	if triggerId == "" {
-		triggerId = generateTriggerString(d)
-	}
 	hermesTrigger := &cfClient.HermesTrigger{
 		Event:    triggerId,
 		Pipeline: d.Get("pipeline").(string),
 	}
 
 	return hermesTrigger
-}
-
-func generateTriggerString(d *schema.ResourceData) string {
-	return fmt.Sprintf("cron:codefresh:%s:%s", d.Get("schedule").(string), d.Get("message").(string))
 }
