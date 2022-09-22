@@ -140,7 +140,7 @@ func TestAccCodefreshPipeline_Variables(t *testing.T) {
 func TestAccCodefreshPipeline_RuntimeEnvironment(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	runtimeName := "system/default"
+	runtimeName := "system/default-plan"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
