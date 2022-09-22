@@ -10,17 +10,17 @@ require (
 	github.com/dlclark/regexp2 v1.4.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/golangci/golangci-lint v1.27.0
-	github.com/google/go-cmp v0.5.8 // indirect
+	github.com/hashicorp/go-getter v1.4.2-0.20200106182914-9813cbd4eb02 // indirect
 	github.com/hashicorp/go-hclog v1.2.1 // indirect
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20191212124732-c6ae6269b9d7 // indirect
 	github.com/hashicorp/terraform-plugin-sdk v1.7.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.0-rc.2.0.20200717132200-7435e2abc9d1
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.23.0
+	github.com/hashicorp/terraform-plugin-test v1.4.4 // indirect
 	github.com/iancoleman/orderedmap v0.2.0
-	github.com/imdario/mergo v0.3.9
+	github.com/imdario/mergo v0.3.12
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/stretchr/objx v0.1.1
-	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.3.0
 )
 
 go 1.13

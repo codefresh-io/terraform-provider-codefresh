@@ -207,7 +207,7 @@ steps:
 
 	expectedSpecAttributes := &cfClient.Spec{
 		Steps: &cfClient.Steps{
-			Steps: `{"zz_firstStep":{"commands":["echo Hello World First Step"],"image":"alpine","stage":"test"},"aa_secondStep":{"commands":["echo Hello World Second Step"],"image":"alpine","stage":"test"}}`,
+			Steps: `{"zz_firstStep":{"stage":"test","image":"alpine","commands":["echo Hello World First Step"]},"aa_secondStep":{"stage":"test","image":"alpine","commands":["echo Hello World Second Step"]}}`,
 		},
 		Stages: &cfClient.Stages{
 			Stages: `["test"]`,
@@ -458,8 +458,10 @@ func TestAccCodefreshPipelineOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.options.0.keep_pvcs_for_pending_approval", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.options.0.pending_approval_concurrency_applied", "false"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.options.*", map[string]string{
+						"keep_pvcs_for_pending_approval":   "true",
+						"pending_approval_concurrency_applied": "false",
+					}),
 				),
 			},
 			{
@@ -472,7 +474,7 @@ func TestAccCodefreshPipelineOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckNoResourceAttr(resourceName, "spec.0.options"),
+					resource.TestCheckNoResourceAttr(resourceName, "spec.0.options.#"),
 				),
 			},
 		},
@@ -780,7 +782,7 @@ resource "codefresh_pipeline" "test" {
         ]
         description = ""
         disabled = false
-        options = {
+        options {
             no_cache             = %t
             no_cf_cache          = %t
             reset_volume         = %t
