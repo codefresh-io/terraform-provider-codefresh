@@ -459,7 +459,7 @@ func TestAccCodefreshPipelineOptions(t *testing.T) {
 					testAccCheckCodefreshPipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.options.*", map[string]string{
-						"keep_pvcs_for_pending_approval":   "true",
+						"keep_pvcs_for_pending_approval":       "true",
 						"pending_approval_concurrency_applied": "false",
 					}),
 				),
