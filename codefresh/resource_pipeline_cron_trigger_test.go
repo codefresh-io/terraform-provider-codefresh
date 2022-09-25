@@ -19,7 +19,7 @@ func TestAccCodefreshPipelineCronTrigger_basic(t *testing.T) {
 	var pipeline cfClient.Pipeline
 	var pipelineCronTrigger cfClient.HermesTrigger
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCodefreshPipelineCronTriggerDestroy,
@@ -33,7 +33,7 @@ func TestAccCodefreshPipelineCronTrigger_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "*/1 * * * *", "test message"),
+				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipeline.GetID(), "*/1 * * * *", "test message"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineCronTriggerExists(cronTriggerResourceName, &pipelineCronTrigger),
 					resource.TestCheckResourceAttr(cronTriggerResourceName, "pipeline_id", pipeline.GetID()),
@@ -50,14 +50,14 @@ func TestAccCodefreshPipelineCronTrigger_basic(t *testing.T) {
 	})
 }
 
-func testAccCodefreshPipelineCronTriggerBasicConfig(pipeline, expression, message string) string {
+func testAccCodefreshPipelineCronTriggerBasicConfig(pipelineID, expression, message string) string {
 	return fmt.Sprintf(`
 resource "codefresh_pipeline_cron_trigger" "test" {
 	pipeline_id = "%s" 
 	expression = "%s"
 	message  = "%s"
   }
-`, pipeline, expression, message)
+`, pipelineID, expression, message)
 }
 
 func testAccCheckCodefreshPipelineCronTriggerDestroy(s *terraform.State) error {

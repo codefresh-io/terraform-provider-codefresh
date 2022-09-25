@@ -6,7 +6,7 @@ import (
 
 type HermesTrigger struct {
 	Event     string    `json:"event,omitempty"`
-	Pipeline  string    `json:"pipeline,omitempty"`
+	PipelineID  string    `json:"pipeline,omitempty"`
 	EventData EventData `json:"event-data,omitempty"`
 }
 
@@ -40,7 +40,7 @@ func (client *Client) GetHermesTriggerByEventAndPipeline(event string, pipeline 
 
 	var hermesTrigger HermesTrigger
 	for _, trigger := range hermesTriggerList {
-		if trigger.Pipeline == pipeline {
+		if trigger.PipelineID == pipeline {
 			hermesTrigger = trigger
 		}
 	}

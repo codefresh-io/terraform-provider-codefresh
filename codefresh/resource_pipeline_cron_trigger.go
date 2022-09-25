@@ -51,7 +51,7 @@ func resourcePipelineCronTriggerCreate(d *schema.ResourceData, meta interface{})
 
 	hermesTrigger := *mapResourceToPipelineCronTrigger(d)
 
-	err = client.CreateHermesTriggerByEventAndPipeline(eventString, hermesTrigger.Pipeline)
+	err = client.CreateHermesTriggerByEventAndPipeline(eventString, hermesTrigger.PipelineID)
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func resourcePipelineCronTriggerDelete(d *schema.ResourceData, meta interface{})
 
 	hermesTrigger := *mapResourceToPipelineCronTrigger(d)
 
-	err := client.DeleteHermesTriggerByEventAndPipeline(hermesTrigger.Event, hermesTrigger.Pipeline)
+	err := client.DeleteHermesTriggerByEventAndPipeline(hermesTrigger.Event, hermesTrigger.PipelineID)
 	if err != nil {
 		log.Printf("Failed to delete cron trigger: %s", err)
 	}
@@ -101,7 +101,7 @@ func resourcePipelineCronTriggerDelete(d *schema.ResourceData, meta interface{})
 func mapPipelineCronTriggerToResource(hermesTrigger *cfClient.HermesTrigger, d *schema.ResourceData) error {
 
 	d.SetId(hermesTrigger.Event)
-	d.Set("pipeline", hermesTrigger.Pipeline)
+	d.Set("pipeline_id", hermesTrigger.PipelineID)
 
 	return nil
 }
@@ -111,7 +111,7 @@ func mapResourceToPipelineCronTrigger(d *schema.ResourceData) *cfClient.HermesTr
 	triggerId := d.Id()
 	hermesTrigger := &cfClient.HermesTrigger{
 		Event:    triggerId,
-		Pipeline: d.Get("pipeline_id").(string),
+		PipelineID: d.Get("pipeline_id").(string),
 	}
 
 	return hermesTrigger
