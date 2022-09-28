@@ -17,7 +17,7 @@ func TestAccCodefreshPipelineCronTrigger_basic(t *testing.T) {
 	resourceName := "codefresh_pipeline_cron_trigger.test"
 	var pipelineCronTrigger cfClient.HermesTrigger
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCodefreshPipelineCronTriggerDestroy,
