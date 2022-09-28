@@ -77,6 +77,12 @@ export CODEFRESH_API_KEY='xyz'
 
 ## Testing the Provider
 
+```bash
+export TF_ACC="test" 
+export CODEFRESH_API_KEY=[YOUR API TOKEN]
+go test -v ./...
+```
+
 ## License
 
 Copyright 2022 Codefresh.
