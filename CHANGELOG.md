@@ -1,3 +1,13 @@
+<a name="v0.1.4"></a>
+# [v0.1.4](https://github.com/korenyoni/terraform-provider-codefresh/releases/tag/v0.1.4) - 28 Sep 2022
+
+## Changes
+- Docs: Add Terraform Acceptance Tests Section to README [@korenyoni](https://github.com/korenyoni) ([#7](https://github.com/korenyoni/terraform-provider-codefresh/issues/7))
+
+
+[Changes][v0.1.4]
+
+
 <a name="v0.1.3"></a>
 # [v0.1.3](https://github.com/korenyoni/terraform-provider-codefresh/releases/tag/v0.1.3) - 28 Sep 2022
 
@@ -40,6 +50,7 @@
 [Changes][v0.1.0]
 
 
+[v0.1.4]: https://github.com/korenyoni/terraform-provider-codefresh/compare/v0.1.3...v0.1.4
 [v0.1.3]: https://github.com/korenyoni/terraform-provider-codefresh/compare/v0.1.2...v0.1.3
 [v0.1.2]: https://github.com/korenyoni/terraform-provider-codefresh/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/korenyoni/terraform-provider-codefresh/compare/v0.1.0...v0.1.1
