@@ -28,6 +28,10 @@ steps:
       - TF_ACC="test"
     commands:
       - go test -v ./... 
+    retry:
+      maxAttempts: 3
+      delay: 5
+      exponentialFactor: 2
 
   prepare_env_vars:
     title: 'Preparing environment variables...'
