@@ -1,3 +1,14 @@
+<a name="v0.1.2"></a>
+# [v0.1.2](https://github.com/korenyoni/terraform-provider-codefresh/releases/tag/v0.1.2) - 28 Sep 2022
+
+## Changes
+- Feat: Add Tests to CI [@korenyoni](https://github.com/korenyoni) ([#5](https://github.com/korenyoni/terraform-provider-codefresh/issues/5))
+- Feat: Pipeline Cron Trigger [@korenyoni](https://github.com/korenyoni) ([#4](https://github.com/korenyoni/terraform-provider-codefresh/issues/4))
+
+
+[Changes][v0.1.2]
+
+
 <a name="v0.1.1"></a>
 # [v0.1.1](https://github.com/korenyoni/terraform-provider-codefresh/releases/tag/v0.1.1) - 12 Sep 2022
 
@@ -19,6 +30,7 @@
 [Changes][v0.1.0]
 
 
+[v0.1.2]: https://github.com/korenyoni/terraform-provider-codefresh/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/korenyoni/terraform-provider-codefresh/compare/v0.1.0...v0.1.1
 [v0.1.0]: https://github.com/korenyoni/terraform-provider-codefresh/tree/v0.1.0
 
