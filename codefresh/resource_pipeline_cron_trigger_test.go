@@ -14,50 +14,40 @@ import (
 
 func TestAccCodefreshPipelineCronTrigger_basic(t *testing.T) {
 	pipelineName := pipelineNamePrefix + acctest.RandString(10)
-	pipelineResourceName := "codefresh_pipeline.test"
-	cronTriggerResourceName := "codefresh_pipeline_cron_trigger.test"
-	var pipeline cfClient.Pipeline
+	resourceName := "codefresh_pipeline_cron_trigger.test"
 	var pipelineCronTrigger cfClient.HermesTrigger
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCodefreshPipelineCronTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshPipelineBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git"),
+				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "*/1 * * * *", "test message"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodefreshPipelineExists(pipelineResourceName, &pipeline),
-					resource.TestCheckResourceAttr(pipelineResourceName, "id", pipeline.GetID()),
-					resource.TestCheckResourceAttr(pipelineResourceName, "name", pipelineName),
+					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
+					resource.TestCheckResourceAttr(resourceName, "expression", "*/1 * * * *"),
+					resource.TestCheckResourceAttr(resourceName, "message", "test message"),
 				),
 			},
 			{
-				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipeline.GetID(), "*/1 * * * *", "test message"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodefreshPipelineCronTriggerExists(cronTriggerResourceName, &pipelineCronTrigger),
-					resource.TestCheckResourceAttr(cronTriggerResourceName, "pipeline_id", pipeline.GetID()),
-					resource.TestCheckResourceAttr(cronTriggerResourceName, "expression", "*/1 * * * *"),
-					resource.TestCheckResourceAttr(cronTriggerResourceName, "message", "test message"),
-				),
-			},
-			{
-				ResourceName:      cronTriggerResourceName,
+				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccCodefreshPipelineCronTriggerImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccCodefreshPipelineCronTriggerBasicConfig(pipelineID, expression, message string) string {
-	return fmt.Sprintf(`
+func testAccCodefreshPipelineCronTriggerBasicConfig(rName, repo, path, revision, context, expression, message string) string {
+	return testAccCodefreshPipelineBasicConfig(rName, repo, path, revision, context) + fmt.Sprintf(`
 resource "codefresh_pipeline_cron_trigger" "test" {
-	pipeline_id = "%s" 
+	pipeline_id =  codefresh_pipeline.test.id
 	expression = "%s"
 	message  = "%s"
   }
-`, pipelineID, expression, message)
+`, expression, message)
 }
 
 func testAccCheckCodefreshPipelineCronTriggerDestroy(s *terraform.State) error {
@@ -69,7 +59,7 @@ func testAccCheckCodefreshPipelineCronTriggerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := apiClient.GetHermesTriggerByEventAndPipeline(rs.Primary.ID, rs.Primary.Attributes["pipeline"])
+		_, err := apiClient.GetHermesTriggerByEventAndPipeline(rs.Primary.ID, rs.Primary.Attributes["pipeline_id"])
 
 		if err == nil {
 			return fmt.Errorf("Pipeline Cron Trigger still exists")
@@ -98,7 +88,7 @@ func testAccCheckCodefreshPipelineCronTriggerExists(resource string, pipelineCro
 		}
 
 		apiClient := testAccProvider.Meta().(*cfClient.Client)
-		retrievedHermesTrigger, err := apiClient.GetHermesTriggerByEventAndPipeline(rs.Primary.ID, rs.Primary.Attributes["pipeline"])
+		retrievedHermesTrigger, err := apiClient.GetHermesTriggerByEventAndPipeline(rs.Primary.ID, rs.Primary.Attributes["pipeline_id"])
 
 		if err != nil {
 			return fmt.Errorf("error fetching pipeline cron trigger with resource %s. %s", resource, err)
@@ -107,5 +97,15 @@ func testAccCheckCodefreshPipelineCronTriggerExists(resource string, pipelineCro
 		*pipelineCronTrigger = *retrievedHermesTrigger
 
 		return nil
+	}
+}
+
+func testAccCodefreshPipelineCronTriggerImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+		return fmt.Sprintf("%s,%s", rs.Primary.ID, rs.Primary.Attributes["pipeline_id"]), nil
 	}
 }

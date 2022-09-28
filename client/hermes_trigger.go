@@ -44,6 +44,9 @@ func (client *Client) GetHermesTriggerByEventAndPipeline(event string, pipeline 
 			hermesTrigger = trigger
 		}
 	}
+	if hermesTrigger.Event == "" {
+		return nil, fmt.Errorf("No trigger found for event %s and pipeline %s", event, pipeline)
+	}
 
 	return &hermesTrigger, nil
 }
