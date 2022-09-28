@@ -11,14 +11,27 @@ steps:
     type: git-clone
     repo: "${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}"
     revision: "${{CF_REVISION}}"
-    git: cf_github
+    git: github
 
   go_fmt:
     title: 'Formatting'
     stage: test
-    image:  goreleaser/goreleaser:v1.6.3
+    image:  goreleaser/goreleaser:v1.11.3
     commands:
       - go fmt
+  
+  go_test:
+    title: 'Run tests'
+    stage: test
+    image:  goreleaser/goreleaser:v1.11.3
+    environment:
+      - TF_ACC="test"
+    commands:
+      - go test -v ./... 
+    retry:
+      maxAttempts: 3
+      delay: 5
+      exponentialFactor: 2
 
   prepare_env_vars:
     title: 'Preparing environment variables...'
