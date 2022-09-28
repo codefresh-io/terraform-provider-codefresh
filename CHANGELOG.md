@@ -1,3 +1,13 @@
+<a name="v0.1.3"></a>
+# [v0.1.3](https://github.com/korenyoni/terraform-provider-codefresh/releases/tag/v0.1.3) - 28 Sep 2022
+
+## Changes
+- Test: Test Release [@korenyoni](https://github.com/korenyoni) ([#6](https://github.com/korenyoni/terraform-provider-codefresh/issues/6))
+
+
+[Changes][v0.1.3]
+
+
 <a name="v0.1.2"></a>
 # [v0.1.2](https://github.com/korenyoni/terraform-provider-codefresh/releases/tag/v0.1.2) - 28 Sep 2022
 
@@ -30,6 +40,7 @@
 [Changes][v0.1.0]
 
 
+[v0.1.3]: https://github.com/korenyoni/terraform-provider-codefresh/compare/v0.1.2...v0.1.3
 [v0.1.2]: https://github.com/korenyoni/terraform-provider-codefresh/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/korenyoni/terraform-provider-codefresh/compare/v0.1.0...v0.1.1
 [v0.1.0]: https://github.com/korenyoni/terraform-provider-codefresh/tree/v0.1.0
