@@ -2,8 +2,8 @@ package codefresh
 
 import (
 	"fmt"
-	"strings"
 	"regexp"
+	"strings"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,7 +30,7 @@ func resourcePipelineCronTrigger() *schema.Resource {
 
 				return []*schema.ResourceData{d}, nil
 			},
-		},	
+		},
 		Schema: map[string]*schema.Schema{
 			"pipeline_id": {
 				Type:     schema.TypeString,
@@ -118,9 +118,9 @@ func mapPipelineCronTriggerToResource(hermesTrigger *cfClient.HermesTrigger, d *
 	d.SetId(hermesTrigger.Event)
 	d.Set("pipeline_id", hermesTrigger.PipelineID)
 
-	if hermesTrigger.Event != ""{
-	r := regexp.MustCompile("[^:]+:[^:]+:[^:]+:[^:]+")
-	eventStringAttributes := strings.Split(hermesTrigger.Event, ":")
+	if hermesTrigger.Event != "" {
+		r := regexp.MustCompile("[^:]+:[^:]+:[^:]+:[^:]+")
+		eventStringAttributes := strings.Split(hermesTrigger.Event, ":")
 		if !r.MatchString(hermesTrigger.Event) {
 			return fmt.Errorf("Event string must be in format 'cron:codefresh:[expression]:[message]:[uid]': %s", hermesTrigger.Event)
 		}
@@ -135,7 +135,7 @@ func mapResourceToPipelineCronTrigger(d *schema.ResourceData) *cfClient.HermesTr
 
 	triggerId := d.Id()
 	hermesTrigger := &cfClient.HermesTrigger{
-		Event:    triggerId,
+		Event:      triggerId,
 		PipelineID: d.Get("pipeline_id").(string),
 	}
 

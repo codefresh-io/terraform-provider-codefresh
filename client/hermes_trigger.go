@@ -5,9 +5,9 @@ import (
 )
 
 type HermesTrigger struct {
-	Event     string    `json:"event,omitempty"`
-	PipelineID  string    `json:"pipeline,omitempty"`
-	EventData EventData `json:"event-data,omitempty"`
+	Event      string    `json:"event,omitempty"`
+	PipelineID string    `json:"pipeline,omitempty"`
+	EventData  EventData `json:"event-data,omitempty"`
 }
 
 type EventData struct {
