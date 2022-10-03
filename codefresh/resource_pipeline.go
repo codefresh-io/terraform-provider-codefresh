@@ -117,8 +117,8 @@ func resourcePipeline() *schema.Resource {
 							},
 						},
 						"trigger": {
-							Type:       schema.TypeList,
-							Optional:   true,
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
