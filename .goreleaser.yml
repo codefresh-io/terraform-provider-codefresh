@@ -32,12 +32,4 @@ signs:
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
-release:
-  # draft: true
-changelog:
-  sort: asc
-  filters:
-    exclude:
-    - '^docs:'
-    - '^test:' 
 

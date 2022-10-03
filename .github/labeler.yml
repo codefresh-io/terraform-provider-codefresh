@@ -1,0 +1,20 @@
+source:
+- 'client/**/*'
+- 'codefresh/**/*'
+- '*.go'
+- '*.mod'
+- '*.sum'
+
+docs:
+- README.md 
+- docs/**/*
+- examples/**/*
+- tf_modules/**/*
+- CHANGELOG.md
+
+automation:
+- scripts/**/*
+- .github/**/*
+- codefresh.yml
+- .goreleaser.yml
+- GNUmakefile

@@ -183,7 +183,7 @@ func testAccCheckCodefreshContextDestroy(s *terraform.State) error {
 			return fmt.Errorf("Alert still exists")
 		}
 
-		notFoundErr := "CONTEXT_NOT_FOUND_ERROR"
+		notFoundErr := "Context .* not found"
 		expectedErr := regexp.MustCompile(notFoundErr)
 		if !expectedErr.Match([]byte(err.Error())) {
 			return fmt.Errorf("expected %s, got %s", notFoundErr, err)
