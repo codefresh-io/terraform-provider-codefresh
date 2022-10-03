@@ -80,10 +80,6 @@ func resourcePipelineCronTriggerRead(d *schema.ResourceData, meta interface{}) e
 
 	client := meta.(*cfClient.Client)
 
-	// TODO: remove
-	if d.Get("pipeline_id").(string) == "" {
-		return fmt.Errorf("ID: %s, pipeline_id: %s", d.Id(), d.Get("pipeline_id").(string))
-	}
 	event := d.Id()
 	pipeline := d.Get("pipeline_id").(string)
 
