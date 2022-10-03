@@ -80,10 +80,6 @@ func resourcePipelineCronTriggerRead(d *schema.ResourceData, meta interface{}) e
 
 	client := meta.(*cfClient.Client)
 
-	// TODO: remove
-	if d.Get("pipeline_id").(string) == "" {
-		return fmt.Errorf("ID: %s, pipeline_id: %s", d.Id(), d.Get("pipeline_id").(string))
-	}
 	event := d.Id()
 	pipeline := d.Get("pipeline_id").(string)
 
@@ -123,7 +119,7 @@ func mapPipelineCronTriggerToResource(hermesTrigger *cfClient.HermesTrigger, d *
 	d.Set("pipeline_id", hermesTrigger.PipelineID)
 
 	if hermesTrigger.Event != ""{
-	r := regexp.MustCompile(".+:.+:.+:.+")
+	r := regexp.MustCompile("[^:]+:[^:]+:[^:]+:[^:]+")
 	eventStringAttributes := strings.Split(hermesTrigger.Event, ":")
 		if !r.MatchString(hermesTrigger.Event) {
 			return fmt.Errorf("Event string must be in format 'cron:codefresh:[expression]:[message]:[uid]': %s", hermesTrigger.Event)
