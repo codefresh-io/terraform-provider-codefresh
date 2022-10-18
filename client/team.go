@@ -5,7 +5,7 @@ import (
 )
 
 type TeamUser struct {
-	ID       string `json:"id,omitempty"`
+	ID       string `json:"_id,omitempty"`
 	UserName string `json:"userName,omitempty"`
 	Email    string `json:"email,omitempty"`
 }
