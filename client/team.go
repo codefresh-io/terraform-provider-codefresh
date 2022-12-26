@@ -90,7 +90,6 @@ func (client *Client) GetTeamByID(id string) (*Team, error) {
 	return nil, nil
 }
 
-//
 func ConvertToNewTeam(team *Team) *NewTeam {
 	var users []string
 

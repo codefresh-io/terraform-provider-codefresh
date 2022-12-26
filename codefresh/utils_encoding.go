@@ -10,10 +10,10 @@ import (
 
 // can be used instead the yaml.MapSlice (as an argument to yaml.Unmarshal) in order to preserve the keys order when converting to JSON later
 //
-//	  // Usage example:
-//	  ms := OrderedMapSlice{}
-//	  yaml.Unmarshal([]byte(originalYamlString), &ms)
-//	  orderedJson, _ := json.Marshal(ms)
+//	// Usage example:
+//	ms := OrderedMapSlice{}
+//	yaml.Unmarshal([]byte(originalYamlString), &ms)
+//	orderedJson, _ := json.Marshal(ms)
 //
 // implements json.Marshaler interface
 type OrderedMapSlice []yaml.MapItem

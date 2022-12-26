@@ -6,9 +6,11 @@ require (
 	github.com/bflad/tfproviderlint v0.28.1
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/client9/misspell v0.3.4
+	github.com/codefresh-io/cronus v0.0.0-20221101215301-4e0362f24459
 	github.com/dlclark/regexp2 v1.4.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/golangci/golangci-lint v1.27.0
+	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/terraform-plugin-sdk v1.16.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.23.0
 	github.com/iancoleman/orderedmap v0.2.0

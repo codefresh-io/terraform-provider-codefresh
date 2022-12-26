@@ -5,7 +5,10 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/codefresh-io/cronus/pkg/cronexp"
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -20,7 +23,7 @@ func resourcePipelineCronTrigger() *schema.Resource {
 				idParts := strings.Split(d.Id(), ",")
 
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected EVENT,PIPELINE_ID", d.Id())
+					return nil, fmt.Errorf("unexpected format of ID (%q), expected EVENT,PIPELINE_ID", d.Id())
 				}
 
 				event := idParts[0]
@@ -39,6 +42,20 @@ func resourcePipelineCronTrigger() *schema.Resource {
 			"expression": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateDiagFunc: func(v interface{}, path cty.Path) (diags diag.Diagnostics) {
+					expression := v.(string)
+					var cronExp cronexp.CronExpression
+
+					if _, err := cronExp.DescribeCronExpression(expression); err != nil {
+						diags = append(diags, diag.Diagnostic{
+							Severity: diag.Error,
+							Summary:  "Invalid cron expression.",
+							Detail:   fmt.Sprintf("The cron expression %q is invalid: %s", expression, err),
+						})
+					}
+
+					return
+				},
 			},
 			"message": {
 				Type:     schema.TypeString,
@@ -97,7 +114,13 @@ func resourcePipelineCronTriggerRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourcePipelineCronTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourcePipelineCronTriggerCreate(d, meta)
+	err := resourcePipelineCronTriggerCreate(d, meta)
+	if err != nil {
+		return err
+	}
+	// Delete old trigger after creating one in its place — the Hermes API does not support updating the trigger.
+	// We delete the old trigger after creating the new one, in case the new trigger fails to create.
+	return resourcePipelineCronTriggerDelete(d, meta)
 }
 
 func resourcePipelineCronTriggerDelete(d *schema.ResourceData, meta interface{}) error {
@@ -107,7 +130,7 @@ func resourcePipelineCronTriggerDelete(d *schema.ResourceData, meta interface{})
 
 	err := client.DeleteHermesTriggerByEventAndPipeline(hermesTrigger.Event, hermesTrigger.PipelineID)
 	if err != nil {
-		return fmt.Errorf("Failed to delete cron trigger: %s", err)
+		return fmt.Errorf("failed to delete cron trigger: %v", err)
 	}
 
 	return nil
@@ -122,7 +145,7 @@ func mapPipelineCronTriggerToResource(hermesTrigger *cfClient.HermesTrigger, d *
 		r := regexp.MustCompile("[^:]+:[^:]+:[^:]+:[^:]+")
 		eventStringAttributes := strings.Split(hermesTrigger.Event, ":")
 		if !r.MatchString(hermesTrigger.Event) {
-			return fmt.Errorf("Event string must be in format 'cron:codefresh:[expression]:[message]:[uid]': %s", hermesTrigger.Event)
+			return fmt.Errorf("event string must be in format 'cron:codefresh:[expression]:[message]:[uid]': %s", hermesTrigger.Event)
 		}
 		d.Set("expression", eventStringAttributes[2])
 		d.Set("message", eventStringAttributes[3])
