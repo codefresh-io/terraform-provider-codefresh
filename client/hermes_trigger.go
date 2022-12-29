@@ -45,7 +45,7 @@ func (client *Client) GetHermesTriggerByEventAndPipeline(event string, pipeline 
 		}
 	}
 	if hermesTrigger.Event == "" {
-		return nil, fmt.Errorf("no Hermes Trigger found for event: %s, pipeline: %s", event, pipeline)
+		return nil, fmt.Errorf("no Trigger found for event: %s, pipeline: %s", event, pipeline)
 	}
 
 	return &hermesTrigger, nil
@@ -73,7 +73,7 @@ func (client *Client) DeleteHermesTriggerByEventAndPipeline(event string, pipeli
 	_, err := client.RequestAPI(&opts)
 
 	if err != nil {
-		return fmt.Errorf("failed to delete Hermes Trigger: \n%v", err)
+		return fmt.Errorf("failed to delete Trigger: \n%v", err)
 	}
 
 	return nil

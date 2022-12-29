@@ -22,7 +22,7 @@ func (client *Client) GetHermesTriggerEvent(event string) (*HermesTriggerEvent, 
 
 	resp, err := client.RequestAPI(&opts)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve Hermes Trigger Event: \n%v", err)
+		return nil, fmt.Errorf("failed to retrieve Trigger Event: \n%v", err)
 	}
 
 	var hermesTriggerEvent HermesTriggerEvent
@@ -50,7 +50,7 @@ func (client *Client) CreateHermesTriggerEvent(event *HermesTriggerEvent) (strin
 
 	resp, err := client.RequestAPI(&opts)
 	if err != nil {
-		return "", fmt.Errorf("failed to create Hermes Trigger Event: \n%v", err)
+		return "", fmt.Errorf("failed to create Trigger Event: \n%v", err)
 	}
 
 	var eventString string
