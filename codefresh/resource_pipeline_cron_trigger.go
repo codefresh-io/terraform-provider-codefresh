@@ -1,15 +1,17 @@
 package codefresh
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
 
-	"github.com/codefresh-io/cronus/pkg/cronexp"
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/robfig/cron"
 )
 
 func resourcePipelineCronTrigger() *schema.Resource {
@@ -44,9 +46,10 @@ func resourcePipelineCronTrigger() *schema.Resource {
 				Required: true,
 				ValidateDiagFunc: func(v interface{}, path cty.Path) (diags diag.Diagnostics) {
 					expression := v.(string)
-					var cronExp cronexp.CronExpression
 
-					if _, err := cronExp.DescribeCronExpression(expression); err != nil {
+					// Cron expression requirements: 6 fields, with ability to use descriptors (e.g. @yearly)
+					parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
+					if _, err := parser.Parse(expression); err != nil {
 						diags = append(diags, diag.Diagnostic{
 							Severity: diag.Error,
 							Summary:  "Invalid cron expression.",
@@ -60,8 +63,36 @@ func resourcePipelineCronTrigger() *schema.Resource {
 			"message": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateDiagFunc: func(v interface{}, path cty.Path) (diags diag.Diagnostics) {
+					message := v.(string)
+
+					// https://github.com/codefresh-io/hermes/blob/6d75b347cb8ff471ce970a766b2285788e5e19fe/pkg/backend/dev_compose_types.json#L226
+					re := regexp.MustCompile(`^[a-zA-Z0-9_+\s-#?.:]{2,128}$`)
+
+					if !re.MatchString(message) {
+						diags = append(diags, diag.Diagnostic{
+							Severity: diag.Error,
+							Summary:  "Invalid message.",
+							Detail:   fmt.Sprintf("The message %q is invalid (must match %q).", message, re.String()),
+						})
+					}
+
+					return
+				},
 			},
 		},
+		// Force new resource if any field changes. This is because the Codefresh API does not support updating cron triggers.
+		CustomizeDiff: customdiff.All(
+			customdiff.ForceNewIfChange("pipeline_id", func(ctx context.Context, old, new, meta interface{}) bool {
+				return true
+			}),
+			customdiff.ForceNewIfChange("expression", func(ctx context.Context, old, new, meta interface{}) bool {
+				return true
+			}),
+			customdiff.ForceNewIfChange("message", func(ctx context.Context, old, new, meta interface{}) bool {
+				return true
+			}),
+		),
 	}
 }
 
@@ -114,13 +145,8 @@ func resourcePipelineCronTriggerRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourcePipelineCronTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
-	err := resourcePipelineCronTriggerCreate(d, meta)
-	if err != nil {
-		return err
-	}
-	// Delete old trigger after creating one in its place — the Hermes API does not support updating the trigger.
-	// We delete the old trigger after creating the new one, in case the new trigger fails to create.
-	return resourcePipelineCronTriggerDelete(d, meta)
+	// see notes in resourcePipelineCronTrigger()
+	return fmt.Errorf("cron triggers cannot be updated")
 }
 
 func resourcePipelineCronTriggerDelete(d *schema.ResourceData, meta interface{}) error {

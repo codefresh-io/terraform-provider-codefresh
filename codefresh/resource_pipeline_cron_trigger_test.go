@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccCodefreshPipelineCronTrigger_valid_expression(t *testing.T) {
+func TestAccCodefreshPipelineCronTriggerValidExpressions(t *testing.T) {
 	pipelineName := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline_cron_trigger.test"
 	var pipelineCronTrigger cfClient.HermesTrigger
@@ -23,29 +23,20 @@ func TestAccCodefreshPipelineCronTrigger_valid_expression(t *testing.T) {
 		CheckDestroy: testAccCheckCodefreshPipelineCronTriggerDestroy,
 		Steps: []resource.TestStep{
 			{
-				// https://crontab.guru/daily
-				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "0 0 * * *", "test message"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
-					resource.TestCheckResourceAttr(resourceName, "expression", "0 0 * * *"),
-					resource.TestCheckResourceAttr(resourceName, "message", "test message"),
-				),
-			},
-			{
-				// https://crontab.guru/every-weekend
-				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "0 0 * * 6,0", "test message"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
-					resource.TestCheckResourceAttr(resourceName, "expression", "0 0 * * 6,0"),
-					resource.TestCheckResourceAttr(resourceName, "message", "test message"),
-				),
-			},
-			{
 				// https://crontab.guru/between-certain-hours
-				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "0 9-17 * * *", "test message"),
+				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "0 9-17 * * * *", "test message"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
-					resource.TestCheckResourceAttr(resourceName, "expression", "0 9-17 * * *"),
+					resource.TestCheckResourceAttr(resourceName, "expression", "0 9-17 * * * *"),
+					resource.TestCheckResourceAttr(resourceName, "message", "test message"),
+				),
+			},
+			{
+				// https://crontab.guru/daily
+				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "0 0 * * * *", "test message"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
+					resource.TestCheckResourceAttr(resourceName, "expression", "0 0 * * * *"),
 					resource.TestCheckResourceAttr(resourceName, "message", "test message"),
 				),
 			},
@@ -59,6 +50,7 @@ func TestAccCodefreshPipelineCronTrigger_valid_expression(t *testing.T) {
 				),
 			},
 			{
+				// Test resource import
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateIdFunc: testAccCodefreshPipelineCronTriggerImportStateIDFunc(resourceName),
@@ -68,7 +60,7 @@ func TestAccCodefreshPipelineCronTrigger_valid_expression(t *testing.T) {
 	})
 }
 
-func TestAccCodefreshPipelineCronTrigger_invalid_expression(t *testing.T) {
+func TestAccCodefreshPipelineCronTriggerInvalidExpressions(t *testing.T) {
 	pipelineName := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline_cron_trigger.test"
 	var pipelineCronTrigger cfClient.HermesTrigger
@@ -81,10 +73,10 @@ func TestAccCodefreshPipelineCronTrigger_invalid_expression(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// invalid cron field
-				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "*/1 * * * test", "test message"),
+				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "*/1 * * * * test", "test message"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
-					resource.TestCheckResourceAttr(resourceName, "expression", "*/1 * * * test"),
+					resource.TestCheckResourceAttr(resourceName, "expression", "0 * * * * test"),
 					resource.TestCheckResourceAttr(resourceName, "message", "test message"),
 				),
 				ExpectError: expectedError,
@@ -100,21 +92,21 @@ func TestAccCodefreshPipelineCronTrigger_invalid_expression(t *testing.T) {
 				ExpectError: expectedError,
 			},
 			{
-				// too few cron fields
-				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "* * *", "test message"),
+				// too few cron fields (Codefresh Cron Triggers have 6 fields, the following only has 5)
+				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "* * * * *", "test message"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
-					resource.TestCheckResourceAttr(resourceName, "expression", "* * *"),
+					resource.TestCheckResourceAttr(resourceName, "expression", "0 * * * *"),
 					resource.TestCheckResourceAttr(resourceName, "message", "test message"),
 				),
 				ExpectError: expectedError,
 			},
 			{
-				// too many cron fields
+				// too many cron fields (Codefresh Cron Triggers have 6 fields, the following has 7)
 				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "* * * * * * *", "test message"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
-					resource.TestCheckResourceAttr(resourceName, "expression", "* * * * * * *"),
+					resource.TestCheckResourceAttr(resourceName, "expression", "0 * * * * * *"),
 					resource.TestCheckResourceAttr(resourceName, "message", "test message"),
 				),
 				ExpectError: expectedError,
@@ -128,6 +120,118 @@ func TestAccCodefreshPipelineCronTrigger_invalid_expression(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "message", "test message"),
 				),
 				ExpectError: expectedError,
+			},
+		},
+	})
+}
+
+func TestAccCodefreshPipelineCronTriggerValidMessages(t *testing.T) {
+	pipelineName := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline_cron_trigger.test"
+	var pipelineCronTrigger cfClient.HermesTrigger
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineCronTriggerDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Valid message
+				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "0 * * * * *", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
+					resource.TestCheckResourceAttr(resourceName, "expression", "0 * * * * *"),
+					resource.TestCheckResourceAttr(resourceName, "message", "test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodefreshPipelineCronTriggerInvalidMessages(t *testing.T) {
+	pipelineName := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline_cron_trigger.test"
+	var pipelineCronTrigger cfClient.HermesTrigger
+	expectedError := regexp.MustCompile("The message .* is invalid.*")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineCronTriggerDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Empty message
+				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "0 * * * * *", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
+					resource.TestCheckResourceAttr(resourceName, "expression", "0 * * * * *"),
+					resource.TestCheckResourceAttr(resourceName, "message", ""),
+				),
+				ExpectError: expectedError,
+			},
+			{
+				// Message contains !
+				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "0 * * * * *", "Triggered by cron!"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
+					resource.TestCheckResourceAttr(resourceName, "expression", "0 * * * * *"),
+					resource.TestCheckResourceAttr(resourceName, "message", "Triggered by cron!"),
+				),
+				ExpectError: expectedError,
+			},
+			{
+				// Message contains ,
+				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "0 * * * * *", "Triggered, by cron"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
+					resource.TestCheckResourceAttr(resourceName, "expression", "0 * * * * *"),
+					resource.TestCheckResourceAttr(resourceName, "message", "Triggered, by cron"),
+				),
+				ExpectError: expectedError,
+			},
+			{
+				// Message with URI
+				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "0 * * * * *", "Check out https://go.dev/play/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
+					resource.TestCheckResourceAttr(resourceName, "expression", "0 * * * * *"),
+					resource.TestCheckResourceAttr(resourceName, "message", "https://go.dev/play/"),
+				),
+				ExpectError: expectedError,
+			},
+		},
+	})
+}
+
+// Ensure that after a pipeline cron trigger is updated, the new cron trigger is created and the old one is deleted.
+// That is, that this process only results in one cron trigger, and not two. The Hermes API does not have a proper
+// update method, so we have to delete and recreate the cron trigger, and if we are not careful, we can end up with
+// an additional cron trigger (if we forget to delete the old one).
+func TestAccCodefreshPipelineCronTriggerUpdateNoDuplicates(t *testing.T) {
+	pipelineName := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline_cron_trigger.test"
+	var pipelineCronTrigger cfClient.HermesTrigger
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineCronTriggerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "0 * * * * *", "test message"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
+					resource.TestCheckResourceAttr(resourceName, "expression", "0 * * * * *"),
+					resource.TestCheckResourceAttr(resourceName, "message", "test message"),
+				),
+			},
+			{
+				Config: testAccCodefreshPipelineCronTriggerBasicConfig(pipelineName, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "0 1 * * * *", "test message"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineCronTriggerExists(resourceName, &pipelineCronTrigger),
+					resource.TestCheckResourceAttr(resourceName, "expression", "0 1 * * * *"),
+					resource.TestCheckResourceAttr(resourceName, "message", "test message"),
+				),
 			},
 		},
 	})
@@ -155,7 +259,7 @@ func testAccCheckCodefreshPipelineCronTriggerDestroy(s *terraform.State) error {
 		_, err := apiClient.GetHermesTriggerByEventAndPipeline(rs.Primary.ID, rs.Primary.Attributes["pipeline_id"])
 
 		if err == nil {
-			return fmt.Errorf("Pipeline Cron Trigger still exists")
+			return fmt.Errorf("pipeline Cron Trigger still exists")
 		}
 
 		notFoundErr := "PIPELINE_NOT_FOUND_ERROR"
@@ -174,10 +278,10 @@ func testAccCheckCodefreshPipelineCronTriggerExists(resource string, pipelineCro
 
 		rs, ok := state.RootModule().Resources[resource]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resource)
+			return fmt.Errorf("not found: %s", resource)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Record ID is set")
+			return fmt.Errorf("no Record ID is set")
 		}
 
 		apiClient := testAccProvider.Meta().(*cfClient.Client)
