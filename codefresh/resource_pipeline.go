@@ -314,6 +314,10 @@ func resourcePipeline() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"required_available_storage": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"runtime_environment": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -510,6 +514,8 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 	}
 
 	m["pack_id"] = spec.PackId
+	m["required_available_storage"] = spec.RequiredAvailableStorage
+
 	m["concurrency"] = spec.Concurrency
 	m["branch_concurrency"] = spec.BranchConcurrency
 	m["trigger_concurrency"] = spec.TriggerConcurrency
@@ -638,11 +644,12 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			OriginalYamlString: originalYamlString,
 		},
 		Spec: cfClient.Spec{
-			PackId:             d.Get("spec.0.pack_id").(string),
-			Priority:           d.Get("spec.0.priority").(int),
-			Concurrency:        d.Get("spec.0.concurrency").(int),
-			BranchConcurrency:  d.Get("spec.0.branch_concurrency").(int),
-			TriggerConcurrency: d.Get("spec.0.trigger_concurrency").(int),
+			PackId:                   d.Get("spec.0.pack_id").(string),
+			RequiredAvailableStorage: d.Get("spec.0.required_available_storage").(string),
+			Priority:                 d.Get("spec.0.priority").(int),
+			Concurrency:              d.Get("spec.0.concurrency").(int),
+			BranchConcurrency:        d.Get("spec.0.branch_concurrency").(int),
+			TriggerConcurrency:       d.Get("spec.0.trigger_concurrency").(int),
 		},
 	}
 
