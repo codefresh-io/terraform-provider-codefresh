@@ -13,7 +13,7 @@ run pluging with set env CODEFRESH_PLUGIN_DEBUG=true in delve
     // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
+    "version": "0.2.1",
     "configurations": [
         {
             "name": "terraform-provider-codefresh",
@@ -36,8 +36,3 @@ export TF_REATTACH_PROVIDERS='{"registry.terraform.io/-/codefresh":{"Protocol":"
 
 terraform apply
 ```
-
-
-
-
-
