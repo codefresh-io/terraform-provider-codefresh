@@ -13,7 +13,7 @@ func dataSourceIdps() *schema.Resource {
 	}
 }
 
-//IdpSchema -
+// IdpSchema -
 func IdpSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"_id": {

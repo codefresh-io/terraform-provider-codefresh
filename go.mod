@@ -9,10 +9,12 @@ require (
 	github.com/dlclark/regexp2 v1.4.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/golangci/golangci-lint v1.27.0
+	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/terraform-plugin-sdk v1.16.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.23.0
 	github.com/iancoleman/orderedmap v0.2.0
 	github.com/imdario/mergo v0.3.12
+	github.com/robfig/cron v1.2.0
 	github.com/stretchr/objx v0.1.1
 	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
 	golang.org/x/tools v0.1.12 // indirect
