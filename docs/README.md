@@ -24,7 +24,7 @@ The following arguments are supported:
 
 ## Recommendation for creation Accounts, Users, Teams, Permissions
 * create users and accounts using [accounts_users module](modules/accounts_users.md) and Codefresh Admin token 
-* Create and save in tf state api_keys using [accounts_token module](modules/accounts_token.md)
+* Create and save in tf state api_keys using [accounts_token module](modules/account_token.md)
 * Create teams using [teams module](modules/teams.md)
 * Create permissions - [see example](../examples/permissions)
 
