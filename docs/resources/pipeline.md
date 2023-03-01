@@ -119,7 +119,7 @@ resource "codefresh_pipeline" "test" {
 - `location` - (Optional) Default value - **git**.
 - `repo` - (Required) The GitHub `account/repo_name`.
 - `path` - (Required) The relative path to the Codefresh pipeline file.
-- `revison` - (Required) The git revision.
+- `revision` - (Required) The git revision.
 - `context` - (Optional) The Codefresh Git [context](https://codefresh.io/docs/docs/integrations/git-providers/).
 
 ---
