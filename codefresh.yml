@@ -1,3 +1,4 @@
+# test
 version: '1.0'
 stages:
   - clone
@@ -19,7 +20,7 @@ steps:
     image:  goreleaser/goreleaser:v1.11.3
     commands:
       - go fmt
-  
+
   go_test:
     title: 'Run tests'
     stage: test
@@ -27,7 +28,7 @@ steps:
     environment:
       - TF_ACC="test"
     commands:
-      - go test -v ./... 
+      - go test -v ./...
     retry:
       maxAttempts: 3
       delay: 5
