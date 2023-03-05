@@ -34,8 +34,11 @@ terraform {
 ```
 
 
-
 ## [Documentation](./docs)
+
+The documentation is generated using [tfplugindocs](https://github.com/hashicorp/terraform-plugin-docs).
+
+See: [CONTRIBUTING.md](./CONTRIBUTING.md#documentation)
 
 ## [Examples](./examples)
 
