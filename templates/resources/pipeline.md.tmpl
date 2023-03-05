@@ -1,0 +1,100 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+See the [documentation](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/introduction-to-codefresh-pipelines/) for the details.
+
+## Example Usage
+
+```hcl
+resource "codefresh_project" "test" {
+  name = "myproject"
+}
+
+resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
+  name    = "${codefresh_project.test.name}/react-sample-app"
+
+  tags = [
+    "production",
+    "docker",
+  ]
+
+  spec {
+    concurrency         = 1
+    branch_concurrency  = 1
+    trigger_concurrency = 1
+
+    priority    = 5
+
+    spec_template {
+      repo        = "codefresh-contrib/react-sample-app"
+      path        = "./codefresh.yml"
+      revision    = "master"
+      context     = "git"
+    }
+
+    contexts = [
+      "context1-name",
+      "context2-name",
+    ]
+
+    trigger {
+      branch_regex  = "/.*/gi"
+      context       = "git"
+      description   = "Trigger for commits"
+      disabled      = false
+      events        = [
+        "push.heads"
+      ]
+      modified_files_glob = ""
+      name                = "commits"
+      provider            = "github"
+      repo                = "codefresh-contrib/react-sample-app"
+      type                = "git"
+    }
+
+    trigger {
+      branch_regex  = "/.*/gi"
+      context       = "git"
+      description   = "Trigger for tags"
+      disabled      = false
+      events        = [
+        "push.tags"
+      ]
+      modified_files_glob = ""
+      commit_status_title = "tags-trigger"
+      name                = "tags"
+      provider            = "github"
+      repo                = "codefresh-contrib/react-sample-app"
+      type                = "git"
+    }
+
+    variables = {
+      MY_PIP_VAR      = "value"
+      ANOTHER_PIP_VAR = "another_value"
+    }
+  }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+```sh
+terraform import codefresh_pipeline.test xxxxxxxxxxxxxxxxxxx
+```

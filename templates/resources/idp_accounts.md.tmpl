@@ -1,0 +1,36 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example usage
+
+```hcl
+resource "codefresh_account" "test" {
+  name = "<MY ACCOUNT NAME>"
+}
+
+resource "codefresh_idp_accounts" "test" {
+
+  idp = "azure"
+
+  accounts = [
+    codefresh_account.test.id,
+    "<ANY ACCOUNT ID>"
+  ]
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+```sh
+terraform import codefresh_idp_accounts.test xxxxxxxxxxxxxxxxxxx
+```

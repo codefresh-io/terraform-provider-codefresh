@@ -2,13 +2,15 @@ package codefresh
 
 import (
 	"fmt"
+
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAccount() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAccountRead,
+		Description: "This data source retrieves an account by _id or name.",
+		Read:        dataSourceAccountRead,
 		Schema: map[string]*schema.Schema{
 			"_id": {
 				Type:     schema.TypeString,

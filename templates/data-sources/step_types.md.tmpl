@@ -1,0 +1,30 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+```hcl
+data "codefresh_step_types" "freestyle" {
+    name = "freestyle"
+}
+
+local {
+  freestyle_map = { for step_definition in data.codefresh_step_types.freestyle.version: step_definition.version_number => step_definition }
+}
+
+output "test" {
+  # Value is return as YAML
+  value = local.freestyle_map[keys(local.freestyle_map)[0]].version_number
+}
+
+```
+
+{{ .SchemaMarkdown | trimspace }}

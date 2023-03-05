@@ -1,0 +1,35 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+See the [documentation](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/triggers/cron-triggers/).
+
+## Example usage
+
+```hcl
+resource "codefresh_project" "test" {
+  name = "myproject"
+}
+
+resource "codefresh_pipeline" "test" {
+
+  name    = "${codefresh_project.test.name}/react-sample-app"
+
+  ...
+}
+
+resource "codefresh_pipeline_cron_trigger" "test" {
+	pipeline_id =  codefresh_pipeline.test.id
+	expression  = "*/1 * * * *"
+	message     = "Example Cron Trigger"
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

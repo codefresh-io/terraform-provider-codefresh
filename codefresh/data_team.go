@@ -2,13 +2,15 @@ package codefresh
 
 import (
 	"fmt"
+
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceTeam() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTeamRead,
+		Description: "This data source retrieves a team by its ID or name.",
+		Read:        dataSourceTeamRead,
 		Schema: map[string]*schema.Schema{
 			"_id": {
 				Type:     schema.TypeString,

@@ -9,7 +9,8 @@ import (
 
 func dataSourceRegistry() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRegistryRead,
+		Description: "This data source allows retrieving information on any existing registry.",
+		Read:        dataSourceRegistryRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

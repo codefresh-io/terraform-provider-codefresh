@@ -10,7 +10,8 @@ import (
 
 func dataSourceContext() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceContextRead,
+		Description: "This data source allows to retrieve information on any defined context.",
+		Read:        dataSourceContextRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

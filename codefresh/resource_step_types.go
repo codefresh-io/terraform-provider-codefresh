@@ -21,6 +21,10 @@ import (
 
 func resourceStepTypes() *schema.Resource {
 	return &schema.Resource{
+		Description: `
+This resource allows to create your own typed step and manage all of its published versions.
+The resource allows to handle the life-cycle of the version by allowing specifying multiple blocks 'version' where the user provides a version number and the yaml file representing the plugin.
+		`,
 		CreateContext: resourceStepTypesCreate,
 		ReadContext:   resourceStepTypesRead,
 		UpdateContext: resourceStepTypesUpdate,
@@ -30,23 +34,27 @@ func resourceStepTypes() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
+				Description: "The name for the step-type",
+				Type:        schema.TypeString,
+				ForceNew:    true,
+				Required:    true,
 			},
 			"version": {
-				Type:       schema.TypeSet,
-				Required:   true,
-				MinItems:   1,
-				Set:        resourceStepTypesVersionsConfigHash,
-				ConfigMode: schema.SchemaConfigModeAttr,
+				Description: "The versions of the step-type",
+				Type:        schema.TypeSet,
+				Required:    true,
+				MinItems:    1,
+				Set:         resourceStepTypesVersionsConfigHash,
+				ConfigMode:  schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"version_number": {
-							Type:     schema.TypeString,
-							Required: true,
+							Description: "The semver of the step-type.",
+							Type:        schema.TypeString,
+							Required:    true,
 						},
 						"step_types_yaml": {
+							Description:      "YAML containing a valid definition of a typed plugin",
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateFunc:     stringIsYaml,

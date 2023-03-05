@@ -1,0 +1,30 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example usage
+
+```hcl
+data "codefresh_user" "admin" {
+  email = "admin@codefresh.io"
+}
+
+resource "codefresh_team" "admins" {
+
+  name = "testsuperteam123"
+
+  users = [
+    data.codefresh_user.admin.user_id,
+    "<ANY USER ID>",
+  ]
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

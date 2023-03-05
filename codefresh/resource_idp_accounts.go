@@ -7,6 +7,10 @@ import (
 
 func resourceIDPAccounts() *schema.Resource {
 	return &schema.Resource{
+		Description: `
+This resource adds the list of provided account IDs to the IDP.  
+Because of the current Codefresh API limitation it's impossible to remove account from IDP, thus deletion is not supported.
+		`,
 		Create: resourceAccountIDPCreate,
 		Read:   resourceAccountIDPRead,
 		Update: resourceAccountIDPUpdate,
@@ -16,12 +20,14 @@ func resourceIDPAccounts() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"idp_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The IdP name.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"account_ids": {
-				Type:     schema.TypeSet,
-				Required: true,
+				Description: "A list of account IDs to add to the IdP.",
+				Type:        schema.TypeSet,
+				Required:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

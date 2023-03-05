@@ -1,0 +1,75 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+{{ .ProviderName }} itself uses an API key, passed as provider's attribute, but it's possible to use that API Key to generate a new one.  
+
+
+
+## Example usage
+
+```hcl
+provider "codefresh" {
+  api_url = "my API URL"
+  token = "my init API token"
+}
+
+resource "codefresh_account" "test" {
+  name = "my new account"
+}
+
+resource "random_string" "random" {
+  length = 16
+  special = false
+}
+
+resource "codefresh_api_key" "new" {
+  account_id = codefresh_account.test.id
+  user_id = data.codefresh_account.test_account_user.user_id
+  name = "tfkey_${random_string.random.result}"
+
+  scopes = [
+    "agent",
+    "agents",
+    "audit",
+    "build",
+    "cluster",
+    "clusters",
+    "environments-v2",
+    "github-action",
+    "helm",
+    "kubernetes",
+    "pipeline",
+    "project",
+    "repos",
+    "runner-installation",
+    "step-type",
+    "step-types",
+    "view",
+    "workflow",
+  ]
+}
+
+provider "codefresh" {
+  alias = "new_account"
+  api_url = "my API URL"
+  token = codefresh_api_key.new.token
+}
+
+
+resource "codefresh_team" "team_1" {
+
+  provider = codefresh.new_account
+
+  name = "team name"
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

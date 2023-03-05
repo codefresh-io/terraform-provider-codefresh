@@ -1,72 +1,85 @@
 package codefresh
 
 import (
+	"log"
+
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUsersCreate,
-		Read:   resourceUsersRead,
-		Update: resourceUsersUpdate,
-		Delete: resourceUsersDelete,
+		Description: "This resource is used to manage a Codefresh user.",
+		Create:      resourceUsersCreate,
+		Read:        resourceUsersRead,
+		Update:      resourceUsersUpdate,
+		Delete:      resourceUsersDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
 			"user_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The username of the user.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"email": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The email of the user.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"activate": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Description: "Whether to activate the user or to leave it as `pending`.",
+				Type:        schema.TypeBool,
+				Optional:    true,
 			},
 			"accounts": {
-				Type:     schema.TypeSet,
-				Required: true,
+				Description: "A list of accounts IDs to assign the user to.",
+				Type:        schema.TypeSet,
+				Required:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"personal": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Description: "Personal information about the user.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"first_name": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Description: "The first name of the user.",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 						"last_name": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Description: "The last name of the user.",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 						"company_name": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Description: "The company name of the user.",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 						"phone_number": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Description: "The phone number of the user.",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 						"country": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Description: "The country of the user.",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 					},
 				},
 			},
 			"short_profile": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Description: "The computed short profile of the user.",
+				Type:        schema.TypeList,
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"user_name": {
@@ -77,28 +90,33 @@ func resourceUser() *schema.Resource {
 				},
 			},
 			"roles": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Description: "The roles of the user.",
+				Type:        schema.TypeSet,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The status of the user (e.g. `new`, `pending`).",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"login": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Description: "Login settings for the user.",
+				Type:        schema.TypeSet,
+				Optional:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"idp_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Description: "The IdP ID for the user's login.",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 						"sso": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							Description: "Whether to enforce SSO for the user.",
+							Type:        schema.TypeBool,
+							Optional:    true,
 						},
 					},
 				},

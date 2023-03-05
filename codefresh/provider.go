@@ -1,10 +1,11 @@
 package codefresh
 
 import (
+	"fmt"
+
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	//"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"os"
 )
 
@@ -15,15 +16,17 @@ func Provider() *schema.Provider {
 				Type:     schema.TypeString,
 				Optional: true,
 				DefaultFunc: func() (interface{}, error) {
-					if url := os.Getenv("CODEFRESH_API_URL"); url != "" {
+					if url := os.Getenv(ENV_CODEFRESH_API_URL); url != "" {
 						return url, nil
 					}
-					return "https://g.codefresh.io/api", nil
+					return DEFAULT_CODEFRESH_API_URL, nil
 				},
+				Description: fmt.Sprintf("The Codefresh API URL. Defaults to `%s`. Can also be set using the `%s` environment variable.", DEFAULT_CODEFRESH_API_URL, ENV_CODEFRESH_API_URL),
 			},
 			"token": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: fmt.Sprintf("The Codefresh API token. Can also be set using the `%s` environment variable.", ENV_CODEFRESH_API_KEY),
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -61,7 +64,7 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	apiURL := d.Get("api_url").(string)
 	token := d.Get("token").(string)
 	if token == "" {
-		token = os.Getenv("CODEFRESH_API_KEY")
+		token = os.Getenv(ENV_CODEFRESH_API_KEY)
 	}
 	return cfClient.NewClient(apiURL, token, ""), nil
 }

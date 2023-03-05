@@ -1,0 +1,65 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example usage
+
+#### Example 1
+
+```hcl
+resource "codefresh_account_admins" "test" {
+
+  account_id = <ACCOUNT ID>
+
+  users = [
+    <USER ID>,
+  ]
+}
+```
+
+#### Example 2
+
+```hcl
+resource "codefresh_account" "test" {
+
+  name = "mynewaccount"
+
+  limits {
+    collaborators = 25
+    data_retention_weeks = 5
+  }
+
+  build {
+    parallel = 2
+  }
+
+}
+
+data "codefresh_user" "admin" {
+  email = "<EXISTING USER EMAIL>"
+}
+
+resource "codefresh_account_admins" "test" {
+
+  account_id = codefresh_account.test.id
+
+  users = [
+    data.codefresh_user.admin.user_id
+  ]
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+```sh
+terraform import codefresh_account_admins.test xxxxxxxxxxxxxxxxxxx
+```

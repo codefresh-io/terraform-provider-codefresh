@@ -3,12 +3,16 @@ package codefresh
 import (
 	"errors"
 	"fmt"
+
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceApiKey() *schema.Resource {
 	return &schema.Resource{
+		Description: `
+		Manages an API Key tied to an Account and a User.
+		`,
 		Create: resourceApiKeyCreate,
 		Read:   resourceApiKeyRead,
 		Update: resourceApiKeyUpdate,
@@ -18,23 +22,48 @@ func resourceApiKey() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The display name for the API key.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"account_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The ID of account in which the API key will be created.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"user_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The ID of a user within the referenced `account_id` that will own the API key.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"token": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+				Description: "The resulting API key.",
+				Type:        schema.TypeString,
+				Computed:    true,
+				Sensitive:   true,
 			},
 			"scopes": {
+				Description: `
+A list of access scopes for the API key. The possible values:
+	* agent
+	* agents
+	* audit
+	* build
+	* cluster
+	* clusters
+	* environments-v2
+	* github-action
+	* helm
+	* kubernetes
+	* pipeline
+	* project
+	* repos
+	* runner-installation
+	* step-type
+	* step-types
+	* view
+	* workflow
+				`,
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{

@@ -1,15 +1,15 @@
-# Terraform provider for Codefresh
+# Terraform Provider for Codefresh
 
-This provider was initialized by [LightStep](https://lightstep.com/) and will be maintained as the official Terraform provider for Codefresh.
+This is the official Terraform Provider for Codefresh.
 
-The provider is still under development, and can be used as a terraform [third-party plugin](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins) only.
+Terraform Registry: [registry.terraform.io/providers/codefresh-io/codefresh](https://registry.terraform.io/providers/codefresh-io/codefresh/latest)
 
 ## Requirements
 
-- [Terraform](https://www.terraform.io/downloads.html) 0.12+ ;
-- [Go](https://golang.org/doc/install) 1.12+ (to build the provider plugin).
+- [Terraform](https://www.terraform.io/downloads.html) `1.x.x` ;
 
-## Download Provider
+## Download the Provider
+
 Download and extract terraform-provider-codefresh from [releases](https://github.com/codefresh-io/terraform-provider-codefresh/releases)
 
 ## Building the Provider
@@ -20,32 +20,19 @@ go build -o terraform-provider-codefresh
 
 ## Using the Provider
 
-Compile or take from the [Releases](https://github.com/codefresh-contrib/terraform-provider-codefresh/releases) `terraform-provider-codefresh` binary and place it locally according the Terraform plugins [documentation](https://www.terraform.io/docs/configuration/providers.html#third-party-plugins).
+In `versions.tf`:
 
-### for terraform 0.12:
-- _~/.terraform.d/plugins/linux\_amd64_
-- _./terraform.d/plugins/linux\_amd64_. The relative path in your Terraform project.
-
-### for terraform 0.13 follow [required providers](https://www.terraform.io/docs/configuration/provider-requirements.html):
-```bash
-# OS  is linux|windows|darwin, ARCH is amd64|arm|x86
-PLUGIN_DIR=~/.terraform.d/plugins/codefresh.io/app/codefresh/0.1.0/<OS_ARCH>
-mkdir -p ${PLUGIN_DIR}
-cp terraform-provider-codefresh  ${PLUGIN_DIR}/
-```
-
-add [required_providers block](https://www.terraform.io/docs/configuration/provider-requirements.html#requiring-providers)
 ```terraform
 terraform {
-
   required_providers {
     codefresh = {
-      version = "0.1.0"
-      source = "codefresh.io/app/codefresh"
+      version = "x.y.z" # Optional but recommended; replace with latest semantic version
+      source = "codefresh.io/codefresh"
     }
   }
 }
 ```
+
 
 
 ## [Documentation](./docs)
@@ -78,10 +65,26 @@ export CODEFRESH_API_KEY='xyz'
 ## Testing the Provider
 
 ```bash
-export TF_ACC="test"
-export CODEFRESH_API_KEY=[YOUR API TOKEN]
-go test -v ./...
+make testacc
 ```
+
+## Contributors
+
+[![All Contributors](https://img.shields.io/github/all-contributors/codefresh-io/terraform-provider-aws?color=ee8449&style=flat-square)](#contributors)
+
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+## Acknowledgements
+
+_This provider was initialized by [LightStep](https://lightstep.com/)_.
 
 ## License
 

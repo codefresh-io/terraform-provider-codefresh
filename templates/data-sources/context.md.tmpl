@@ -1,0 +1,54 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+```hcl
+# Assuming runtimes-list is a context of type "config" with the following values
+# runtime_a: dev
+# runtime_b: test
+# runtime_c: prod
+
+data "codefresh_context" "runtimes_list" {
+  name = "runtimes-list"
+}
+
+resource "codefresh_project" "test" {
+  name = "myproject"
+}
+
+resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
+  name    = "${codefresh_project.test.name}/react-sample-app"
+
+  runtime_environment {
+    name = yamldecode(data.codefresh_context.runtimes_list.data).runtime_a
+  }
+
+  spec {
+
+    spec_template {
+      repo        = "codefresh-contrib/react-sample-app"
+      path        = "./codefresh.yml"
+      revision    = "master"
+      context     = "git"
+    }
+  }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"gopkg.in/yaml.v2"
@@ -17,248 +19,317 @@ var terminationPolicyOnCreateBranchAttributes = []string{"branchName", "ignoreTr
 
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePipelineCreate,
-		Read:   resourcePipelineRead,
-		Update: resourcePipelineUpdate,
-		Delete: resourcePipelineDelete,
+		Description: "The central component of the Codefresh Platform. Pipelines are workflows that contain individual steps. Each step is responsible for a specific action in the process.",
+		Create:      resourcePipelineCreate,
+		Read:        resourcePipelineRead,
+		Update:      resourcePipelineUpdate,
+		Delete:      resourcePipelineDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The display name for the pipeline.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"original_yaml_string": {
+				Description: `
+A string with original yaml pipeline.
+
+For example:
+
+<code>original_yaml_string = "version: \\"1.0\\"\nsteps:\n	test:\n	image: alpine:latest\n	commands:\n	- echo \\"ACC tests\\"</code>
+
+Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
+				`,
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"project_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The ID of the project that the pipeline belongs to.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"is_public": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Description: "Boolean that specifies if the build logs are publicly accessible (default: `false`).",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
 			},
 			"revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Description: "The pipeline's revision. Should be added to the **lifecycle/ignore_changes** or incremented mannually each update.",
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
 			"tags": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Description: "A list of tags to mark a project for easy management and access control.",
+				Type:        schema.TypeSet,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"spec": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Description: "The pipeline's specs.",
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"priority": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0,
+							Description: "Helps to organize the order of builds execution in case of reaching the concurrency limit (default: `0`).",
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     0,
 						},
 						"concurrency": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0, // zero is unlimited
+							Description: "The maximum amount of concurrent builds. Zero is unlimited (default: `0`).",
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     0,
 						},
 						"branch_concurrency": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0, // zero is unlimited
+							Description: "The maximum amount of concurrent builds that may run for each branch. Zero is unlimited (default: `0`).",
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     0,
 						},
 						"trigger_concurrency": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0, // zero is unlimited
+							Description: "The maximum amount of concurrent builds that may run for each trigger (default: `0`).",
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     0,
 						},
 						"spec_template": {
-							Type:     schema.TypeList,
-							Optional: true,
+							Description: "The pipeline's spec template.",
+							Type:        schema.TypeList,
+							Optional:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"location": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "git",
+										Description: "The location of the spec template (default: `git`).",
+										Type:        schema.TypeString,
+										Optional:    true,
+										Default:     "git",
 									},
 									"repo": {
-										Type:     schema.TypeString,
-										Required: true,
+										Description: "The repository of the spec template (owner/repo).",
+										Type:        schema.TypeString,
+										Required:    true,
 									},
 									"path": {
-										Type:     schema.TypeString,
-										Required: true,
+										Description: "The relative path to the Codefresh pipeline file.",
+										Type:        schema.TypeString,
+										Required:    true,
 									},
 									"revision": {
-										Type:     schema.TypeString,
-										Required: true,
+										Description: "The git revision of the spec template.",
+										Type:        schema.TypeString,
+										Required:    true,
 									},
 									"context": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "github",
+										Description: "The Codefresh git context (default: `github`).",
+										Type:        schema.TypeString,
+										Optional:    true,
+										Default:     "github",
 									},
 								},
 							},
 						},
 						"variables": {
-							Type:     schema.TypeMap,
-							Optional: true,
+							Description: "The pipeline's variables.",
+							Type:        schema.TypeMap,
+							Optional:    true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
 						"trigger": {
-							Type:     schema.TypeList,
-							Optional: true,
+							Description: "The pipeline's triggers (currently the only nested trigger supported is git; for other trigger types, use the `codefresh_pipeline_*_trigger` resources).",
+							Type:        schema.TypeList,
+							Optional:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Description: "The name of the trigger.",
+										Type:        schema.TypeString,
+										Optional:    true,
 									},
 									"description": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Description: "The description of the trigger.",
+										Type:        schema.TypeString,
+										Optional:    true,
 									},
 									"type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "git",
+										Description: "The type of the trigger (default: `git`; see notes above).",
+										Type:        schema.TypeString,
+										Optional:    true,
+										Default:     "git",
+										ValidateDiagFunc: func(v any, p cty.Path) diag.Diagnostics {
+											value := v.(string)
+											expected := "git"
+											var diags diag.Diagnostics
+											if value != expected {
+												diag := diag.Diagnostic{
+													Severity: diag.Error,
+													Summary:  "Only triggers of type git are supported for nested triggers. For other trigger types, use the codefresh_pipeline_*_trigger resources.",
+													Detail:   fmt.Sprintf("%q is not %q", value, expected),
+												}
+												diags = append(diags, diag)
+											}
+											return diags
+										},
 									},
 									"repo": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Description: "The repository name, (owner/repo)",
+										Type:        schema.TypeString,
+										Optional:    true,
 									},
 									"branch_regex": {
+										Description:  " A regular expression and will only trigger for branches that match this naming pattern (default: `/.*/gi`).",
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/.*/gi",
 										ValidateFunc: stringIsValidRe2RegExp,
 									},
 									"branch_regex_input": {
+										Description:  "Flag to manage how the `branch_regex` field is interpreted. Possible values: `multiselect-exclude`, `multiselect`, `regex` (default: `regex`).",
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "regex",
 										ValidateFunc: validation.StringInSlice([]string{"multiselect-exclude", "multiselect", "regex"}, false),
 									},
 									"pull_request_target_branch_regex": {
+										Description:  "A regular expression and will only trigger for pull requests to branches that match this naming pattern.",
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: stringIsValidRe2RegExp,
 									},
 									"comment_regex": {
+										Description:  " A regular expression and will only trigger for pull requests where a comment matches this naming pattern (default: `/.*/gi`).",
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/.*/gi",
 										ValidateFunc: stringIsValidRe2RegExp,
 									},
 									"modified_files_glob": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "",
+										Description: "Allows to constrain the build and trigger it only if the modified files from the commit match this glob expression (default: `\"\"`).",
+										Type:        schema.TypeString,
+										Optional:    true,
+										Default:     "",
 									},
 									"events": {
-										Type:     schema.TypeList,
-										Optional: true,
+										Description: "A list of GitHub events for which a Pipeline is triggered.",
+										Type:        schema.TypeList,
+										Optional:    true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
 									},
 									"provider": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "github",
+										Description: "The git provider tied to the trigger.",
+										Type:        schema.TypeString,
+										Optional:    true,
+										Default:     "github",
 									},
 									"disabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
+										Description: "Flag to disable the trigger.",
+										Type:        schema.TypeBool,
+										Optional:    true,
+										Default:     false,
 									},
 									"options": {
-										Type:     schema.TypeList,
-										Optional: true,
+										Description: "The trigger's options.",
+										Type:        schema.TypeList,
+										Optional:    true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"no_cache": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Default:  false,
+													Description: "If true, docker layer cache is disabled",
+													Type:        schema.TypeBool,
+													Optional:    true,
+													Default:     false,
 												},
 												"no_cf_cache": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Default:  false,
+													Description: "If true, extra Codefresh caching is disabled.",
+													Type:        schema.TypeBool,
+													Optional:    true,
+													Default:     false,
 												},
 												"reset_volume": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Default:  false,
+													Description: "If true, all files on volume will be deleted before each execution.",
+													Type:        schema.TypeBool,
+													Optional:    true,
+													Default:     false,
 												},
 												"enable_notifications": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Default:  false,
+													Description: "If false the pipeline will not send notifications to Slack and status updates back to the Git provider.",
+													Type:        schema.TypeBool,
+													Optional:    true,
+													Default:     false,
 												},
 											},
 										},
 									},
 									"pull_request_allow_fork_events": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
+										Description: "If this trigger is also applicable to git forks.",
+										Type:        schema.TypeBool,
+										Optional:    true,
+										Default:     false,
 									},
 									"commit_status_title": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Description: "The commit status title pushed to the git provider.",
+										Type:        schema.TypeString,
+										Optional:    true,
 									},
 									"context": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "github",
+										Description: "The Codefresh git context.",
+										Type:        schema.TypeString,
+										Optional:    true,
+										Default:     "github",
 									},
 									"contexts": {
-										Type:     schema.TypeList,
-										Optional: true,
+										Description: "A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be loaded when the trigger is executed.",
+										Type:        schema.TypeList,
+										Optional:    true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
 									},
 									"runtime_environment": {
-										Type:     schema.TypeList,
-										Optional: true,
+										Description: "The runtime environment for the trigger.",
+										Type:        schema.TypeList,
+										Optional:    true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"name": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Description: "The name of the runtime environment.",
+													Type:        schema.TypeString,
+													Optional:    true,
 												},
 												"memory": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Description: "The memory allocated to the runtime environment.",
+													Type:        schema.TypeString,
+													Optional:    true,
 												},
 												"cpu": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Description: "The CPU allocated to the runtime environment.",
+													Type:        schema.TypeString,
+													Optional:    true,
 												},
 												"dind_storage": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Description: "The storage allocated to the runtime environment.",
+													Type:        schema.TypeString,
+													Optional:    true,
 												},
 											},
 										},
 									},
 									"variables": {
-										Type:     schema.TypeMap,
-										Optional: true,
+										Description: "Trigger variables.",
+										Type:        schema.TypeMap,
+										Optional:    true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
@@ -267,92 +338,133 @@ func resourcePipeline() *schema.Resource {
 							},
 						},
 						"contexts": {
-							Type:     schema.TypeList,
-							Optional: true,
+							Description: "A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be configured for the pipeline.",
+							Type:        schema.TypeList,
+							Optional:    true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
 						"termination_policy": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Description: "The termination policy for the pipeline.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							MaxItems:    1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"on_create_branch": {
+										Description: `
+The following table presents how to configure this block based on the options available in the UI:
+
+| Option Description                                                            | Value Selected           | on_create_branch | branch_name | ignore_trigger | ignore_branch |
+| ----------------------------------------------------------------------------- |:------------------------:|:----------------:|:-----------:|---------------:| -------------:|
+| Once a build is created terminate previous builds from the same branch        | Disabled                 |        Omit      |     N/A     |       N/A      |      N/A      |
+| Once a build is created terminate previous builds from the same branch        | From the SAME trigger    |       Defined    |     N/A     |      false     |      N/A      |
+| Once a build is created terminate previous builds from the same branch        | From ANY trigger         |       Defined    |     N/A     |      true      |      N/A      |
+| Once a build is created terminate previous builds only from a specific branch | Disabled                 |        Omit      |     N/A     |       N/A      |      N/A      |
+| Once a build is created terminate previous builds only from a specific branch | From the SAME trigger    |       Defined    |    Regex    |      false     |      N/A      |
+| Once a build is created terminate previous builds only from a specific branch | From ANY trigger         |       Defined    |    Regex    |      true      |      N/A      |
+| Once a build is created, terminate all other running builds                   | Disabled                 |        Omit      |     N/A     |       N/A      |      N/A      |
+| Once a build is created, terminate all other running builds                   | From the SAME trigger    |       Defined    |     N/A     |      false     |      true     |
+| Once a build is created, terminate all other running builds                   | From ANY trigger         |       Defined    |     N/A     |      true      |      true     |
+										`,
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"branch_name": {
+													Description:   "A regular expression to filter the branches on with the termination policy applies.",
 													Type:          schema.TypeString,
 													Optional:      true,
 													ValidateFunc:  stringIsValidRe2RegExp,
 													ConflictsWith: []string{"spec.0.termination_policy.0.on_create_branch.0.ignore_branch"},
 												},
 												"ignore_trigger": {
-													Optional: true,
-													Type:     schema.TypeBool,
+													Description: "Whether to ignore the trigger.",
+													Optional:    true,
+													Type:        schema.TypeBool,
 												},
 												"ignore_branch": {
-													Optional: true,
-													Type:     schema.TypeBool,
+													Description: "Whether to ignore the branch.",
+													Optional:    true,
+													Type:        schema.TypeBool,
 												},
 											},
 										},
 									},
 									"on_terminate_annotation": {
-										Optional: true,
-										Type:     schema.TypeBool,
-										Default:  false,
+										Description: "Enables the policy `Once a build is terminated, terminate all child builds initiated from it`.",
+										Optional:    true,
+										Type:        schema.TypeBool,
+										Default:     false,
 									},
 								},
 							},
 						},
 						"pack_id": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Description: "SAAS pack (`5cd1746617313f468d669013` for Small; `5cd1746717313f468d669014` for Medium; `5cd1746817313f468d669015` for Large; `5cd1746817313f468d669017` for XL; `5cd1746817313f468d669018` for XXL).",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 						"required_available_storage": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Description: " Minimum disk space required for build filesystem ( unit Gi is required).",
+							Type:        schema.TypeString,
+							Optional:    true,
 						},
 						"runtime_environment": {
-							Type:     schema.TypeList,
-							Optional: true,
+							Description: "The runtime environment for the pipeline.",
+							Type:        schema.TypeList,
+							Optional:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Description: "The name of the runtime environment.",
+										Type:        schema.TypeString,
+										Optional:    true,
 									},
 									"memory": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Description: "The memory allocated to the runtime environment.",
+										Type:        schema.TypeString,
+										Optional:    true,
 									},
 									"cpu": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Description: "The CPU allocated to the runtime environment.",
+										Type:        schema.TypeString,
+										Optional:    true,
 									},
 									"dind_storage": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Description: "The storage allocated to the runtime environment.",
+										Type:        schema.TypeString,
+										Optional:    true,
 									},
 								},
 							},
 						},
 						"options": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
+							Description: "The options for the pipeline.",
+							Type:        schema.TypeList,
+							MaxItems:    1,
+							Optional:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"keep_pvcs_for_pending_approval": {
+										Description: `
+When build enters 'Pending Approval' state, volume should:
+	* Default (attribute not specified): "Use Setting accounts"
+	* true: "Remain (build remains active)"
+	* false: "Be removed"
+										`,
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
 									"pending_approval_concurrency_applied": {
+										Description: `
+Pipeline concurrency policy: Builds on 'Pending Approval' state should be:
+	* Default (attribute not specified): "Use Setting accounts"
+	* true: "Included in concurrency"
+	* false: "Not included in concurrency"
+										`,
 										Type:     schema.TypeBool,
 										Optional: true,
 									},

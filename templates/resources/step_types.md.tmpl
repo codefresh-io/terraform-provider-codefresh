@@ -1,0 +1,52 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+More about custom steps in the [official documentation](https://codefresh.io/docs/docs/codefresh-yaml/steps/#creating-a-typed-codefresh-plugin).
+
+## Known limitations and disclaimers
+
+### Version and name in yaml Metadata are ignored.
+
+The version and name of the step declared in the yaml files are superseeded by the attributes specified at resource level:
+- `name` : at top level
+- `version_numer`: specified in the `version` block
+The above are added/replaced at runtime time.
+
+### Number of API requests
+
+This resource makes a lot of additional API calls to validate the steps and retrieve all the version available.
+Caution is recommended on the amount of versions maintained and the number of resources defined in a single project.
+
+
+## Example Usage
+
+```hcl
+
+data "codefresh_current_account" "acc" {
+}
+
+resource "codefresh_step_types_versions" "my-custom-step" {
+  name = "${data.codefresh_current_account.acc.name}/my-custom-step"
+
+  version {
+    version_number = "0.0.1"
+    step_types_yaml = file("./templates/plugin-0.0.1.yaml")
+  }
+  version {
+    version_number = "0.0.2"
+    step_types_yaml = file("./templates/plugin-0.0.2.yaml")
+  }
+  ....
+}
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

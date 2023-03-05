@@ -1,8 +1,9 @@
 package codefresh
 
 import (
-	storageContext "github.com/codefresh-io/terraform-provider-codefresh/codefresh/context"
 	"log"
+
+	storageContext "github.com/codefresh-io/terraform-provider-codefresh/codefresh/context"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/ghodss/yaml"
@@ -40,23 +41,26 @@ func getConflictingContexts(context string) []string {
 
 func resourceContext() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceContextCreate,
-		Read:   resourceContextRead,
-		Update: resourceContextUpdate,
-		Delete: resourceContextDelete,
+		Description: "A Context is an authentication/configuration that is used by the Codefresh system and engine.",
+		Create:      resourceContextCreate,
+		Read:        resourceContextRead,
+		Update:      resourceContextUpdate,
+		Delete:      resourceContextDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: "The display name for the context.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			"spec": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
+				Description: "The context's specs.",
+				Type:        schema.TypeList,
+				Required:    true,
+				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						normalizeFieldName(contextConfig): {
@@ -68,8 +72,9 @@ func resourceContext() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data": {
-										Type:     schema.TypeMap,
-										Required: true,
+										Description: "The map of variables representing the shared config.",
+										Type:        schema.TypeMap,
+										Required:    true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
@@ -86,9 +91,10 @@ func resourceContext() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data": {
-										Type:      schema.TypeMap,
-										Required:  true,
-										Sensitive: true,
+										Description: "The map of variables representing the shared config (secret).",
+										Type:        schema.TypeMap,
+										Required:    true,
+										Sensitive:   true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
@@ -105,6 +111,7 @@ func resourceContext() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data": {
+										Description:      "The YAML string representing the shared config.",
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateFunc:     stringIsYaml,
@@ -126,6 +133,7 @@ func resourceContext() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data": {
+										Description:      "The YAML string representing the shared config (secret).",
 										Type:             schema.TypeString,
 										Required:         true,
 										Sensitive:        true,
