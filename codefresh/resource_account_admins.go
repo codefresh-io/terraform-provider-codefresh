@@ -20,13 +20,13 @@ func resourceAccountAdmins() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"account_id": {
 				Description: "The account id where to set up a list of admins.",
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"users": {
 				Description: "A list of users to set up as account admins.",
-				Type:     schema.TypeSet,
-				Required: true,
+				Type:        schema.TypeSet,
+				Required:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
