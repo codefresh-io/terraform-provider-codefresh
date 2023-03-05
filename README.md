@@ -6,17 +6,11 @@ Terraform Registry: [registry.terraform.io/providers/codefresh-io/codefresh](htt
 
 ## Requirements
 
-- [Terraform](https://www.terraform.io/downloads.html) `1.x.x` ;
+- [Terraform](https://www.terraform.io/downloads.html) `1.x.x` 
 
 ## Download the Provider
 
 Download and extract terraform-provider-codefresh from [releases](https://github.com/codefresh-io/terraform-provider-codefresh/releases)
-
-## Building the Provider
-
-```sh
-go build -o terraform-provider-codefresh
-```
 
 ## Using the Provider
 
@@ -33,14 +27,17 @@ terraform {
 }
 ```
 
+## Building the Provider Locally
 
-## [Documentation](./docs)
+```sh
+make install
+```
+
+## [Provider Documentation](./docs)
 
 The documentation is generated using [tfplugindocs](https://github.com/hashicorp/terraform-plugin-docs).
 
 See: [CONTRIBUTING.md](./CONTRIBUTING.md#documentation)
-
-## [Examples](./examples)
 
 ## To configure Codefresh provider:
 
@@ -66,6 +63,8 @@ export CODEFRESH_API_KEY='xyz'
 ```
 
 ## Testing the Provider
+
+**NOTE:** Acceptance tests create real resources, including admin resources (accounts, users) so make sure that `CODEFRESH_API_KEY` is set to an account that you are ok with being modified.
 
 ```bash
 make testacc
