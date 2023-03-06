@@ -19,8 +19,7 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
       - run: |
-          export GOROOT=$HOME/go
-          export PATH=$PATH:$GOROOT/bin
+          export PATH=$PATH:/home/runner/go/bin
           make docs
       - name: Commit changes
         uses: EndBug/add-and-commit@v9.1.1
