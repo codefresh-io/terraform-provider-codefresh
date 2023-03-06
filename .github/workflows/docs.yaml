@@ -19,9 +19,9 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
       - run: |
-          export PATH=$PATH:/home/runner/go/bin
+          export PATH=$PATH:$GOPATH
           make docs-prepare
-          ls -lah /home/runner/go/bin
+          ls -lah $GOPATH
           tfplugindocs generate
       - name: Commit changes
         uses: EndBug/add-and-commit@v9.1.1
