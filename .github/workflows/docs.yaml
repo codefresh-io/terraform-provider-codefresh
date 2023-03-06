@@ -1,6 +1,6 @@
 name: "Update Terraform Provider Docs"
 on:
-  pull_request_target:
+  pull_request:
     paths:
       - "**/*.go"
       - "templates/**/*"
