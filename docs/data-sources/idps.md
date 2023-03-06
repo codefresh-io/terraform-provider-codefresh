@@ -11,7 +11,7 @@ This data source retrieves all Identity Providers (IdPs) in the system.
 
 ## Example Usage
 
-```
+```hcl
 data "codefresh_idps" "idp_azure" {
   display_name = "codefresh-onprem-tst-2"
   # client_name = "2222"

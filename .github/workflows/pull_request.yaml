@@ -15,8 +15,7 @@ jobs:
           export PATH=$PATH:/home/runner/go/bin
           make docs-prepare
           tfplugindocs generate
-      - id: docs-need-updating
-        name: Validate No Changes
+      - name: Validate No Changes
         run: |
           git diff --exit-code
   gofmt:
@@ -30,7 +29,6 @@ jobs:
       - name: Run gofmt
         run: |
           go fmt
-      - id: go-needs-formatting
-        name: Validate No Changes
+      - name: Validate No Changes
         run: |
           git diff --exit-code

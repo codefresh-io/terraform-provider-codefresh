@@ -28,7 +28,7 @@ output "current_ac" {
 ```
 
 The output example: 
-```
+```hcl
 Outputs:
 
 current_ac = {
