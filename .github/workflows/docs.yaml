@@ -9,7 +9,8 @@ on:
 
 jobs:
   tfplugindocs:
-    if: github.event_name == 'pull_request' || contains(github.event.comment.body, '/docs')
+    # Always run if pull_request was triggered because of paths, but also run if someone commented /docs on a PR
+    if: github.event_name == 'pull_request' || (github.event.issue.pull_request && contains(github.event.comment.body, '/docs'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
