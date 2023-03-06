@@ -15,8 +15,7 @@ jobs:
           export PATH=$PATH:/home/runner/go/bin
           make docs-prepare
           tfplugindocs generate
-      - id: docs-need-updating
-        name: Validate No Changes
+      - name: Validate No Changes
         run: |
           git diff --exit-code
   gofmt:
@@ -30,14 +29,14 @@ jobs:
       - name: Run gofmt
         run: |
           go fmt
-      - id: go-needs-formatting
-        name: Validate No Changes
+      - name: Validate No Changes
         run: |
           git diff --exit-code
   tasklist:
     name: "Ensure all PR tasks are completed"
     runs-on: ubuntu-latest
     steps:
-      - uses: kentaro-m/task-completed-checker-action@v0.1.1
+      - name: Check for incomplete task list items
+        uses: Shopify/task-list-checker@main
         with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
