@@ -15,14 +15,14 @@ steps:
   go_fmt:
     title: "Formatting"
     stage: test
-    image: goreleaser/goreleaser:v1.11.3
+    image: goreleaser/goreleaser:v1.15.2
     commands:
       - go fmt
 
   go_test:
     title: "Run tests"
     stage: test
-    image: goreleaser/goreleaser:v1.11.3
+    image: goreleaser/goreleaser:v1.15.2
     environment:
       - TF_ACC="test"
     commands:
@@ -52,7 +52,7 @@ steps:
 
   release_binaries:
     title: Create release in Github
-    image: goreleaser/goreleaser:v1.11.3
+    image: goreleaser/goreleaser:v1.15.2
     stage: release
     environment:
       - GPG_FINGERPRINT=${{GPG_FINGERPRINT}}
