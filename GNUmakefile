@@ -59,9 +59,13 @@ vet:
 		exit 1; \
 	fi
 
-docs:
-	@echo "==> Generating Provider Documentation..."
+docs-prepare:
+	@echo "==> Setting up docs..."
 	which tfplugindocs || go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@${TFPLUGINDOCS_VERSION}
+
+docs: docs-prepare
+	@echo "==> Generating Provider Documentation..."
 	tfplugindocs generate
 
-.PHONY: build test testacc vet fmt fmtcheck lint tools test-compile docs
+.PHONY: build test testacc vet fmt fmtcheck lint tools test-compile docs docs-prepare
+
