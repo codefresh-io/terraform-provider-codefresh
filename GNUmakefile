@@ -59,7 +59,7 @@ vet:
 	fi
 
 docs-prepare:
-	@echo "==> Setting up docs..."
+	@echo "==> Setting up tfplugindocs..."
 	go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@${TFPLUGINDOCS_VERSION}
 
 docs: docs-prepare
