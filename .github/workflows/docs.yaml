@@ -9,7 +9,7 @@ on:
 
 jobs:
   tfplugindocs:
-    if: github.event_name == "pull_request" || contains(github.event.comment.body, '/docs')
+    if: github.event_name == 'pull_request' || contains(github.event.comment.body, '/docs')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
