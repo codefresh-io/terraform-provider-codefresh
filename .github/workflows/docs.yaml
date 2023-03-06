@@ -18,7 +18,7 @@ jobs:
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CF_CI_BOT_PAT }}
       - name: Generate Docs
         run: |
           export PATH=$PATH:/home/runner/go/bin
