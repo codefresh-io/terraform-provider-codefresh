@@ -5,7 +5,6 @@ HOSTNAME=codefresh.io
 PKG_NAME=codefresh
 NAMESPACE=app
 BINARY=terraform-provider-${PKG_NAME}
-VERSION=0.2.1
 OS_ARCH=darwin_amd64
 TFPLUGINDOCS_VERSION=v0.14.1
 
@@ -61,7 +60,8 @@ vet:
 
 docs-prepare:
 	@echo "==> Setting up docs..."
-	which tfplugindocs || go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@${TFPLUGINDOCS_VERSION}
+	go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@${TFPLUGINDOCS_VERSION}
+	which tfplugindocs
 
 docs: docs-prepare
 	@echo "==> Generating Provider Documentation..."
