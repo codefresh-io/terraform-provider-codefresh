@@ -1,8 +1,9 @@
-name: "Validate Docs and Go Code"
+name: "Pull Request"
 on: pull_request
 
 jobs:
-  tfplugindocs:
+  docs:
+    name: "Ensure 'make docs' has been run"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -18,25 +19,8 @@ jobs:
         name: Validate No Changes
         run: |
           git diff --exit-code
-      - name: Issue Comment on PR
-        if: steps.docs-need-updating.output.outcome != 'success'
-        uses: thollander/actions-comment-pull-request@v2.3.1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          message: |
-            :warning: Terraform Provider Docs need updating!
-
-            Run:
-
-            ```bash
-            $ make docs
-            ```
-
-            Then commit the changes.
-          pr_number: ${{ github.event.pull_request.number }}
-          comment_tag: docs-need-updating
-
   gofmt:
+    name: "Ensure 'make fmt' has been run"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -50,20 +34,3 @@ jobs:
         name: Validate No Changes
         run: |
           git diff --exit-code
-      - name: Issue Comment on PR
-        if: steps.go-needs-formatting.output.outcome != 'success'
-        uses: thollander/actions-comment-pull-request@v2.3.1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          message: |
-            :warning: Go code needs formatting!
-
-            Run:
-
-            ```bash
-            $ make fmt
-            ```
-
-            Then commit the changes.
-          pr_number: ${{ github.event.pull_request.number }}
-          comment_tag: go-needs-formatting
