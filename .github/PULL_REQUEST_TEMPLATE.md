@@ -5,7 +5,7 @@
 ## Notes
 <!-- Add any notes here -->
 
-## PR Checklist
+## Checklist
 
 * [ ] _I have read [CONTRIBUTING.md](https://github.com/codefresh-io/terraform-provider-codefresh/blob/master/README.md)._
 * [ ] _I have [allowed changes to my fork to be made](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/allowing-changes-to-a-pull-request-branch-created-from-a-fork)._

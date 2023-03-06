@@ -34,3 +34,10 @@ jobs:
         name: Validate No Changes
         run: |
           git diff --exit-code
+  tasklist:
+    name: "Ensure all PR tasks are completed"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: kentaro-m/task-completed-checker-action@v0.1.1
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
