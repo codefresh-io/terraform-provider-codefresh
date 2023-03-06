@@ -8,7 +8,7 @@ on:
       - "templates/**/*"
 
 jobs:
-  tfplugindocs:
+  tfplugindocs-generate:
     # Always run if pull_request was triggered because of paths, but also run if someone commented /docs on a PR
     if: github.event_name == 'pull_request' || (github.event.issue.pull_request && contains(github.event.comment.body, '/docs'))
     runs-on: ubuntu-latest
@@ -20,11 +20,12 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
       - run: |
           export PATH=$PATH:/home/runner/go/bin
-          make docs
+          make docs-prepare
+          tfplugindocs generate
       - name: Commit changes
         uses: EndBug/add-and-commit@v9.1.1
         with:
           pull: "--ff"
-          message: "Update Provider Docs"
+          message: "Update Terraform Provider Docs"
           add: "docs/**/*.md"
           default_author: github_actions
