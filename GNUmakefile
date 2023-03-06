@@ -61,7 +61,8 @@ vet:
 docs-prepare:
 	@echo "==> Setting up docs..."
 	go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@${TFPLUGINDOCS_VERSION}
-	which tfplugindocs
+	ls -lah /home/runner/go
+	ls -lah $GOPATH
 
 docs: docs-prepare
 	@echo "==> Generating Provider Documentation..."
