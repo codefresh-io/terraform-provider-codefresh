@@ -1,6 +1,6 @@
 {
-  "projectName": "all-contributors",
-  "projectOwner": "all-contributors",
+  "projectName": "terraform-provider-codefresh",
+  "projectOwner": "codefresh-io",
   "repoType": "github",
   "repoHost": "https://github.com",
   "files": ["README.md"],
