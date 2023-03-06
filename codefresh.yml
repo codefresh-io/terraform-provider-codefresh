@@ -1,12 +1,11 @@
-version: '1.0'
+version: "1.0"
 stages:
   - clone
   - test
-  - pakcages
   - release
 steps:
   main_clone:
-    title: 'Cloning main repository...'
+    title: "Cloning main repository..."
     stage: clone
     type: git-clone
     repo: "${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}"
@@ -14,27 +13,27 @@ steps:
     git: cf_github
 
   go_fmt:
-    title: 'Formatting'
+    title: "Formatting"
     stage: test
-    image:  goreleaser/goreleaser:v1.11.3
+    image: goreleaser/goreleaser:v1.11.3
     commands:
       - go fmt
-  
+
   go_test:
-    title: 'Run tests'
+    title: "Run tests"
     stage: test
-    image:  goreleaser/goreleaser:v1.11.3
+    image: goreleaser/goreleaser:v1.11.3
     environment:
       - TF_ACC="test"
     commands:
-      - go test -v ./... 
+      - go test -v ./...
     retry:
       maxAttempts: 3
       delay: 5
       exponentialFactor: 2
 
   prepare_env_vars:
-    title: 'Preparing environment variables...'
+    title: "Preparing environment variables..."
     stage: release
     image: codefreshio/ci-helpers
     environment:
@@ -53,7 +52,7 @@ steps:
 
   release_binaries:
     title: Create release in Github
-    image:  goreleaser/goreleaser:v1.11.3
+    image: goreleaser/goreleaser:v1.11.3
     stage: release
     environment:
       - GPG_FINGERPRINT=${{GPG_FINGERPRINT}}

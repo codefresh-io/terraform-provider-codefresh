@@ -7,7 +7,7 @@ It is possible that we will switch to the [Terraform Plugin Framework](https://g
 ### Prerequisites (other than Terraform)
 
 - GNU Make
-- [Go](https://golang.org/doc/install) `1.18.x` (minimum supported Go version required to build the provider).
+- [Go](https://golang.org/doc/install) `1.(n-2).x` (minimum supported Go version required to build the provider; n is the latest minor version listed [here](https://go.dev/dl/)).
 
 ### Building and Running a Local Build of the Provider
 
