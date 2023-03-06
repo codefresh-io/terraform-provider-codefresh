@@ -16,10 +16,11 @@ import (
 
 func resourcePipelineCronTrigger() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePipelineCronTriggerCreate,
-		Read:   resourcePipelineCronTriggerRead,
-		Update: resourcePipelineCronTriggerUpdate,
-		Delete: resourcePipelineCronTriggerDelete,
+		Description: "This resource is used to create cron-based triggers for pipeilnes.",
+		Create:      resourcePipelineCronTriggerCreate,
+		Read:        resourcePipelineCronTriggerRead,
+		Update:      resourcePipelineCronTriggerUpdate,
+		Delete:      resourcePipelineCronTriggerDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ",")

@@ -7,6 +7,7 @@ NAMESPACE=app
 BINARY=terraform-provider-${PKG_NAME}
 VERSION=0.2.1
 OS_ARCH=darwin_amd64
+TFPLUGINDOCS_VERSION=v0.14.1
 
 default: build
 
@@ -20,8 +21,7 @@ build: fmtcheck
 	go build -o ${BINARY}
 
 install: build
-	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${PKG_NAME}/${VERSION}/${OS_ARCH}
-	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${PKG_NAME}/${VERSION}/${OS_ARCH}
+	mv ${BINARY} $(HOME)/go/bin/
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
@@ -59,22 +59,9 @@ vet:
 		exit 1; \
 	fi
 
-website:
-ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
-	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
-	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
-endif
-	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
+docs:
+	@echo "==> Generating Provider Documentation..."
+	which tfplugindocs || go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@${TFPLUGINDOCS_VERSION}
+	tfplugindocs generate
 
-website-lint:
-	@echo "==> Checking website against linters..."
-	@misspell -error -source=text website/
-
-website-test:
-ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
-	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
-	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
-endif
-	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
-
-.PHONY: build test testacc vet fmt fmtcheck lint tools test-compile website website-lint website-test
+.PHONY: build test testacc vet fmt fmtcheck lint tools test-compile docs

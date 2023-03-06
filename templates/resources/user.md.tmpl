@@ -1,0 +1,72 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+
+
+## Example usage
+
+```hcl
+resource "codefresh_account" "test" {
+
+  name = "mynewaccount"
+
+  limits {
+    collaborators = 25
+    data_retention_weeks = 5
+  }
+
+  build {
+    parallel = 2
+  }
+}
+
+resource "codefresh_user" "new" {
+  email = "<EMAIL>"
+  user_name = "<USER>"
+
+  activate = true
+
+  roles = [
+    "Admin",
+    "User"
+  ]
+
+  login {
+      idp_id = data.codefresh_idps.idp_azure.id
+      sso = true
+  }
+  
+  login  {
+      idp_id = data.codefresh_idps.local.id
+      //sso = false
+  }
+
+
+  personal {
+    first_name = "John"
+    last_name = "Smith"
+  }
+
+  accounts = [
+    codefresh_account.test.id,
+    "59009117c102763beda7ce71",
+  ]
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+```sh
+terraform import codefresh_user.new xxxxxxxxxxxxxxxxxxx
+```
+

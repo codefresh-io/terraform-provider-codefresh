@@ -2,43 +2,54 @@ package codefresh
 
 import (
 	"fmt"
+
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceTeam() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTeamCreate,
-		Read:   resourceTeamRead,
-		Update: resourceTeamUpdate,
-		Delete: resourceTeamDelete,
+		Description: "Teams are groups of users that are used to enforce access control.",
+		Create:      resourceTeamCreate,
+		Read:        resourceTeamRead,
+		Update:      resourceTeamUpdate,
+		Delete:      resourceTeamDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The name of the team.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"type": {
+				Description: `
+The type of the team. Possible values:
+	* __default__
+	* __admin__
+				`,
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"account_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Description: "The account id where to create the team.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
 			},
 			"tags": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Description: "The tags of the team.",
+				Type:        schema.TypeSet,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"users": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Description: "A list of user IDs that should be in the team.",
+				Type:        schema.TypeSet,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

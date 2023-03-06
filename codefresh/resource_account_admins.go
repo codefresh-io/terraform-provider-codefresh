@@ -7,6 +7,9 @@ import (
 
 func resourceAccountAdmins() *schema.Resource {
 	return &schema.Resource{
+		Description: `
+		Use this resource to set a list of admins for any account.
+		`,
 		Create: resourceAccountAdminsCreate,
 		Read:   resourceAccountAdminsRead,
 		Update: resourceAccountAdminsUpdate,
@@ -16,12 +19,14 @@ func resourceAccountAdmins() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"account_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The account id where to set up a list of admins.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"users": {
-				Type:     schema.TypeSet,
-				Required: true,
+				Description: "A list of users to set up as account admins.",
+				Type:        schema.TypeSet,
+				Required:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

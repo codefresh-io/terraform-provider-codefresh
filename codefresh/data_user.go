@@ -3,14 +3,16 @@ package codefresh
 import (
 	"errors"
 	"fmt"
+
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		Read:   dataSourceUserRead,
-		Schema: *UserSchema(),
+		Description: "This data source retrieves a user by email.",
+		Read:        dataSourceUserRead,
+		Schema:      *UserSchema(),
 	}
 }
 

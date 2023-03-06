@@ -2,13 +2,15 @@ package codefresh
 
 import (
 	"fmt"
+
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceCurrentAccount() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCurrentAccountRead,
+		Description: "Returns the current account (owner of the token) and its users.",
+		Read:        dataSourceCurrentAccountRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

@@ -1,34 +1,23 @@
 package main
 
 import (
-	"context"
-	"log"
 	"os"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	//"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+// Generate the Terraform provider documentation using `tfplugindocs`:
+//go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+
 func main() {
-	debugMode := (os.Getenv("CODEFRESH_PLUGIN_DEBUG") != "")
-	// for terraform 0.13: export CODEFRESH_PLUGIN_ADDR="codefresh.io/app/codefresh"
-	providerAddr := os.Getenv("CODEFRESH_PLUGIN_ADDR")
+	debugMode := (os.Getenv(codefresh.ENV_CODEFRESH_PLUGIN_DEBUG) != "")
+	providerAddr := os.Getenv(codefresh.ENV_CODEFRESH_PLUGIN_ADDR)
 	if providerAddr == "" {
-		providerAddr = "registry.terraform.io/-/codefresh"
+		providerAddr = codefresh.DEFAULT_CODEFRESH_PLUGIN_ADDR
 	}
-	if debugMode {
-		err := plugin.Debug(context.Background(), providerAddr,
-			&plugin.ServeOpts{
-				ProviderFunc: codefresh.Provider,
-			})
-		if err != nil {
-			log.Println(err.Error())
-		}
-	} else {
-		plugin.Serve(&plugin.ServeOpts{
-			ProviderFunc: codefresh.Provider,
-		},
-		)
-	}
+	plugin.Serve(&plugin.ServeOpts{
+		ProviderFunc: codefresh.Provider,
+		Debug:        debugMode,
+	})
 }

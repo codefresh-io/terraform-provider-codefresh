@@ -1,0 +1,30 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+```hcl
+data "codefresh_team" "admin" {
+  provider = codefresh.acc1
+  name = "users"
+}
+
+resource "codefresh_permission" "permission2" {
+  provider = codefresh.acc1
+  team = data.codefresh_team.admin.id
+  action = "create"
+  resource = "pipeline"
+  tags = ["frontend"]
+}
+
+```
+
+{{ .SchemaMarkdown | trimspace }}

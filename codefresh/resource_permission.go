@@ -10,24 +10,32 @@ import (
 
 func resourcePermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePermissionCreate,
-		Read:   resourcePermissionRead,
-		Update: resourcePermissionUpdate,
-		Delete: resourcePermissionDelete,
+		Description: "Permission are used to setup access control and allow to define which teams have access to which clusters and pipelines based on tags.",
+		Create:      resourcePermissionCreate,
+		Read:        resourcePermissionRead,
+		Update:      resourcePermissionUpdate,
+		Delete:      resourcePermissionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
 			"_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Description: "The permission ID.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
 			},
 			"team": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The Id of the team the permissions apply to.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"resource": {
+				Description: `
+The type of resources the permission applies to. Possible values:
+	* pipeline
+	* cluster
+				`,
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
@@ -39,6 +47,16 @@ func resourcePermission() *schema.Resource {
 				},
 			},
 			"action": {
+				Description: `
+Action to be allowed. Possible values:
+	* create
+	* read
+	* update
+	* delete
+	* run (Only valid for pipeline resource)
+	* approve (Only valid for pipeline resource)
+	* debug (Only valid for pipeline resource)
+				`,
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
@@ -50,6 +68,11 @@ func resourcePermission() *schema.Resource {
 				},
 			},
 			"tags": {
+				Description: `
+The effective tags to apply the permission. It supports 2 custom tags:
+	* untagged is a “tag” which refers to all clusters that don't have any tag.
+	* (the star character) means all tags.
+				`,
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{

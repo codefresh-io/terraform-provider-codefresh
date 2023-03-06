@@ -1,0 +1,45 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+See the [documentation](https://codefresh.io/docs/docs/administration/account-user-management/).
+
+## Example usage
+
+```hcl
+resource "codefresh_account" "test" {
+  name = "my_account_name"
+
+  limits {
+    collaborators = 25
+    data_retention_weeks = 5
+  }
+
+  build {
+    parallel = 27
+  }
+
+  features = {
+    OfflineLogging = true,
+    ssoManagement = true,
+    teamsManagement = true,
+    abac = true,
+    customKubernetesCluster = true,
+    launchDarklyManagement = false,
+  }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+```sh
+terraform import codefresh_account.test xxxxxxxxxxxxxxxxxxx
+```

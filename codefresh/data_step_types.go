@@ -10,7 +10,8 @@ import (
 
 func dataSourceStepTypes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceStepTypesRead,
+		Description: "This data source allows to retrieve the published versions of step-types.",
+		Read:        dataSourceStepTypesRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

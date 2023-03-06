@@ -1,0 +1,28 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+See the [documentation](https://codefresh.io/docs/docs/administration/access-control/).
+
+## Example usage
+
+```hcl
+resource "codefresh_team" "developers" {
+
+  name = "developers"
+
+  users = [
+      "5efc3cb6355c6647041b6e49",
+      "59009221c102763beda7cf04"
+    ]
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

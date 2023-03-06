@@ -1,0 +1,85 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+For more details see the [Codefresh Docker Registries](https://codefresh.io/docs/docs/integrations/docker-registries/)
+
+
+## Concurrency Limitation 
+
+Codefresh Registry API was not designed initially to handle concurrent modifications on `registry` entity.
+Thus, you need to take one of the following approaches to avoid **errors** and **non-expected behavior**:
+
+1) run terraform write operations with `-parallelism=1` option
+```shell
+terraform apply -parallelism=1
+terraform destroy -parallelism=1
+```
+
+2) make each registry resource `depend_on` each other - so the CRUD operations will be performed for each registry **sequentially**
+```hcl
+resource "codefresh_registry" "dockerhub" {
+    name = "dockerhub"
+  
+    spec {
+        dockerhub {
+          # some specific fields here
+        }
+    }
+}
+
+# this registry will depend on the "dockerhub" registry
+resource "codefresh_registry" "gcr" {
+    name = "gcr"
+    
+    depends_on = [codefresh_registry.dockerhub]    
+    spec {
+        gcr {
+          # some specific fields here
+        }
+    }
+}
+```
+
+## Supported Registry Providers
+
+Currently, Codefresh supports the following registry providers:
+* dockerhub - [Docker Hub](https://codefresh.io/docs/docs/integrations/docker-registries/docker-hub/)
+* acr - [Azure Container Registry](https://codefresh.io/docs/docs/integrations/docker-registries/azure-docker-registry)
+* gcr - [Google Container Registry](https://codefresh.io/docs/docs/integrations/docker-registries/google-container-registry)
+* gar - [Google Artifact Registry](https://codefresh.io/docs/docs/integrations/docker-registries/google-artifact-registry)
+* ecr - [Amazon EC2 Container Registry](https://codefresh.io/docs/docs/integrations/docker-registries/amazon-ec2-container-registry)
+* bintray - [Bintray / Artifactory](https://codefresh.io/docs/docs/integrations/docker-registries/bintray-io)
+* other - any other provider including [Quay](https://codefresh.io/docs/docs/integrations/docker-registries/quay-io) and [Github Container Registry](https://codefresh.io/docs/docs/integrations/docker-registries/github-container-registry). See the [docs](https://codefresh.io/docs/docs/integrations/docker-registries/other-registries).
+
+### Resource Spec
+
+Each registry resource have some common fields and specific ones stored under the `spec`. Here is the template:
+
+```hcl
+resource "codefresh_registry" "some_registry" {
+    name = "some_name"
+    default = false
+    primary = true
+    fallback_registry = codefresh_registry.some_other_registry.id
+  
+    spec {
+        <provider_name> {
+          # some specific fields here
+        }
+    }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+```sh
+terraform import codefresh_registry.test xxxxxxxxxxxxxxxxxxx
+```

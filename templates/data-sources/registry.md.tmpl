@@ -1,0 +1,36 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+```hcl
+# some pre-existing registry
+data "codefresh_registry" "dockerhub" {
+  name = "dockerhub"
+}
+
+# example with using data reference to existing registry, not managed by terraform
+# "dockerhub" registry will be used as fallback for "dockerhub1"
+resource "codefresh_registry" "dockerhub1" {
+  name              = "dockerhub1"
+  primary           = !data.codefresh_registry.dockerhub.primary
+
+  spec {
+    dockerhub {
+      username = "test"
+      password = "test"
+    }
+  }
+  fallback_registry = data.codefresh_registry.dockerhub.id
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}

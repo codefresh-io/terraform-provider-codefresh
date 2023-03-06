@@ -11,6 +11,11 @@ import (
 
 func resourceProject() *schema.Resource {
 	return &schema.Resource{
+		Description: `
+The top-level concept in Codefresh. You can create projects to group pipelines that are related.
+In most cases a single project will be a single application (that itself contains many micro-services).
+You are free to use projects as you see fit. For example, you could create a project for a specific Kubernetes cluster or a specific team/department.
+		`,
 		Create: resourceProjectCreate,
 		Read:   resourceProjectRead,
 		Update: resourceProjectUpdate,
@@ -20,19 +25,22 @@ func resourceProject() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The display name for the project.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"tags": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Description: "A list of tags to mark a project for easy management and access control.",
+				Type:        schema.TypeSet,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"variables": {
-				Type:     schema.TypeMap,
-				Optional: true,
+				Description: "Project variables.",
+				Type:        schema.TypeMap,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

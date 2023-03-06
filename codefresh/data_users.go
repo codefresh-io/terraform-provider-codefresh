@@ -1,14 +1,16 @@
 package codefresh
 
 import (
+	"time"
+
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"time"
 )
 
 func dataSourceUsers() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUsersRead,
+		Description: "This data source retrieves all users in the system.",
+		Read:        dataSourceUsersRead,
 		Schema: map[string]*schema.Schema{
 			"users": {
 				Type:     schema.TypeList,

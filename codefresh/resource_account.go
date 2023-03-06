@@ -7,6 +7,9 @@ import (
 
 func resourceAccount() *schema.Resource {
 	return &schema.Resource{
+		Description: `
+		By creating different accounts for different teams within the same company a customer can achieve complete segregation of assets between the teams.
+		`,
 		Create: resourceAccountCreate,
 		Read:   resourceAccountRead,
 		Update: resourceAccountUpdate,
@@ -16,18 +19,20 @@ func resourceAccount() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The display name for the account.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			// "admins": {
-			// 	Type:     schema.TypeSet,
-			// 	Optional: true,
-			// 	Elem: &schema.Schema{
-			// 		Type: schema.TypeString,
-			// 	},
-			// },
-
 			"features": {
+				Description: `
+Features toggles for this account. Default:
+
+OfflineLogging: true
+ssoManagement: true
+teamsManagement: true
+abac: true
+customKubernetesCluster: true
+`,
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -42,35 +47,41 @@ func resourceAccount() *schema.Resource {
 				},
 			},
 			"limits": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Description: "Limits for this account.",
+				Type:        schema.TypeList,
+				Optional:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"collaborators": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Description: "The number of collaborators allowed for this account.",
+							Type:        schema.TypeInt,
+							Required:    true,
 						},
 						"data_retention_weeks": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  5,
+							Description: "Specifies how long, in weeks, the builds be stored (default: `5`).",
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     5,
 						},
 					},
 				},
 			},
 			"build": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Description: "Build limits for this account.",
+				Type:        schema.TypeList,
+				Optional:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"parallel": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Description: "The number of parallel builds allowed for this account.",
+							Type:        schema.TypeInt,
+							Required:    true,
 						},
 						"nodes": {
-							Type:     schema.TypeInt,
-							Default:  1,
-							Optional: true,
+							Description: "The number of nodes allowed for this account (default: `1`).",
+							Type:        schema.TypeInt,
+							Default:     1,
+							Optional:    true,
 						},
 					},
 				},
