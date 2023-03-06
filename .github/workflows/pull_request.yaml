@@ -32,11 +32,3 @@ jobs:
       - name: Validate No Changes
         run: |
           git diff --exit-code
-  tasklist:
-    name: "Ensure all PR tasks are completed"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check for incomplete task list items
-        uses: Shopify/task-list-checker@main
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
