@@ -155,24 +155,21 @@ func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func mapAccountToResource(account *cfClient.Account, d *schema.ResourceData) error {
-
 	err := d.Set("name", account.Name)
 	if err != nil {
 		return err
 	}
 
-	// err = d.Set("admins", account.Admins)
-	// if err != nil {
-	// 	return err
-	// }
 	err = d.Set("features", account.Features)
 	if err != nil {
 		return err
 	}
 
-	err = d.Set("limits", []map[string]interface{}{flattenLimits(*account.Limits)})
-	if err != nil {
-		return err
+	if account.Limits != nil { // On-prem API does not return 'limits' field
+		err = d.Set("limits", []map[string]interface{}{flattenLimits(*account.Limits)})
+		if err != nil {
+			return err
+		}
 	}
 
 	err = d.Set("build", []map[string]interface{}{flattenBuild(*account.Build)})
@@ -197,12 +194,9 @@ func flattenBuild(build cfClient.Build) map[string]interface{} {
 	return res
 }
 func mapResourceToAccount(d *schema.ResourceData) *cfClient.Account {
-	// admins := d.Get("admins").(*schema.Set).List()
-
 	account := &cfClient.Account{
 		ID:   d.Id(),
 		Name: d.Get("name").(string),
-		// Admins: convertStringArr(admins),
 	}
 
 	if _, ok := d.GetOk("features"); ok {
