@@ -31,6 +31,7 @@ version-resolver:
       - "fix"
       - "bugfix"
       - "bug"
+      - "dependencies"
   default: patch
 template: |
   ## Changes
