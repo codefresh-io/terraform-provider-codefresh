@@ -128,10 +128,6 @@ type Account struct {
 	RepoPermission              string              `json:"repoPermission,omitempty"`
 	Limits                      *Limits             `json:"limits,omitempty"`
 	Features                    map[string]bool     `json:"features,omitempty"`
-	// Features                    *Features           `json:"features,omitempty"`
-	// RuntimeEnvironments ToDo
-	// Remaining ToDo
-	// ID string `json:"id"`
 }
 
 type AccountDetails struct {
