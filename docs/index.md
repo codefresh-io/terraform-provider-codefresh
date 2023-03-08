@@ -35,7 +35,6 @@ For example:
 provider "codefresh" {
   api_key = "..."
 }
-
 provider "codefresh" {
   api_key = "..."
   alias   = "acme-dev"
