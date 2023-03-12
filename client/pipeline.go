@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+type Pipelines struct {
+	Docs  []Pipeline `json:"docs,omitempty"`
+	Count int        `json:"count,omitempty"`
+}
+
 type ErrorResponse struct {
 	Status  int    `json:"status,omitempty"`
 	Message string `json:"message,omitempty"`
@@ -177,6 +182,29 @@ func (client *Client) GetPipeline(name string) (*Pipeline, error) {
 	}
 
 	return &pipeline, nil
+}
+
+func (client *Client) GetPipelines() (*[]Pipeline, error) {
+	fullPath := "/pipelines"
+	opts := RequestOptions{
+		Path:   fullPath,
+		Method: "GET",
+	}
+
+	resp, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var getPipelines Pipelines
+
+	err = DecodeResponseInto(resp, &getPipelines)
+	if err != nil {
+		return nil, err
+	}
+
+	return &getPipelines.Docs, nil
 }
 
 func (client *Client) CreatePipeline(pipeline *Pipeline) (*Pipeline, error) {
