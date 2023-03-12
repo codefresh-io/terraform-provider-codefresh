@@ -3,12 +3,12 @@
 page_title: "codefresh_pipelines Data Source - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  This resource retrives Pipeline based on the provided attributes.
+  This resource retrives all pipelines belonging to the current user, which can be optionally filtered by the name.
 ---
 
 # codefresh_pipelines (Data Source)
 
-This resource retrives Pipeline based on the provided attributes.
+This resource retrives all pipelines belonging to the current user, which can be optionally filtered by the name.
 
 
 

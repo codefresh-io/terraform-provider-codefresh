@@ -11,7 +11,7 @@ import (
 
 func dataSourcePipelines() *schema.Resource {
 	return &schema.Resource{
-		Description: "This resource retrives Pipeline based on the provided attributes.",
+		Description: "This resource retrives all pipelines belonging to the current user, which can be optionally filtered by the name.",
 		Read:        dataSourcePipelinesRead,
 		Schema: map[string]*schema.Schema{
 			"name_regex": {
