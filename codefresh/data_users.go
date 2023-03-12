@@ -33,6 +33,9 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err = mapDataUsersToResource(*users, d)
+	if err != nil {
+		return err
+	}
 
 	d.SetId(time.Now().UTC().String())
 
