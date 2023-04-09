@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
@@ -12,7 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"gopkg.in/yaml.v2"
+	"github.com/sclevine/yj/convert"
+	"github.com/sclevine/yj/order"
 )
 
 var terminationPolicyOnCreateBranchAttributes = []string{"branchName", "ignoreTrigger", "ignoreBranch"}
@@ -873,68 +876,81 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 	return pipeline
 }
 
-// extractSpecAttributesFromOriginalYamlString extracts the steps and stages from the original yaml string to enable propagation in the `Spec` attribute of the pipeline
-// We cannot leverage on the standard marshal/unmarshal because the steps attribute needs to maintain the order of elements
-// while by default the standard function doesn't do it because in JSON maps are unordered
+// This function is used to extract the spec attributes from the original_yaml_string attribute.
+// Typically, unmarshalling the YAML string is problematic because the order of the attributes is not preserved.
+// Namely, we care a lot about the order of the steps and stages attributes.
+// Luckily, the yj package introduces a MapSlice type that preserves the order Map items.
+//
+// The Pipeline struct in the client package expects steps, stages and hooks to be a JSON string.
+// So, we need to marshal the MapSlice to JSON using the yq package.
+// For any other spec attribute that is not a map, we can just use the json.Marshal function.
 func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfClient.Pipeline) {
-	ms := OrderedMapSlice{}
-	err := yaml.Unmarshal([]byte(originalYamlString), &ms)
+	yamlConverter := convert.YAML{}
+
+	stringReader := strings.NewReader(originalYamlString)
+	decodedYaml, err := yamlConverter.Decode(stringReader)
+
 	if err != nil {
-		log.Fatalf("Unable to unmarshall original_yaml_string. Error: %v", err)
+		log.Fatalf("Unable to decode original_yaml_string. Error: %v", err)
 	}
 
-	stages := "[]"
-	steps := "{}"
-	hooks := "{}"
-
-	// Parse elements of the YAML string to extract Steps, Hooks and Stages if defined
-	for _, item := range ms {
-		key := item.Key.(string)
-		switch key {
+	marshalJson := func(v interface{}) (string, error) {
+		var b []byte
+		var err error
+		switch reflect.TypeOf(v).String() {
+		case "order.MapSlice":
+			b, err = v.(order.MapSlice).MarshalJSON()
+		case "[]interface {}":
+			b, err = json.Marshal(v)
+		default:
+			return fmt.Sprintf("%v", v), nil
+		}
+		return string(b), err
+	}
+	for _, item := range decodedYaml.(order.MapSlice) {
+		switch item.Key {
 		case "steps":
-			switch x := item.Value.(type) {
-			default:
-				log.Fatalf("unsupported value type: %T", item.Value)
-
-			case OrderedMapSlice:
-				s, _ := json.Marshal(x)
-				steps = string(s)
+			steps, err := marshalJson(item.Val)
+			if err != nil {
+				log.Fatalf("Unable to marshal 'steps'. Error: %v", err)
+			}
+			pipeline.Spec.Steps = &cfClient.Steps{
+				Steps: steps,
 			}
 		case "stages":
-			s, _ := json.Marshal(item.Value)
-			stages = string(s)
-
+			stages, err := marshalJson(item.Val)
+			if err != nil {
+				log.Fatalf("Unable to marshal 'stages'. Error: %v", err)
+			}
+			pipeline.Spec.Stages = &cfClient.Stages{
+				Stages: stages,
+			}
 		case "hooks":
-			switch x := item.Value.(type) {
-			default:
-				log.Fatalf("unsupported value type: %T", item.Value)
-
-			case OrderedMapSlice:
-				h, _ := json.Marshal(x)
-				hooks = string(h)
+			hooks, err := marshalJson(item.Val)
+			if err != nil {
+				log.Fatalf("Unable to marshal 'hooks'. Error: %v", err)
+			}
+			pipeline.Spec.Hooks = &cfClient.Hooks{
+				Hooks: hooks,
 			}
 		case "mode":
-			pipeline.Spec.Mode = item.Value.(string)
-		case "fail_fast":
-			ff, ok := item.Value.(bool)
-			if ok {
-				pipeline.Spec.FailFast = &ff
+			mode, err := marshalJson(item.Val)
+			if err != nil {
+				log.Fatalf("Unable to marshal 'mode'. Error: %v", err)
 			}
-		default:
-			log.Printf("Unsupported entry %s", key)
+			pipeline.Spec.Mode = mode
+		case "fail_fast":
+			ff, err := marshalJson(item.Val)
+			if err != nil {
+				log.Fatalf("Unable to marshal 'fail_fast'. Error: %v", err)
+			}
+			ff_b, err := strconv.ParseBool(ff)
+			if err != nil {
+				log.Fatalf("Unable to parse 'fail_fast' as bool. Error: %v", err)
+			}
+			pipeline.Spec.FailFast = &ff_b
 		}
 	}
-
-	pipeline.Spec.Steps = &cfClient.Steps{
-		Steps: steps,
-	}
-	pipeline.Spec.Stages = &cfClient.Stages{
-		Stages: stages,
-	}
-	pipeline.Spec.Hooks = &cfClient.Hooks{
-		Hooks: hooks,
-	}
-
 }
 
 func getSupportedTerminationPolicyAttributes(policy string) map[string]interface{} {
