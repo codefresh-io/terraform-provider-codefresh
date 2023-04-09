@@ -1,10 +1,8 @@
 package codefresh
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
-	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,8 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/sclevine/yj/convert"
-	"github.com/sclevine/yj/order"
 )
 
 var terminationPolicyOnCreateBranchAttributes = []string{"branchName", "ignoreTrigger", "ignoreBranch"}
@@ -879,77 +875,53 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 // This function is used to extract the spec attributes from the original_yaml_string attribute.
 // Typically, unmarshalling the YAML string is problematic because the order of the attributes is not preserved.
 // Namely, we care a lot about the order of the steps and stages attributes.
-// Luckily, the yj package introduces a MapSlice type that preserves the order Map items.
-//
-// The Pipeline struct in the client package expects steps, stages and hooks to be a JSON string.
-// So, we need to marshal the MapSlice to JSON using the yq package.
-// For any other spec attribute that is not a map, we can just use the json.Marshal function.
+// Luckily, the yj package introduces a MapSlice type that preserves the order Map items (see utils.go).
 func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfClient.Pipeline) {
-	yamlConverter := convert.YAML{}
-
-	stringReader := strings.NewReader(originalYamlString)
-	decodedYaml, err := yamlConverter.Decode(stringReader)
-
-	if err != nil {
-		log.Fatalf("Unable to decode original_yaml_string. Error: %v", err)
-	}
-
-	marshalJson := func(v interface{}) (string, error) {
-		var b []byte
-		var err error
-		switch reflect.TypeOf(v).String() {
-		case "order.MapSlice":
-			b, err = v.(order.MapSlice).MarshalJSON()
-		case "[]interface {}":
-			b, err = json.Marshal(v)
-		default:
-			return fmt.Sprintf("%v", v), nil
+	for _, attribute := range []string{"stages", "steps", "hooks"} {
+		yamlString, err := yq(fmt.Sprintf(".%s", attribute), originalYamlString)
+		if err != nil {
+			log.Fatalf("Error while extracting '%s' from original YAML string: %v", attribute, err)
+		} else if yamlString == "" {
+			continue
 		}
-		return string(b), err
-	}
-	for _, item := range decodedYaml.(order.MapSlice) {
-		switch item.Key {
-		case "steps":
-			steps, err := marshalJson(item.Val)
-			if err != nil {
-				log.Fatalf("Unable to marshal 'steps'. Error: %v", err)
-			}
-			pipeline.Spec.Steps = &cfClient.Steps{
-				Steps: steps,
-			}
+
+		attributeJson, err := yamlToJson(yamlString)
+		if err != nil {
+			log.Fatalf("Error while converting '%s' YAML to JSON: %v", attribute, err)
+		}
+
+		switch attribute {
 		case "stages":
-			stages, err := marshalJson(item.Val)
-			if err != nil {
-				log.Fatalf("Unable to marshal 'stages'. Error: %v", err)
-			}
 			pipeline.Spec.Stages = &cfClient.Stages{
-				Stages: stages,
+				Stages: attributeJson,
+			}
+		case "steps":
+			pipeline.Spec.Steps = &cfClient.Steps{
+				Steps: attributeJson,
 			}
 		case "hooks":
-			hooks, err := marshalJson(item.Val)
-			if err != nil {
-				log.Fatalf("Unable to marshal 'hooks'. Error: %v", err)
-			}
 			pipeline.Spec.Hooks = &cfClient.Hooks{
-				Hooks: hooks,
+				Hooks: attributeJson,
 			}
-		case "mode":
-			mode, err := marshalJson(item.Val)
-			if err != nil {
-				log.Fatalf("Unable to marshal 'mode'. Error: %v", err)
-			}
-			pipeline.Spec.Mode = mode
-		case "fail_fast":
-			ff, err := marshalJson(item.Val)
-			if err != nil {
-				log.Fatalf("Unable to marshal 'fail_fast'. Error: %v", err)
-			}
-			ff_b, err := strconv.ParseBool(ff)
-			if err != nil {
-				log.Fatalf("Unable to parse 'fail_fast' as bool. Error: %v", err)
-			}
-			pipeline.Spec.FailFast = &ff_b
 		}
+	}
+
+	mode, err := yq(".mode", originalYamlString)
+	if err != nil {
+		log.Fatalf("Error while extracting 'mode' from original YAML string: %v", err)
+	} else if mode != "" {
+		pipeline.Spec.Mode = mode
+	}
+
+	ff, err := yq(".fail_fast", originalYamlString)
+	if err != nil {
+		log.Fatalf("Error while extracting 'mode' from original YAML string: %v", err)
+	} else if ff != "" {
+		ff_b, err := strconv.ParseBool(ff)
+		if err != nil {
+			log.Fatalf("Error while parsing 'fail_fast' as boolean: %v", err)
+		}
+		pipeline.Spec.FailFast = &ff_b
 	}
 }
 
