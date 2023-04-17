@@ -1,11 +1,14 @@
 package codefresh
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	funk "github.com/thoas/go-funk"
 )
 
 func resourcePermission() *schema.Resource {
@@ -35,16 +38,26 @@ func resourcePermission() *schema.Resource {
 The type of resources the permission applies to. Possible values:
 	* pipeline
 	* cluster
+	* project
 				`,
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					v := val.(string)
-					if v != "cluster" && v != "pipeline" {
-						errs = append(errs, fmt.Errorf("%q must be between \"pipeline\" or \"cluster\", got: %s", key, v))
-					}
-					return
-				},
+				ValidateFunc: validation.StringInSlice([]string{
+					"pipeline",
+					"cluster",
+					"project",
+				}, false),
+			},
+			"related_resource": {
+				Description: `
+Specifies the resource to use when evaluating the tags. Possible values:
+	* project
+`,
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"project",
+				}, false),
 			},
 			"action": {
 				Description: `
@@ -59,13 +72,15 @@ Action to be allowed. Possible values:
 				`,
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					v := val.(string)
-					if v != "create" && v != "read" && v != "update" && v != "delete" && v != "run" && v != "approve" && v != "debug" {
-						errs = append(errs, fmt.Errorf("%q must be between one of create,read,update,delete,approve,debug got: %s", key, v))
-					}
-					return
-				},
+				ValidateFunc: validation.StringInSlice([]string{
+					"create",
+					"read",
+					"update",
+					"delete",
+					"run",
+					"approve",
+					"debug",
+				}, false),
 			},
 			"tags": {
 				Description: `
@@ -80,7 +95,22 @@ The effective tags to apply the permission. It supports 2 custom tags:
 				},
 			},
 		},
+		CustomizeDiff: resourcePermissionCustomDiff,
 	}
+}
+
+func resourcePermissionCustomDiff(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if diff.HasChanges("resource", "related_resource") {
+		if diff.Get("related_resource").(string) != "" && diff.Get("resource").(string) != "pipeline" {
+			return fmt.Errorf("related_resource is only valid when resource is 'pipeline'")
+		}
+	}
+	if diff.HasChanges("resource", "action") {
+		if funk.Contains([]string{"run", "approve", "debug"}, diff.Get("action").(string)) && diff.Get("resource").(string) != "pipeline" {
+			return fmt.Errorf("action %v is only valid when resource is 'pipeline'", diff.Get("action").(string))
+		}
+	}
+	return nil
 }
 
 func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
@@ -128,7 +158,6 @@ func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfClient.Client)
 
 	permission := *mapResourceToPermission(d)
-	permission.ID = ""
 	resp, err := client.CreatePermission(&permission)
 	if err != nil {
 		return err

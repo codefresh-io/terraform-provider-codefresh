@@ -143,6 +143,11 @@ func TestAccCodefreshStepTypes(t *testing.T) {
 					ResourceName:      resourceName,
 					ImportState:       true,
 					ImportStateVerify: true,
+					// `codefresH_step_types` cannot retrieve `version` on Read only using d.GetId(),
+					// hence ImportStateVerify will always retrieve an unequilvalent value
+					// for `version`. We ignore this field for the purpose of the test.
+					// See: https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/import#importstateverifyignore-1
+					ImportStateVerifyIgnore: []string{"version"},
 				},
 			},
 		})
