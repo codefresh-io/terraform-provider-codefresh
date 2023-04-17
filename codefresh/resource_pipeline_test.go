@@ -168,7 +168,59 @@ func TestAccCodefreshPipeline_RuntimeEnvironment(t *testing.T) {
 	})
 }
 
-func TestAccCodefreshPipeline_OriginalYamlString(t *testing.T) {
+func TestAccCodefreshPipeline_OriginalYamlString_Steps(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+	originalYamlString := `version: 1.0
+steps:
+  cc_firstStep:
+    image: alpine
+    commands:
+      - echo Hello World First Step
+  bb_secondStep:
+    image: alpine
+    commands:
+      - echo Hello World Second jStep
+  aa_secondStep:
+    image: alpine
+    commands:
+      - echo Hello World Third Step`
+
+	expectedSpecAttributes := &cfClient.Spec{
+		Steps: &cfClient.Steps{
+			Steps: `{"cc_firstStep":{"image":"alpine","commands":["echo Hello World First Step"]},"bb_secondStep":{"image":"alpine","commands":["echo Hello World Second jStep"]},"aa_secondStep":{"image":"alpine","commands":["echo Hello World Third Step"]}}`,
+		},
+		Stages: &cfClient.Stages{
+			Stages: `[]`,
+		},
+	}
+
+	var pipeline cfClient.Pipeline
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineBasicConfigOriginalYamlString(name, originalYamlString),
+				Check: resource.ComposeTestCheckFunc(
+
+					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
+					resource.TestCheckResourceAttr(resourceName, "original_yaml_string", originalYamlString),
+					testAccCheckCodefreshPipelineOriginalYamlStringAttributePropagation(resourceName, expectedSpecAttributes),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCodefreshPipeline_OriginalYamlString_All(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
 	originalYamlString := `version: 1.0

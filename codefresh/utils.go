@@ -1,14 +1,20 @@
 package codefresh
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/sclevine/yj/convert"
 	"log"
 	"regexp"
+	"strings"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/dlclark/regexp2"
 	"github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/mikefarah/yq/v4/pkg/yqlib"
+	logging "gopkg.in/op/go-logging.v1"
+	"io/ioutil"
 )
 
 func convertStringArr(ifaceArr []interface{}) []string {
@@ -115,4 +121,43 @@ func stringIsValidRe2RegExp(i interface{}, k string) (warnings []string, errors 
 	}
 
 	return warnings, errors
+}
+
+// Get a value from a YAML string using yq
+func yq(yamlString string, expression string) (string, error) {
+	yqEncoder := yqlib.NewYamlEncoder(0, false, yqlib.NewDefaultYamlPreferences())
+	yqDecoder := yqlib.NewYamlDecoder(yqlib.NewDefaultYamlPreferences())
+	yqEvaluator := yqlib.NewStringEvaluator()
+
+	// Disable yq logging
+	yqLogBackend := logging.AddModuleLevel(logging.NewLogBackend(ioutil.Discard, "", 0))
+	yqlib.GetLogger().SetBackend(yqLogBackend)
+
+	yamlString, err := yqEvaluator.Evaluate(yamlString, expression, yqEncoder, yqDecoder)
+	yamlString = strings.TrimSpace(yamlString)
+
+	if yamlString == "null" { // yq's Evaluate() returns "null" if the expression does not match anything
+		return "", err
+	}
+	return yamlString, err
+}
+
+// Convert a YAML string to JSON while preserving the order of map keys (courtesy of yj package).
+// If this were to use yaml.Unmarshal() and json.Marshal() instead, the order of map keys would be lost.
+func yamlToJson(yamlString string) (string, error) {
+	yamlConverter := convert.YAML{}
+	jsonConverter := convert.JSON{}
+
+	yamlDecoded, err := yamlConverter.Decode(strings.NewReader(yamlString))
+	if err != nil {
+		return "", err
+	}
+
+	jsonBuffer := new(bytes.Buffer)
+	err = jsonConverter.Encode(jsonBuffer, yamlDecoded)
+	if err != nil {
+		return "", err
+	}
+
+	return jsonBuffer.String(), nil
 }

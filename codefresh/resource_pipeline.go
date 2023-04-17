@@ -1,10 +1,10 @@
 package codefresh
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"gopkg.in/yaml.v2"
 )
 
 var terminationPolicyOnCreateBranchAttributes = []string{"branchName", "ignoreTrigger", "ignoreBranch"}
@@ -482,9 +481,12 @@ func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
 
-	pipeline := *mapResourceToPipeline(d)
+	pipeline, err := mapResourceToPipeline(d)
+	if err != nil {
+		return err
+	}
 
-	resp, err := client.CreatePipeline(&pipeline)
+	resp, err := client.CreatePipeline(pipeline)
 	if err != nil {
 		return err
 	}
@@ -522,10 +524,14 @@ func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
 
-	pipeline := *mapResourceToPipeline(d)
+	pipeline, err := mapResourceToPipeline(d)
+	if err != nil {
+		return err
+	}
+
 	pipeline.Metadata.ID = d.Id()
 
-	_, err := client.UpdatePipeline(&pipeline)
+	_, err = client.UpdatePipeline(pipeline)
 	if err != nil {
 		return err
 	}
@@ -735,7 +741,7 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 	return res
 }
 
-func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
+func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 
 	tags := d.Get("tags").(*schema.Set).List()
 
@@ -774,7 +780,10 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			Context:  d.Get("spec.0.spec_template.0.context").(string),
 		}
 	} else {
-		extractSpecAttributesFromOriginalYamlString(originalYamlString, pipeline)
+		err := extractSpecAttributesFromOriginalYamlString(originalYamlString, pipeline)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if _, ok := d.GetOk("spec.0.runtime_environment"); ok {
@@ -870,71 +879,61 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 
 	pipeline.Spec.TerminationPolicy = codefreshTerminationPolicy
 
-	return pipeline
+	return pipeline, nil
 }
 
-// extractSpecAttributesFromOriginalYamlString extracts the steps and stages from the original yaml string to enable propagation in the `Spec` attribute of the pipeline
-// We cannot leverage on the standard marshal/unmarshal because the steps attribute needs to maintain the order of elements
-// while by default the standard function doesn't do it because in JSON maps are unordered
-func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfClient.Pipeline) {
-	ms := OrderedMapSlice{}
-	err := yaml.Unmarshal([]byte(originalYamlString), &ms)
-	if err != nil {
-		log.Fatalf("Unable to unmarshall original_yaml_string. Error: %v", err)
-	}
+// This function is used to extract the spec attributes from the original_yaml_string attribute.
+// Typically, unmarshalling the YAML string is problematic because the order of the attributes is not preserved.
+// Namely, we care a lot about the order of the steps and stages attributes.
+// Luckily, the yj package introduces a MapSlice type that preserves the order Map items (see utils.go).
+func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfClient.Pipeline) error {
+	for _, attribute := range []string{"stages", "steps", "hooks"} {
+		yamlString, err := yq(fmt.Sprintf(".%s", attribute), originalYamlString)
+		if err != nil {
+			return fmt.Errorf("error while extracting '%s' from original YAML string: %v", attribute, err)
+		} else if yamlString == "" {
+			continue
+		}
 
-	stages := "[]"
-	steps := "{}"
-	hooks := "{}"
+		attributeJson, err := yamlToJson(yamlString)
+		if err != nil {
+			return fmt.Errorf("error while converting '%s' YAML to JSON: %v", attribute, err)
+		}
 
-	// Parse elements of the YAML string to extract Steps, Hooks and Stages if defined
-	for _, item := range ms {
-		key := item.Key.(string)
-		switch key {
-		case "steps":
-			switch x := item.Value.(type) {
-			default:
-				log.Fatalf("unsupported value type: %T", item.Value)
-
-			case OrderedMapSlice:
-				s, _ := json.Marshal(x)
-				steps = string(s)
-			}
+		switch attribute {
 		case "stages":
-			s, _ := json.Marshal(item.Value)
-			stages = string(s)
-
+			pipeline.Spec.Stages = &cfClient.Stages{
+				Stages: attributeJson,
+			}
+		case "steps":
+			pipeline.Spec.Steps = &cfClient.Steps{
+				Steps: attributeJson,
+			}
 		case "hooks":
-			switch x := item.Value.(type) {
-			default:
-				log.Fatalf("unsupported value type: %T", item.Value)
-
-			case OrderedMapSlice:
-				h, _ := json.Marshal(x)
-				hooks = string(h)
+			pipeline.Spec.Hooks = &cfClient.Hooks{
+				Hooks: attributeJson,
 			}
-		case "mode":
-			pipeline.Spec.Mode = item.Value.(string)
-		case "fail_fast":
-			ff, ok := item.Value.(bool)
-			if ok {
-				pipeline.Spec.FailFast = &ff
-			}
-		default:
-			log.Printf("Unsupported entry %s", key)
 		}
 	}
 
-	pipeline.Spec.Steps = &cfClient.Steps{
-		Steps: steps,
-	}
-	pipeline.Spec.Stages = &cfClient.Stages{
-		Stages: stages,
-	}
-	pipeline.Spec.Hooks = &cfClient.Hooks{
-		Hooks: hooks,
+	mode, err := yq(".mode", originalYamlString)
+	if err != nil {
+		return fmt.Errorf("error while extracting 'mode' from original YAML string: %v", err)
+	} else if mode != "" {
+		pipeline.Spec.Mode = mode
 	}
 
+	ff, err := yq(".fail_fast", originalYamlString)
+	if err != nil {
+		return fmt.Errorf("error while extracting 'mode' from original YAML string: %v", err)
+	} else if ff != "" {
+		ff_b, err := strconv.ParseBool(strings.TrimSpace(ff))
+		if err != nil {
+			return fmt.Errorf("error while parsing 'fail_fast' as boolean: %v", err)
+		}
+		pipeline.Spec.FailFast = &ff_b
+	}
+	return nil
 }
 
 func getSupportedTerminationPolicyAttributes(policy string) map[string]interface{} {
