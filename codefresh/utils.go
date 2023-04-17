@@ -134,8 +134,9 @@ func yq(yamlString string, expression string) (string, error) {
 	yqlib.GetLogger().SetBackend(yqLogBackend)
 
 	yamlString, err := yqEvaluator.Evaluate(yamlString, expression, yqEncoder, yqDecoder)
+	yamlString = strings.TrimSpace(yamlString)
 
-	if strings.TrimSpace(yamlString) == "null" { // yq's Evaluate() returns "null" if the expression does not match anything
+	if yamlString == "null" { // yq's Evaluate() returns "null" if the expression does not match anything
 		return "", err
 	}
 	return yamlString, err

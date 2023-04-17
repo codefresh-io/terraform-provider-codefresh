@@ -481,9 +481,12 @@ func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
 
-	pipeline := *mapResourceToPipeline(d)
+	pipeline, err := mapResourceToPipeline(d)
+	if err != nil {
+		return err
+	}
 
-	resp, err := client.CreatePipeline(&pipeline)
+	resp, err := client.CreatePipeline(pipeline)
 	if err != nil {
 		return err
 	}
@@ -521,10 +524,14 @@ func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
 
-	pipeline := *mapResourceToPipeline(d)
+	pipeline, err := mapResourceToPipeline(d)
+	if err != nil {
+		return err
+	}
+
 	pipeline.Metadata.ID = d.Id()
 
-	_, err := client.UpdatePipeline(&pipeline)
+	_, err = client.UpdatePipeline(pipeline)
 	if err != nil {
 		return err
 	}
@@ -734,7 +741,7 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 	return res
 }
 
-func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
+func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 
 	tags := d.Get("tags").(*schema.Set).List()
 
@@ -773,7 +780,10 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 			Context:  d.Get("spec.0.spec_template.0.context").(string),
 		}
 	} else {
-		extractSpecAttributesFromOriginalYamlString(originalYamlString, pipeline)
+		err := extractSpecAttributesFromOriginalYamlString(originalYamlString, pipeline)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if _, ok := d.GetOk("spec.0.runtime_environment"); ok {
@@ -869,25 +879,25 @@ func mapResourceToPipeline(d *schema.ResourceData) *cfClient.Pipeline {
 
 	pipeline.Spec.TerminationPolicy = codefreshTerminationPolicy
 
-	return pipeline
+	return pipeline, nil
 }
 
 // This function is used to extract the spec attributes from the original_yaml_string attribute.
 // Typically, unmarshalling the YAML string is problematic because the order of the attributes is not preserved.
 // Namely, we care a lot about the order of the steps and stages attributes.
 // Luckily, the yj package introduces a MapSlice type that preserves the order Map items (see utils.go).
-func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfClient.Pipeline) {
+func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfClient.Pipeline) error {
 	for _, attribute := range []string{"stages", "steps", "hooks"} {
 		yamlString, err := yq(fmt.Sprintf(".%s", attribute), originalYamlString)
 		if err != nil {
-			log.Fatalf("Error while extracting '%s' from original YAML string: %v", attribute, err)
+			return fmt.Errorf("error while extracting '%s' from original YAML string: %v", attribute, err)
 		} else if yamlString == "" {
 			continue
 		}
 
 		attributeJson, err := yamlToJson(yamlString)
 		if err != nil {
-			log.Fatalf("Error while converting '%s' YAML to JSON: %v", attribute, err)
+			return fmt.Errorf("error while converting '%s' YAML to JSON: %v", attribute, err)
 		}
 
 		switch attribute {
@@ -908,21 +918,22 @@ func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipe
 
 	mode, err := yq(".mode", originalYamlString)
 	if err != nil {
-		log.Fatalf("Error while extracting 'mode' from original YAML string: %v", err)
+		return fmt.Errorf("error while extracting 'mode' from original YAML string: %v", err)
 	} else if mode != "" {
 		pipeline.Spec.Mode = mode
 	}
 
 	ff, err := yq(".fail_fast", originalYamlString)
 	if err != nil {
-		log.Fatalf("Error while extracting 'mode' from original YAML string: %v", err)
+		return fmt.Errorf("error while extracting 'mode' from original YAML string: %v", err)
 	} else if ff != "" {
-		ff_b, err := strconv.ParseBool(ff)
+		ff_b, err := strconv.ParseBool(strings.TrimSpace(ff))
 		if err != nil {
-			log.Fatalf("Error while parsing 'fail_fast' as boolean: %v", err)
+			return fmt.Errorf("error while parsing 'fail_fast' as boolean: %v", err)
 		}
 		pipeline.Spec.FailFast = &ff_b
 	}
+	return nil
 }
 
 func getSupportedTerminationPolicyAttributes(policy string) map[string]interface{} {

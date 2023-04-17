@@ -190,6 +190,9 @@ steps:
 		Steps: &cfClient.Steps{
 			Steps: `{"cc_firstStep":{"image":"alpine","commands":["echo Hello World First Step"]},"bb_secondStep":{"image":"alpine","commands":["echo Hello World Second jStep"]},"aa_secondStep":{"image":"alpine","commands":["echo Hello World Third Step"]}}`,
 		},
+		Stages: &cfClient.Stages{
+			Stages: `[]`,
+		},
 	}
 
 	var pipeline cfClient.Pipeline
