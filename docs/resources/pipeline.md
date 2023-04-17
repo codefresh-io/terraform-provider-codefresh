@@ -169,7 +169,7 @@ Required:
 
 - `path` (String) The relative path to the Codefresh pipeline file.
 - `repo` (String) The repository of the spec template (owner/repo).
-- `revision` (String) The git revision of the spec template.
+- `revision` (String) The git revision of the spec template. Possible values: '', *name of branch*. Use '' to autoselect a branch.
 
 Optional:
 

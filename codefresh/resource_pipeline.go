@@ -123,7 +123,7 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Required:    true,
 									},
 									"revision": {
-										Description: "The git revision of the spec template.",
+										Description: "The git revision of the spec template. Possible values: '', *name of branch*. Use '' to autoselect a branch.",
 										Type:        schema.TypeString,
 										Required:    true,
 									},
