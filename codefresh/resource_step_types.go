@@ -198,8 +198,9 @@ func resourceStepTypesUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	// Parse current set: new versions that need to be created are added to a data structure
-	// that will be sorted later for the creation
-	// Updates are performed immediately
+	// that will be sorted later for the creation.
+	// Updates are performed immediately.
+	// Also, see notes in TestAccCodefreshStepTypes regarding `version` and d.GetId()
 	for _, version := range stepTypesVersions.Versions {
 		versionNumber := version.VersionNumber
 		versionsDefined[versionNumber] = versionNumber
@@ -215,7 +216,6 @@ func resourceStepTypesUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			_, err := client.UpdateStepTypes(&version.StepTypes)
 			if err != nil {
 				return diag.Errorf("[DEBUG] Error while updating stepTypes. Error = %v", err)
-
 			}
 		}
 	}

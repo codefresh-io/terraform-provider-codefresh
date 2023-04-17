@@ -162,7 +162,7 @@ func testAccCheckCodefreshContextExists(resource string) resource.TestCheckFunc 
 		_, err := apiClient.GetContext(contextID)
 
 		if err != nil {
-			return fmt.Errorf("error fetching context with resource %s. %s", resource, err)
+			return fmt.Errorf("error fetching context with ID %s. %s", contextID, err)
 		}
 		return nil
 	}

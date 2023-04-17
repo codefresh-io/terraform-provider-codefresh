@@ -2,30 +2,30 @@ package client
 
 import (
 	"fmt"
-	//"log"
 )
 
 // Permission spec
 type Permission struct {
-	ID       string   `json:"id,omitempty"`
-	Team     string   `json:"role,omitempty"`
-	Resource string   `json:"resource,omitempty"`
-	Action   string   `json:"action,omitempty"`
-	Account  string   `json:"account,omitempty"`
-	Tags     []string `json:"attributes,omitempty"`
+	ID              string   `json:"id,omitempty"`
+	Team            string   `json:"role,omitempty"`
+	Resource        string   `json:"resource,omitempty"`
+	RelatedResource string   `json:"related_resource,omitempty"`
+	Action          string   `json:"action,omitempty"`
+	Account         string   `json:"account,omitempty"`
+	Tags            []string `json:"attributes,omitempty"`
 }
 
-// NewPermission spec, diffs from Permission is `json:"team,omitempty"` vs `json:"role,omitempty"`
+// NewPermission spec, diffs from Permission: `json:"_id,omitempty"`, `json:"team,omitempty"`, `json:"tags,omitempty"`
 type NewPermission struct {
-	ID       string   `json:"_id,omitempty"`
-	Team     string   `json:"team,omitempty"`
-	Resource string   `json:"resource,omitempty"`
-	Action   string   `json:"action,omitempty"`
-	Account  string   `json:"account,omitempty"`
-	Tags     []string `json:"tags,omitempty"`
+	ID              string   `json:"_id,omitempty"`
+	Team            string   `json:"team,omitempty"`
+	Resource        string   `json:"resource,omitempty"`
+	RelatedResource string   `json:"related_resource,omitempty"`
+	Action          string   `json:"action,omitempty"`
+	Account         string   `json:"account,omitempty"`
+	Tags            []string `json:"tags,omitempty"`
 }
 
-// GetPermissionList -
 func (client *Client) GetPermissionList(teamID, action, resource string) ([]Permission, error) {
 	fullPath := "/abac"
 	opts := RequestOptions{
@@ -84,16 +84,16 @@ func (client *Client) GetPermissionByID(id string) (*Permission, error) {
 	return &permission, nil
 }
 
-// CreatePermision -
 func (client *Client) CreatePermission(permission *Permission) (*Permission, error) {
 
 	newPermission := &NewPermission{
-		ID:       permission.ID,
-		Team:     permission.Team,
-		Resource: permission.Resource,
-		Action:   permission.Action,
-		Account:  permission.Account,
-		Tags:     permission.Tags,
+		ID:              permission.ID,
+		Team:            permission.Team,
+		Resource:        permission.Resource,
+		RelatedResource: permission.RelatedResource,
+		Action:          permission.Action,
+		Account:         permission.Account,
+		Tags:            permission.Tags,
 	}
 
 	body, err := EncodeToJSON(newPermission)
@@ -113,8 +113,6 @@ func (client *Client) CreatePermission(permission *Permission) (*Permission, err
 		return nil, err
 	}
 
-	// respStr := string(resp)
-	// log.Printf("[DEBUG] createPermission responce body = %s", respStr)
 	var permissionResp []Permission
 	err = DecodeResponseInto(resp, &permissionResp)
 	if err != nil {
@@ -129,7 +127,6 @@ func (client *Client) CreatePermission(permission *Permission) (*Permission, err
 	return client.GetPermissionByID(newPermissionID)
 }
 
-// DeletePermission -
 func (client *Client) DeletePermission(id string) error {
 	fullPath := fmt.Sprintf("/abac/%s", id)
 	opts := RequestOptions{
