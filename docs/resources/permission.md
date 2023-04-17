@@ -51,11 +51,14 @@ resource "codefresh_permission" "developers" {
 - `resource` (String) The type of resources the permission applies to. Possible values:
 	* pipeline
 	* cluster
+	* project
 - `team` (String) The Id of the team the permissions apply to.
 
 ### Optional
 
 - `_id` (String) The permission ID.
+- `related_resource` (String) Specifies the resource to use when evaluating the tags. Possible values:
+	* project
 - `tags` (Set of String) The effective tags to apply the permission. It supports 2 custom tags:
 	* untagged is a “tag” which refers to all clusters that don't have any tag.
 	* (the star character) means all tags.
