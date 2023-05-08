@@ -9,7 +9,7 @@ import (
 
 func dataSourceProject() *schema.Resource {
 	return &schema.Resource{
-		Description: "This data source retrieves a team by its ID or name.",
+		Description: "This data source retrieves a project by its ID or name.",
 		Read:        dataSourceProjectRead,
 		Schema: map[string]*schema.Schema{
 			"_id": {
