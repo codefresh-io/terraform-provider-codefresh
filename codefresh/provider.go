@@ -40,6 +40,7 @@ func Provider() *schema.Provider {
 			"codefresh_users":           dataSourceUsers(),
 			"codefresh_registry":        dataSourceRegistry(),
 			"codefresh_pipelines":       dataSourcePipelines(),
+			"codefresh_project":         dataSourceProject(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"codefresh_account":               resourceAccount(),
