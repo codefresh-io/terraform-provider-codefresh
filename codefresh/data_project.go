@@ -48,7 +48,7 @@ func dataSourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if project == nil {
-		return fmt.Errorf("data.codefresh_team - cannot find team")
+		return fmt.Errorf("data.codefresh_project - cannot find project")
 	}
 
 	return mapDataProjectToResource(project, d)
