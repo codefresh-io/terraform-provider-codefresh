@@ -2,12 +2,12 @@
 page_title: "codefresh_project Data Source - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  This data source retrieves a team by its ID or name.
+  This data source retrieves a project by its ID or name.
 ---
 
 # codefresh_project (Data Source)
 
-This data source retrieves a team by its ID or name.
+This data source retrieves a project by its ID or name.
 
 ## Example Usage
 
