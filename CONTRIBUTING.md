@@ -16,7 +16,6 @@ make docs
 
 1. Fork the repo
 2. Create a PR from your fork against the `master` branch
-3. Add labels to your PR (see: [Labels](.github/release-drafter.yaml))
 
 ### PR Requirements
 
