@@ -36,7 +36,12 @@ func TestRules(t *testing.T) {
 		t.Fatalf("CODEFRESH_API_KEY variable is not set")
 	}
 
-	client := cfClient.NewClient(os.Getenv(codefresh.ENV_CODEFRESH_API_URL), os.Getenv(codefresh.ENV_CODEFRESH_API_KEY), "")
+	client := cfClient.NewClient(
+		os.Getenv(codefresh.ENV_CODEFRESH_API_URL),
+		os.Getenv(codefresh.ENV_CODEFRESH_API2_URL),
+		os.Getenv(codefresh.ENV_CODEFRESH_API_KEY),
+		"",
+	)
 
 	currentAccount, err := client.GetCurrentAccount()
 	if err != nil {
@@ -44,10 +49,7 @@ func TestRules(t *testing.T) {
 	}
 	fmt.Println(currentAccount)
 
-	gqlClient := cfClient.NewGqlClient(os.Getenv(codefresh.ENV_CODEFRESH_API2_URL),
-		codefresh.DEFAULT_CODEFRESH_API2_URL, os.Getenv(codefresh.ENV_CODEFRESH_API_KEY))
-
-	created, err := gqlClient.CreateAbacRule(
+	created, err := client.CreateAbacRule(
 		currentAccount.ID,
 		&cfClient.GitopsAbacRule{
 			EntityType: cfClient.AbacEntityGitopsApplications,
@@ -75,7 +77,7 @@ func TestRules(t *testing.T) {
 		t.Fatalf("Empty rule after creation")
 	}
 
-	list, err := gqlClient.GetAbacRulesList(currentAccount.ID, cfClient.AbacEntityGitopsApplications)
+	list, err := client.GetAbacRulesList(currentAccount.ID, cfClient.AbacEntityGitopsApplications)
 	if err != nil {
 		t.Fatalf("Error: %s", err.Error())
 	}

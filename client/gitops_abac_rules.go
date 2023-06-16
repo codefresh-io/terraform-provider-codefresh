@@ -50,7 +50,7 @@ type GitopsAbacRuleResponse struct {
 	} `json:"data"`
 }
 
-func (client *GraphQLClient) GetAbacRulesList(accountId string, entityType AbacEntityValues) ([]GitopsAbacRule, error) {
+func (client *Client) GetAbacRulesList(accountId string, entityType AbacEntityValues) ([]GitopsAbacRule, error) {
 	request := GraphQLRequest{
 		Query: `
 			query AbacRules($accountId: String!, $entityType: AbacEntityValues!) {
@@ -75,7 +75,7 @@ func (client *GraphQLClient) GetAbacRulesList(accountId string, entityType AbacE
 		},
 	}
 
-	response, err := client.SendRequest(request)
+	response, err := client.SendGqlRequest(request)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil, err
@@ -91,7 +91,7 @@ func (client *GraphQLClient) GetAbacRulesList(accountId string, entityType AbacE
 }
 
 // GetAbacRuleByID -
-func (client *GraphQLClient) GetAbacRuleByID(accountId string, id string) (*GitopsAbacRule, error) {
+func (client *Client) GetAbacRuleByID(accountId string, id string) (*GitopsAbacRule, error) {
 	request := GraphQLRequest{
 		Query: `
 			query AbacRule($accountId: String!, $id: ID!) {
@@ -116,7 +116,7 @@ func (client *GraphQLClient) GetAbacRuleByID(accountId string, id string) (*Gito
 		},
 	}
 
-	response, err := client.SendRequest(request)
+	response, err := client.SendGqlRequest(request)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil, err
@@ -131,7 +131,7 @@ func (client *GraphQLClient) GetAbacRuleByID(accountId string, id string) (*Gito
 	return &gitopsAbacRuleResponse.Data.AbacRule, nil
 }
 
-func (client *GraphQLClient) CreateAbacRule(accountId string, gitopsAbacRule *GitopsAbacRule) (*GitopsAbacRule, error) {
+func (client *Client) CreateAbacRule(accountId string, gitopsAbacRule *GitopsAbacRule) (*GitopsAbacRule, error) {
 
 	newAbacRule := &GitopsAbacRule{
 		EntityType: gitopsAbacRule.EntityType,
@@ -165,7 +165,7 @@ func (client *GraphQLClient) CreateAbacRule(accountId string, gitopsAbacRule *Gi
 		},
 	}
 
-	response, err := client.SendRequest(request)
+	response, err := client.SendGqlRequest(request)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil, err
@@ -180,7 +180,7 @@ func (client *GraphQLClient) CreateAbacRule(accountId string, gitopsAbacRule *Gi
 	return &gitopsAbacRuleResponse.Data.CreateAbacRule, nil
 }
 
-func (client *GraphQLClient) DeleteAbacRule(accountId string, id string) (*GitopsAbacRule, error) {
+func (client *Client) DeleteAbacRule(accountId string, id string) (*GitopsAbacRule, error) {
 	request := GraphQLRequest{
 		Query: `
 			mutation RemoveAbacRule($accountId: String!, $id: ID!) {
@@ -205,7 +205,7 @@ func (client *GraphQLClient) DeleteAbacRule(accountId string, id string) (*Gitop
 		},
 	}
 
-	response, err := client.SendRequest(request)
+	response, err := client.SendGqlRequest(request)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil, err

@@ -14,38 +14,13 @@ type GraphQLRequest struct {
 	Variables map[string]interface{} `json:"variables,omitempty"`
 }
 
-// GraphQLClient GraphQL client
-type GraphQLClient struct {
-	Token       string
-	TokenHeader string
-	Host        string
-	Client      *http.Client
-}
-
-// NewGqlClient returns a new graphql client configured to communicate on a server with the
-// given hostname and to send an Authorization Header with the value of token
-func NewGqlClient(url, defaultUrl, apiKey string) *GraphQLClient {
-	tokenHeader := "Authorization"
-	hostname := url
-	if hostname == "" {
-		hostname = defaultUrl
-	}
-	token := apiKey
-	return &GraphQLClient{
-		Host:        hostname,
-		Token:       token,
-		TokenHeader: tokenHeader,
-		Client:      &http.Client{},
-	}
-}
-
-func (client *GraphQLClient) SendRequest(request GraphQLRequest) ([]byte, error) {
+func (client *Client) SendGqlRequest(request GraphQLRequest) ([]byte, error) {
 	jsonRequest, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", client.Host, bytes.NewBuffer(jsonRequest))
+	req, err := http.NewRequest("POST", client.HostV2, bytes.NewBuffer(jsonRequest))
 	if err != nil {
 		return nil, err
 	}
