@@ -86,7 +86,7 @@ func TestRules(t *testing.T) {
 		t.Fatalf("List of rules is empty")
 	}
 
-	one, err := gqlClient.GetAbacRuleByID(currentAccount.ID, created.ID)
+	one, err := client.GetAbacRuleByID(currentAccount.ID, created.ID)
 	if err != nil {
 		t.Fatalf("Error: %s", err.Error())
 	}
@@ -95,7 +95,7 @@ func TestRules(t *testing.T) {
 		t.Fatalf("Expected %s, but got %s", created.ID, one.ID)
 	}
 
-	deleted, err := gqlClient.DeleteAbacRule(currentAccount.ID, created.ID)
+	deleted, err := client.DeleteAbacRule(currentAccount.ID, created.ID)
 	if err != nil {
 		t.Fatalf("Error: %s", err.Error())
 	}
