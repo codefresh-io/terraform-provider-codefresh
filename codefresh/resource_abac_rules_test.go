@@ -62,7 +62,7 @@ func testAccCheckCodefreshAbacRulesExists(resource string) resource.TestCheckFun
 		abacRuleID := rs.Primary.ID
 
 		apiClient := testAccProvider.Meta().(*cfClient.Client)
-		_, err := apiClient.GetAbacRuleByID("", abacRuleID)
+		_, err := apiClient.GetAbacRuleByID(abacRuleID)
 
 		if err != nil {
 			return fmt.Errorf("error fetching abac rule with ID %s. %s", abacRuleID, err)
@@ -96,7 +96,6 @@ func testAccCodefreshAbacRulesConfig(entityType, name, key, value string, action
 						   }]
 		`, escapeString(name), keyStr, escapeString(value))
 	}
-	attributes = ""
 
 	return fmt.Sprintf(`
 	data "codefresh_team" "users" {

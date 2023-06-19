@@ -4,21 +4,6 @@ import (
 	"fmt"
 )
 
-type AbacEntityValues string
-
-const (
-	AbacEntityClusters            AbacEntityValues = "clusters"
-	AbacEntityExecutionContext    AbacEntityValues = "executionContext"
-	AbacEntityGitContexts         AbacEntityValues = "gitContexts"
-	AbacEntityGitopsApplications  AbacEntityValues = "gitopsApplications"
-	AbacEntityHelmCharts          AbacEntityValues = "helmCharts"
-	AbacEntityPipelines           AbacEntityValues = "pipelines"
-	AbacEntityProjects            AbacEntityValues = "projects"
-	AbacEntitySharedConfiguration AbacEntityValues = "sharedConfiguration"
-	AbacEntityWorkflows           AbacEntityValues = "workflows"
-	AbacEntityWorkflowTemplates   AbacEntityValues = "workflowTemplates"
-)
-
 type EntityAbacAttribute struct {
 	Name  string `json:"name"`
 	Key   string `json:"key,omitempty"`
@@ -29,7 +14,7 @@ type EntityAbacAttribute struct {
 type GitopsAbacRule struct {
 	ID         string                `json:"id,omitempty"`
 	AccountId  string                `json:"accountId,omitempty"`
-	EntityType AbacEntityValues      `json:"entityType"`
+	EntityType string                `json:"entityType"`
 	Teams      []string              `json:"teams"`
 	Tags       []string              `json:"tags,omitempty"`
 	Actions    []string              `json:"actions"`
@@ -50,7 +35,7 @@ type GitopsAbacRuleResponse struct {
 	} `json:"data"`
 }
 
-func (client *Client) GetAbacRulesList(accountId string, entityType AbacEntityValues) ([]GitopsAbacRule, error) {
+func (client *Client) GetAbacRulesList(entityType string) ([]GitopsAbacRule, error) {
 	request := GraphQLRequest{
 		Query: `
 			query AbacRules($accountId: String!, $entityType: AbacEntityValues!) {
@@ -70,7 +55,7 @@ func (client *Client) GetAbacRulesList(accountId string, entityType AbacEntityVa
 			}
 		`,
 		Variables: map[string]interface{}{
-			"accountId":  accountId,
+			"accountId":  "",
 			"entityType": entityType,
 		},
 	}
@@ -91,7 +76,7 @@ func (client *Client) GetAbacRulesList(accountId string, entityType AbacEntityVa
 }
 
 // GetAbacRuleByID -
-func (client *Client) GetAbacRuleByID(accountId string, id string) (*GitopsAbacRule, error) {
+func (client *Client) GetAbacRuleByID(id string) (*GitopsAbacRule, error) {
 	request := GraphQLRequest{
 		Query: `
 			query AbacRule($accountId: String!, $id: ID!) {
@@ -111,7 +96,7 @@ func (client *Client) GetAbacRuleByID(accountId string, id string) (*GitopsAbacR
 			}
 		`,
 		Variables: map[string]interface{}{
-			"accountId": accountId,
+			"accountId": "",
 			"id":        id,
 		},
 	}
@@ -131,7 +116,7 @@ func (client *Client) GetAbacRuleByID(accountId string, id string) (*GitopsAbacR
 	return &gitopsAbacRuleResponse.Data.AbacRule, nil
 }
 
-func (client *Client) CreateAbacRule(accountId string, gitopsAbacRule *GitopsAbacRule) (*GitopsAbacRule, error) {
+func (client *Client) CreateAbacRule(gitopsAbacRule *GitopsAbacRule) (*GitopsAbacRule, error) {
 
 	newAbacRule := &GitopsAbacRule{
 		EntityType: gitopsAbacRule.EntityType,
@@ -160,7 +145,7 @@ func (client *Client) CreateAbacRule(accountId string, gitopsAbacRule *GitopsAba
 			}
 		`,
 		Variables: map[string]interface{}{
-			"accountId":           accountId,
+			"accountId":           "",
 			"createAbacRuleInput": newAbacRule,
 		},
 	}
@@ -180,7 +165,7 @@ func (client *Client) CreateAbacRule(accountId string, gitopsAbacRule *GitopsAba
 	return &gitopsAbacRuleResponse.Data.CreateAbacRule, nil
 }
 
-func (client *Client) DeleteAbacRule(accountId string, id string) (*GitopsAbacRule, error) {
+func (client *Client) DeleteAbacRule(id string) (*GitopsAbacRule, error) {
 	request := GraphQLRequest{
 		Query: `
 			mutation RemoveAbacRule($accountId: String!, $id: ID!) {
@@ -200,7 +185,7 @@ func (client *Client) DeleteAbacRule(accountId string, id string) (*GitopsAbacRu
 			}
 		`,
 		Variables: map[string]interface{}{
-			"accountId": accountId,
+			"accountId": "",
 			"id":        id,
 		},
 	}

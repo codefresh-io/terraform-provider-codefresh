@@ -50,9 +50,8 @@ func TestRules(t *testing.T) {
 	fmt.Println(currentAccount)
 
 	created, err := client.CreateAbacRule(
-		currentAccount.ID,
 		&cfClient.GitopsAbacRule{
-			EntityType: cfClient.AbacEntityGitopsApplications,
+			EntityType: "gitopsApplications",
 			Teams:      []string{"6365495094c782ba1ba45451"},
 			Tags:       []string{},
 			Actions:    []string{"SYNC"},
@@ -77,7 +76,7 @@ func TestRules(t *testing.T) {
 		t.Fatalf("Empty rule after creation")
 	}
 
-	list, err := client.GetAbacRulesList(currentAccount.ID, cfClient.AbacEntityGitopsApplications)
+	list, err := client.GetAbacRulesList("gitopsApplications")
 	if err != nil {
 		t.Fatalf("Error: %s", err.Error())
 	}
@@ -86,7 +85,7 @@ func TestRules(t *testing.T) {
 		t.Fatalf("List of rules is empty")
 	}
 
-	one, err := client.GetAbacRuleByID(currentAccount.ID, created.ID)
+	one, err := client.GetAbacRuleByID(created.ID)
 	if err != nil {
 		t.Fatalf("Error: %s", err.Error())
 	}
@@ -95,7 +94,7 @@ func TestRules(t *testing.T) {
 		t.Fatalf("Expected %s, but got %s", created.ID, one.ID)
 	}
 
-	deleted, err := client.DeleteAbacRule(currentAccount.ID, created.ID)
+	deleted, err := client.DeleteAbacRule(created.ID)
 	if err != nil {
 		t.Fatalf("Error: %s", err.Error())
 	}

@@ -122,7 +122,7 @@ func resourceGitopsAbacRuleCreate(d *schema.ResourceData, meta interface{}) erro
 
 	abacRule := *mapResourceToGitopsAbacRule(d)
 
-	newGitopsAbacRule, err := client.CreateAbacRule("", &abacRule)
+	newGitopsAbacRule, err := client.CreateAbacRule(&abacRule)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func resourceGitopsAbacRuleRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
-	abacRule, err := client.GetAbacRuleByID("", abacRuleID)
+	abacRule, err := client.GetAbacRuleByID(abacRuleID)
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func resourceGitopsAbacRuleUpdate(d *schema.ResourceData, meta interface{}) erro
 	client := meta.(*cfClient.Client)
 
 	abacRule := *mapResourceToGitopsAbacRule(d)
-	resp, err := client.CreateAbacRule("", &abacRule)
+	resp, err := client.CreateAbacRule(&abacRule)
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func resourceGitopsAbacRuleUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceGitopsAbacRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfClient.Client)
 
-	_, err := client.DeleteAbacRule("", d.Id())
+	_, err := client.DeleteAbacRule(d.Id())
 	if err != nil {
 		return err
 	}
@@ -233,10 +233,10 @@ func mapResourceToGitopsAbacRule(d *schema.ResourceData) *cfClient.GitopsAbacRul
 	}
 	abacRule := &cfClient.GitopsAbacRule{
 		ID:         d.Id(),
-		EntityType: d.Get("entity_type").(cfClient.AbacEntityValues),
-		Teams:      d.Get("teams").([]string),
+		EntityType: d.Get("entity_type").(string),
+		Teams:      convertStringArr(d.Get("teams").(*schema.Set).List()),
 		Tags:       tags,
-		Actions:    d.Get("actions").([]string),
+		Actions:    convertStringArr(d.Get("actions").(*schema.Set).List()),
 		Attributes: d.Get("attributes").([]cfClient.EntityAbacAttribute),
 	}
 
