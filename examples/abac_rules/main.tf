@@ -6,27 +6,14 @@ data "codefresh_team" "users" {
   name = "users"
 }
 
-resource "codefresh_abac_rules" "dev_pipeline" {
-  for_each = toset(["run", "create", "update", "delete", "read"])
-  team     = data.codefresh_team.users.id
-  action   = each.value
-  resource = "pipeline"
-  tags     = ["dev", "untagged"]
-}
-
-resource "codefresh_permission" "admin_pipeline" {
-  for_each = toset(["run", "create", "update", "delete", "read", "approve"])
-  team     = data.codefresh_team.admins.id
-  action   = each.value
-  resource = "pipeline"
-  tags     = ["production", "*"]
-}
-
-resource "codefresh_permission" "admin_pipeline_related_resource" {
-  for_each         = toset(["run", "create", "update", "delete", "read", "approve"])
-  team             = data.codefresh_team.admins.id
-  action           = each.value
-  resource         = "pipeline"
-  related_resource = "project"
-  tags             = ["production", "*"]
+resource "codefresh_abac_rules" "app_rule" {
+  entity_type = "gitopsApplications"
+  teams       = [data.codefresh_team.users.id]
+  actions     = ["REFRESH", "SYNC", "TERMINATE_SYNC", "VIEW_POD_LOGS", "APP_ROLLBACK"]
+#  attributes  = [{
+#    name = "LABEL"
+#    key = "KEY"
+#    value = "VALUE"
+#  }]
+  tags        = ["dev", "untagged"]
 }

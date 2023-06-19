@@ -1,6 +1,7 @@
 package codefresh
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+var validSetValues = []string{"REFRESH", "SYNC", "TERMINATE_SYNC", "VIEW_POD_LOGS", "APP_ROLLBACK"}
 
 func resourceGitopsAbacRule() *schema.Resource {
 	return &schema.Resource{
@@ -26,7 +29,7 @@ func resourceGitopsAbacRule() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 			},
-			"entityType": {
+			"entity_type": {
 				Description: `
 The type of resources the abac rules applies to. Possible values:
 	* gitopsApplications
@@ -64,15 +67,14 @@ Action to be allowed. Possible values:
 	* VIEW_POD_LOGS
 	* APP_ROLLBACK
 				`,
-				Type:         schema.TypeSet,
-				Required:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				ValidateFunc: ValidateSubset,
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"attributes": {
 				Description: "Resource attributes that need to be validated",
-				Type:        schema.TypeSet,
-				Required:    true,
+				Type:        schema.TypeList,
+				Optional:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -80,7 +82,8 @@ Action to be allowed. Possible values:
 							Required: true,
 						},
 						"key": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"value": {
 							Type:     schema.TypeString,
@@ -90,31 +93,19 @@ Action to be allowed. Possible values:
 				},
 			},
 		},
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			actions := diff.Get("actions").(*schema.Set).List()
+
+			for _, action := range actions {
+				actionStr := action.(string)
+				if !contains(validSetValues, actionStr) {
+					return fmt.Errorf("Invalid action value: %s", actionStr)
+				}
+			}
+
+			return nil
+		},
 	}
-}
-
-func ValidateSubset(v interface{}, k string) (warnings []string, errors []error) {
-	actions, ok := v.(*schema.Set)
-	if !ok {
-		errors = append(errors, fmt.Errorf("expected TypeSet for actions"))
-		return
-	}
-
-	validActions := []string{"REFRESH", "SYNC", "TERMINATE_SYNC", "VIEW_POD_LOGS", "APP_ROLLBACK"} // Allowed values
-
-	for _, team := range actions.List() {
-		teamStr, ok := team.(string)
-		if !ok {
-			errors = append(errors, fmt.Errorf("expected string element in actions"))
-			continue
-		}
-
-		if !contains(validActions, teamStr) {
-			errors = append(errors, fmt.Errorf("team %s is not a valid action", teamStr))
-		}
-	}
-
-	return
 }
 
 func contains(slice []string, element string) bool {
@@ -203,7 +194,7 @@ func mapGitopsAbacRuleToResource(abacRule *cfClient.GitopsAbacRule, d *schema.Re
 		return err
 	}
 
-	err = d.Set("entityType", abacRule.EntityType)
+	err = d.Set("entity_type", abacRule.EntityType)
 	if err != nil {
 		return err
 	}
@@ -242,7 +233,7 @@ func mapResourceToGitopsAbacRule(d *schema.ResourceData) *cfClient.GitopsAbacRul
 	}
 	abacRule := &cfClient.GitopsAbacRule{
 		ID:         d.Id(),
-		EntityType: d.Get("entityType").(cfClient.AbacEntityValues),
+		EntityType: d.Get("entity_type").(cfClient.AbacEntityValues),
 		Teams:      d.Get("teams").([]string),
 		Tags:       tags,
 		Actions:    d.Get("actions").([]string),
