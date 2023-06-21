@@ -71,8 +71,8 @@ Action to be allowed. Possible values:
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"attributes": {
-				Description: "Resource attributes that need to be validated",
+			"attribute": {
+				Description: "Resource attribute that need to be validated",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem: &schema.Resource{
@@ -187,6 +187,18 @@ func resourceGitopsAbacRuleDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
+func flattenAttributes(attributes []cfClient.EntityAbacAttribute) []map[string]interface{} {
+	var res = make([]map[string]interface{}, len(attributes))
+	for i, attribute := range attributes {
+		m := make(map[string]interface{})
+		m["name"] = attribute.Name
+		m["key"] = attribute.Key
+		m["value"] = attribute.Value
+		res[i] = m
+	}
+	return res
+}
+
 func mapGitopsAbacRuleToResource(abacRule *cfClient.GitopsAbacRule, d *schema.ResourceData) error {
 
 	err := d.Set("id", abacRule.ID)
@@ -214,9 +226,11 @@ func mapGitopsAbacRuleToResource(abacRule *cfClient.GitopsAbacRule, d *schema.Re
 		return err
 	}
 
-	err = d.Set("attributes", abacRule.Attributes)
-	if err != nil {
-		return err
+	if len(abacRule.Attributes) > 0 {
+		err = d.Set("attribute", flattenAttributes(abacRule.Attributes))
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -231,14 +245,24 @@ func mapResourceToGitopsAbacRule(d *schema.ResourceData) *cfClient.GitopsAbacRul
 	} else {
 		tags = []string{"*", "untagged"}
 	}
+
 	abacRule := &cfClient.GitopsAbacRule{
 		ID:         d.Id(),
 		EntityType: d.Get("entity_type").(string),
 		Teams:      convertStringArr(d.Get("teams").(*schema.Set).List()),
 		Tags:       tags,
 		Actions:    convertStringArr(d.Get("actions").(*schema.Set).List()),
-		Attributes: d.Get("attributes").([]cfClient.EntityAbacAttribute),
+		Attributes: []cfClient.EntityAbacAttribute{},
 	}
 
+	attributes := d.Get("attribute").([]interface{})
+	for idx := range attributes {
+		attr := cfClient.EntityAbacAttribute{
+			Name:  d.Get(fmt.Sprintf("attribute.%v.name", idx)).(string),
+			Key:   d.Get(fmt.Sprintf("attribute.%v.key", idx)).(string),
+			Value: d.Get(fmt.Sprintf("attribute.%v.value", idx)).(string),
+		}
+		abacRule.Attributes = append(abacRule.Attributes, attr)
+	}
 	return abacRule
 }

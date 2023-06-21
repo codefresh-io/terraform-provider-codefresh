@@ -31,11 +31,11 @@ func TestAccCodefreshAbacRulesConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshAbacRulesExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "entity_type", "gitopsApplications"),
-					resource.TestCheckResourceAttr(resourceName, "actions.0", "SYNC"),
-					resource.TestCheckResourceAttr(resourceName, "actions.1", "REFRESH"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.0.name", "LABEL"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.0.key", "KEY"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.0.value", "VALUE"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0", "REFRESH"),
+					resource.TestCheckResourceAttr(resourceName, "actions.1", "SYNC"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.0.name", "LABEL"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.0.key", "KEY"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.0.value", "VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.0", "*"),
 					resource.TestCheckResourceAttr(resourceName, "tags.1", "production"),
 				),
@@ -82,18 +82,18 @@ func testAccCodefreshAbacRulesConfig(entityType, name, key, value string, action
 	tagsEscaped := funk.Map(tags, escapeString).([]string)
 	actionsEscaped := funk.Map(actions, escapeString).([]string)
 
-	attributes := ""
+	attribute := ""
 	if name != "" && value != "" {
 		keyStr := ""
 		if key != "" {
 			keyStr = fmt.Sprintf(`key = %s`, escapeString(key))
 		}
-		attributes = fmt.Sprintf(`
-		attributes       = [{
-							  name  = %s
-							  %s
-							  value = %s
-						   }]
+		attribute = fmt.Sprintf(`
+		attribute {
+					  name  = %s
+					  %s
+					  value = %s
+				   }
 		`, escapeString(name), keyStr, escapeString(value))
 	}
 
@@ -109,5 +109,5 @@ func testAccCodefreshAbacRulesConfig(entityType, name, key, value string, action
 		%s
 		tags             = [%s]
 	}
-`, escapeString(entityType), strings.Join(actionsEscaped[:], ","), attributes, strings.Join(tagsEscaped[:], ","))
+`, escapeString(entityType), strings.Join(actionsEscaped[:], ","), attribute, strings.Join(tagsEscaped[:], ","))
 }
