@@ -21,6 +21,7 @@ The key can be passed either as the provider's attribute or as environment varia
 ### Optional
 
 - `api_url` (String) The Codefresh API URL. Defaults to `https://g.codefresh.io/api`. Can also be set using the `CODEFRESH_API_URL` environment variable.
+- `api_url_v2` (String) The Codefresh gitops API URL. Defaults to `https://g.codefresh.io/2.0/api/graphql`. Can also be set using the `CODEFRESH_API2_URL` environment variable.
 - `token` (String) The Codefresh API token. Can also be set using the `CODEFRESH_API_KEY` environment variable.
 
 ## Managing Resources Across Different Accounts
