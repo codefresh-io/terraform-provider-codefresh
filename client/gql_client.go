@@ -25,7 +25,11 @@ func (client *Client) SendGqlRequest(request GraphQLRequest) ([]byte, error) {
 		return nil, err
 	}
 
-	req.Header.Set(client.TokenHeader, client.Token)
+	tokenHeader := client.TokenHeader
+	if tokenHeader == "" {
+		tokenHeader = "Authorization"
+	}
+	req.Header.Set(tokenHeader, client.Token)
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	httpClient := &http.Client{}
