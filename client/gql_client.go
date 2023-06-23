@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -32,7 +33,11 @@ func (client *Client) SendGqlRequest(request GraphQLRequest) ([]byte, error) {
 	req.Header.Set(tokenHeader, client.Token)
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
+	fmt.Println("Authorization", req.Header.Get("Authorization"))
+	fmt.Println("x-access-token", req.Header.Get("x-access-token"))
 	httpClient := &http.Client{}
+	fmt.Println("url", req.URL)
+	fmt.Println("host", req.Host)
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
