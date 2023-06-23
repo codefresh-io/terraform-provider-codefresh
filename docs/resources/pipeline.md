@@ -160,6 +160,7 @@ Optional:
 - `dind_storage` (String) The storage allocated to the runtime environment.
 - `memory` (String) The memory allocated to the runtime environment.
 - `name` (String) The name of the runtime environment.
+- `required_available_storage` (String) Minimum disk space required for build filesystem ( unit Gi is required).
 
 
 <a id="nestedblock--spec--spec_template"></a>
@@ -253,6 +254,7 @@ Optional:
 - `dind_storage` (String) The storage allocated to the runtime environment.
 - `memory` (String) The memory allocated to the runtime environment.
 - `name` (String) The name of the runtime environment.
+- `required_available_storage` (String) Minimum disk space required for build filesystem ( unit Gi is required).
 
 ## Import
 

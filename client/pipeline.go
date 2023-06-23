@@ -70,10 +70,11 @@ type TriggerOptions struct {
 }
 
 type RuntimeEnvironment struct {
-	Name        string `json:"name,omitempty"`
-	Memory      string `json:"memory,omitempty"`
-	CPU         string `json:"cpu,omitempty"`
-	DindStorage string `json:"dindStorage,omitempty"`
+	Name                     string `json:"name,omitempty"`
+	Memory                   string `json:"memory,omitempty"`
+	CPU                      string `json:"cpu,omitempty"`
+	DindStorage              string `json:"dindStorage,omitempty"`
+	RequiredAvailableStorage string `json:"requiredAvailableStorage,omitempty"`
 }
 
 func (t *Trigger) SetVariables(variables map[string]interface{}) {

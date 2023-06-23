@@ -21,7 +21,7 @@ terraform {
   required_providers {
     codefresh = {
       version = "x.y.z" # Optional but recommended; replace with latest semantic version
-      source = "codefresh.io/codefresh"
+      source = "codefresh-io/codefresh"
     }
   }
 }

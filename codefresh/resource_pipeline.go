@@ -322,6 +322,11 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 													Type:        schema.TypeString,
 													Optional:    true,
 												},
+												"required_available_storage": {
+													Description: "Minimum disk space required for build filesystem ( unit Gi is required).",
+													Type:        schema.TypeString,
+													Optional:    true,
+												},
 											},
 										},
 									},
@@ -434,6 +439,11 @@ The following table presents how to configure this block based on the options av
 									},
 									"dind_storage": {
 										Description: "The storage allocated to the runtime environment.",
+										Type:        schema.TypeString,
+										Optional:    true,
+									},
+									"required_available_storage": {
+										Description: "Minimum disk space required for build filesystem ( unit Gi is required).",
 										Type:        schema.TypeString,
 										Optional:    true,
 									},
@@ -690,10 +700,11 @@ func flattenSpecTemplate(spec cfClient.SpecTemplate) []map[string]interface{} {
 func flattenSpecRuntimeEnvironment(spec cfClient.RuntimeEnvironment) []map[string]interface{} {
 	return []map[string]interface{}{
 		{
-			"name":         spec.Name,
-			"memory":       spec.Memory,
-			"cpu":          spec.CPU,
-			"dind_storage": spec.DindStorage,
+			"name":                       spec.Name,
+			"memory":                     spec.Memory,
+			"cpu":                        spec.CPU,
+			"dind_storage":               spec.DindStorage,
+			"required_available_storage": spec.RequiredAvailableStorage,
 		},
 	}
 }
@@ -788,10 +799,11 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 
 	if _, ok := d.GetOk("spec.0.runtime_environment"); ok {
 		pipeline.Spec.RuntimeEnvironment = cfClient.RuntimeEnvironment{
-			Name:        d.Get("spec.0.runtime_environment.0.name").(string),
-			Memory:      d.Get("spec.0.runtime_environment.0.memory").(string),
-			CPU:         d.Get("spec.0.runtime_environment.0.cpu").(string),
-			DindStorage: d.Get("spec.0.runtime_environment.0.dind_storage").(string),
+			Name:                     d.Get("spec.0.runtime_environment.0.name").(string),
+			Memory:                   d.Get("spec.0.runtime_environment.0.memory").(string),
+			CPU:                      d.Get("spec.0.runtime_environment.0.cpu").(string),
+			DindStorage:              d.Get("spec.0.runtime_environment.0.dind_storage").(string),
+			RequiredAvailableStorage: d.Get("spec.0.runtime_environment.0.required_available_storage").(string),
 		}
 	}
 
@@ -836,10 +848,11 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 		}
 		if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.runtime_environment", idx)); ok {
 			triggerRuntime := cfClient.RuntimeEnvironment{
-				Name:        d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.name", idx)).(string),
-				Memory:      d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.memory", idx)).(string),
-				CPU:         d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.cpu", idx)).(string),
-				DindStorage: d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.dind_storage", idx)).(string),
+				Name:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.name", idx)).(string),
+				Memory:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.memory", idx)).(string),
+				CPU:                      d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.cpu", idx)).(string),
+				DindStorage:              d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.dind_storage", idx)).(string),
+				RequiredAvailableStorage: d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.required_available_storage", idx)).(string),
 			}
 			codefreshTrigger.RuntimeEnvironment = &triggerRuntime
 		}
