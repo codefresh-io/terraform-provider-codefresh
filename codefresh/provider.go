@@ -23,6 +23,17 @@ func Provider() *schema.Provider {
 				},
 				Description: fmt.Sprintf("The Codefresh API URL. Defaults to `%s`. Can also be set using the `%s` environment variable.", DEFAULT_CODEFRESH_API_URL, ENV_CODEFRESH_API_URL),
 			},
+			"api_url_v2": {
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: func() (interface{}, error) {
+					if url := os.Getenv(ENV_CODEFRESH_API2_URL); url != "" {
+						return url, nil
+					}
+					return DEFAULT_CODEFRESH_API2_URL, nil
+				},
+				Description: fmt.Sprintf("The Codefresh gitops API URL. Defaults to `%s`. Can also be set using the `%s` environment variable.", DEFAULT_CODEFRESH_API2_URL, ENV_CODEFRESH_API2_URL),
+			},
 			"token": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -55,6 +66,7 @@ func Provider() *schema.Provider {
 			"codefresh_step_types":            resourceStepTypes(),
 			"codefresh_user":                  resourceUser(),
 			"codefresh_team":                  resourceTeam(),
+			"codefresh_abac_rules":            resourceGitopsAbacRule(),
 		},
 		ConfigureFunc: configureProvider,
 	}
@@ -63,9 +75,10 @@ func Provider() *schema.Provider {
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
 
 	apiURL := d.Get("api_url").(string)
+	apiURLV2 := d.Get("api_url_v2").(string)
 	token := d.Get("token").(string)
 	if token == "" {
 		token = os.Getenv(ENV_CODEFRESH_API_KEY)
 	}
-	return cfClient.NewClient(apiURL, token, ""), nil
+	return cfClient.NewClient(apiURL, apiURLV2, token, ""), nil
 }

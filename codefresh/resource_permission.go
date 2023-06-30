@@ -123,7 +123,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if newPermission == nil {
-		return fmt.Errorf("resourcePermissionCreate - failed to create permission, empty responce")
+		return fmt.Errorf("resourcePermissionCreate - failed to create permission, empty response")
 	}
 
 	d.SetId(newPermission.ID)
