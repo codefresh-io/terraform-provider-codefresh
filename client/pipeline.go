@@ -62,6 +62,21 @@ type Trigger struct {
 	Variables                    []Variable          `json:"variables,omitempty"`
 }
 
+type CronTrigger struct {
+	Name               string              `json:"name,omitempty"`
+	Type               string              `json:"type,omitempty"`
+	Expression         string              `json:"expression,omitempty"`
+	Message            string              `json:"message,omitempty"`
+	GitTriggerId       string              `json:"gitTriggerId,omitempty"`
+	Branch             string              `json:"branch,omitempty"`
+	Disabled           bool                `json:"disabled,omitempty"`
+	Options            *TriggerOptions     `json:"options,omitempty"`
+	CommitStatusTitle  string              `json:"commitStatusTitle,omitempty"`
+	Context            string              `json:"context,omitempty"`
+	RuntimeEnvironment *RuntimeEnvironment `json:"runtimeEnvironment,omitempty"`
+	Variables          []Variable          `json:"variables,omitempty"`
+}
+
 type TriggerOptions struct {
 	NoCache             bool `json:"noCache,omitempty"`
 	NoCfCache           bool `json:"noCfCache,omitempty"`
@@ -83,10 +98,17 @@ func (t *Trigger) SetVariables(variables map[string]interface{}) {
 	}
 }
 
+func (t *CronTrigger) SetVariables(variables map[string]interface{}) {
+	for key, value := range variables {
+		t.Variables = append(t.Variables, Variable{Key: key, Value: value.(string)})
+	}
+}
+
 type Spec struct {
 	Variables                []Variable               `json:"variables,omitempty"`
 	SpecTemplate             *SpecTemplate            `json:"specTemplate,omitempty"`
 	Triggers                 []Trigger                `json:"triggers,omitempty"`
+	CronTriggers             []CronTrigger            `json:"cronTriggers,omitempty"`
 	Priority                 int                      `json:"priority,omitempty"`
 	Concurrency              int                      `json:"concurrency,omitempty"`
 	BranchConcurrency        int                      `json:"branchConcurrency,omitempty"`
