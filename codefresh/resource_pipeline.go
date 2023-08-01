@@ -461,11 +461,6 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 											},
 										},
 									},
-									"commit_status_title": {
-										Description: "The commit status title pushed to the git provider.",
-										Type:        schema.TypeString,
-										Optional:    true,
-									},
 									"runtime_environment": {
 										Description: "The runtime environment for the trigger.",
 										Type:        schema.TypeList,
@@ -1032,14 +1027,13 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 	cronTriggers := d.Get("spec.0.cronTrigger").([]interface{})
 	for idx := range cronTriggers {
 		codefreshCronTrigger := cfClient.CronTrigger{
-			Name:              d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.name", idx)).(string),
-			Type:              d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.type", idx)).(string),
-			Expression:        d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.expression", idx)).(string),
-			Message:           d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.message", idx)).(string),
-			Disabled:          d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.disabled", idx)).(bool),
-			CommitStatusTitle: d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.commit_status_title", idx)).(string),
-			GitTriggerId:      d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.git_trigger_id", idx)).(string),
-			Branch:            d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.branch", idx)).(string),
+			Name:         d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.name", idx)).(string),
+			Type:         d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.type", idx)).(string),
+			Expression:   d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.expression", idx)).(string),
+			Message:      d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.message", idx)).(string),
+			Disabled:     d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.disabled", idx)).(bool),
+			GitTriggerId: d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.git_trigger_id", idx)).(string),
+			Branch:       d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.branch", idx)).(string),
 		}
 		variables := d.Get(fmt.Sprintf("spec.0.cronTrigger.%v.variables", idx)).(map[string]interface{})
 		codefreshCronTrigger.SetVariables(variables)

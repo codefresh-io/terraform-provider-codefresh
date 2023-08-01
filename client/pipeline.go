@@ -71,8 +71,6 @@ type CronTrigger struct {
 	Branch             string              `json:"branch,omitempty"`
 	Disabled           bool                `json:"disabled,omitempty"`
 	Options            *TriggerOptions     `json:"options,omitempty"`
-	CommitStatusTitle  string              `json:"commitStatusTitle,omitempty"`
-	Context            string              `json:"context,omitempty"`
 	RuntimeEnvironment *RuntimeEnvironment `json:"runtimeEnvironment,omitempty"`
 	Variables          []Variable          `json:"variables,omitempty"`
 }

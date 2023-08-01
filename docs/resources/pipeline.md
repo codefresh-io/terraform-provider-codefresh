@@ -149,7 +149,6 @@ Required:
 Optional:
 
 - `branch` (String) Branch that should be passed for build triggered by this cron trigger.
-- `commit_status_title` (String) The commit status title pushed to the git provider.
 - `disabled` (Boolean) Flag to disable the trigger.
 - `git_trigger_id` (String) Related git-trigger id. Will by used to take all possible git information by branch.
 - `options` (Block List) The trigger's options. (see [below for nested schema](#nestedblock--spec--cron_trigger--options))
