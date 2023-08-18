@@ -406,6 +406,125 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 	})
 }
 
+func TestAccCodefreshPipeline_CronTriggers(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+	var pipeline cfClient.Pipeline
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineBasicConfigCronTriggers(
+					name,
+					"codefresh-contrib/react-sample-app",
+					"./codefresh.yml",
+					"master",
+					"git",
+					"cT1",
+					"first",
+					"0 0/1 * 1/1 * *",
+					"64abd1550f02a62699b10df7",
+					"runtime1",
+					"100mb",
+					"1cpu",
+					"1gb",
+					"1gb",
+					"cT2",
+					"second",
+					"0 0/1 * 1/1 * *",
+					"64abd1550f02a62699b10df7",
+					true,
+					true,
+					true,
+					true,
+					"MY_VAR",
+					"test",
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.name", "cT1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.message", "first"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.expression", "0 0/1 * 1/1 * *"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.name", "runtime1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.memory", "100mb"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.cpu", "1cpu"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.dind_storage", "1gb"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.required_available_storage", "1gb"),
+
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.name", "cT2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.message", "second"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.expression", "0 0/1 * 1/1 * *"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.git_trigger_id", "64abd1550f02a62699b10df7"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.no_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.no_cf_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.reset_volume", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.enable_notifications", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodefreshPipelineBasicConfigCronTriggers(
+					name,
+					"codefresh-contrib/react-sample-app",
+					"./codefresh.yml",
+					"master",
+					"git",
+					"cT1",
+					"first-1",
+					"0 0/1 * 1/1 * *",
+					"00abd1550f02a62699b10df7",
+					"runtime2",
+					"500mb",
+					"2cpu",
+					"2gb",
+					"3gb",
+					"cT2",
+					"second",
+					"0 1/1 * 1/1 * *",
+					"00abd1550f02a62699b10df7",
+					true,
+					true,
+					false,
+					false,
+					"MY_VAR",
+					"test",
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.name", "cT1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.message", "first-1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.expression", "0 0/1 * 1/1 * *"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.name", "runtime2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.memory", "500mb"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.cpu", "2cpu"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.dind_storage", "2gb"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.required_available_storage", "3gb"),
+
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.name", "cT2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.message", "second"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.expression", "0 1/1 * 1/1 * *"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.git_trigger_id", "00abd1550f02a62699b10df7"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.no_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.no_cf_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.reset_volume", "false"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.enable_notifications", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCodefreshPipeline_Revision(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
@@ -899,6 +1018,116 @@ resource "codefresh_pipeline" "test" {
 		trigger2VarName,
 		trigger2VarValue,
 		trigger2CommitStatusTitle)
+}
+
+func testAccCodefreshPipelineBasicConfigCronTriggers(
+	rName,
+	repo,
+	path,
+	revision,
+	context,
+	cronTrigger1Name string,
+	cronTrigger1Message string,
+	cronTrigger1Expression string,
+	cronTrigger1GitTriggerId string,
+	cronTrigger1REName string,
+	cronTrigger1REMemory string,
+	cronTrigger1RECpu string,
+	cronTrigger1REDindStorage string,
+	cronTrigger1RERequiredAvailableStorage string,
+	cronTrigger2Name string,
+	cronTrigger2Message string,
+	cronTrigger2Expression string,
+	cronTrigger2GitTriggerId string,
+	cronTrigger2NoCache bool,
+	cronTrigger2NoCfCache bool,
+	cronTrigger2ResetVolume bool,
+	cronTrigger2EnableNotifications bool,
+	cronTrigger2VarName string,
+	cronTrigger2VarValue string,
+) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
+  name = "%s"
+
+  spec {
+	spec_template {
+		repo        = %q
+		path        = %q
+		revision    = %q
+		context     = %q
+	}
+
+    cron_trigger {
+        name = %q
+        type = "cron"
+        branch = "main"
+        message = %q
+        expression = %q
+        git_trigger_id = %q
+        disabled = true
+        runtime_environment {
+			name = %q
+			memory = %q
+			cpu = %q
+			dind_storage = %q
+			required_available_storage = %q
+		}
+    }
+
+    cron_trigger {
+        name = %q
+        type = "cron"
+        branch = "master"
+        message = %q
+        expression = %q
+        git_trigger_id = %q
+        disabled = false
+        options {
+            no_cache             = %t
+            no_cf_cache          = %t
+            reset_volume         = %t
+            enable_notifications = %t
+        }
+        variables = {
+            %q = %q
+		}
+    }
+  }
+}
+`,
+		rName,
+		repo,
+		path,
+		revision,
+		context,
+		cronTrigger1Name,
+		cronTrigger1Message,
+		cronTrigger1Expression,
+		cronTrigger1GitTriggerId,
+		cronTrigger1REName,
+		cronTrigger1REMemory,
+		cronTrigger1RECpu,
+		cronTrigger1REDindStorage,
+		cronTrigger1RERequiredAvailableStorage,
+		cronTrigger2Name,
+		cronTrigger2Message,
+		cronTrigger2Expression,
+		cronTrigger2GitTriggerId,
+		cronTrigger2NoCache,
+		cronTrigger2NoCfCache,
+		cronTrigger2ResetVolume,
+		cronTrigger2EnableNotifications,
+		cronTrigger2VarName,
+		cronTrigger2VarValue,
+	)
 }
 
 func testAccCodefreshPipelineBasicConfigRuntimeEnvironment(rName, repo, path, revision, context, runtimeName string) string {

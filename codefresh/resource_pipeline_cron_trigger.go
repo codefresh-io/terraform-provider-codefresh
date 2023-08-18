@@ -16,6 +16,7 @@ import (
 
 func resourcePipelineCronTrigger() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage: "This resource is deprecated and will be removed in a future version of the Codefresh Terraform provider. Please use the cron_triggers attribute of the codefresh_pipeline resource instead.",
 		Description: "This resource is used to create cron-based triggers for pipeilnes.",
 		Create:      resourcePipelineCronTriggerCreate,
 		Read:        resourcePipelineCronTriggerRead,

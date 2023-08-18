@@ -2,6 +2,7 @@ package codefresh
 
 import (
 	"fmt"
+	"github.com/robfig/cron"
 	"log"
 	"regexp"
 	"strconv"
@@ -341,6 +342,170 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 								},
 							},
 						},
+						"cron_trigger": {
+							Description: "The pipeline's cron triggers. Conflicts with the deprecated [codefresh_pipeline_cron_trigger](https://registry.terraform.io/providers/codefresh-io/codefresh/latest/docs/resources/pipeline_cron_trigger) resource.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Description: "The name of the cron trigger.",
+										Type:        schema.TypeString,
+										Required:    true,
+									},
+									"type": {
+										Description: "The type of the trigger (default: `cron`; see notes above).",
+										Type:        schema.TypeString,
+										Optional:    true,
+										Default:     "cron",
+										ValidateDiagFunc: func(v any, p cty.Path) diag.Diagnostics {
+											value := v.(string)
+											expected := "cron"
+											var diags diag.Diagnostics
+											if value != expected {
+												diag := diag.Diagnostic{
+													Severity: diag.Error,
+													Summary:  "Only triggers of type cron are supported for cron triggers. For other trigger types, use the codefresh_pipeline_*_trigger resources.",
+													Detail:   fmt.Sprintf("%q is not %q", value, expected),
+												}
+												diags = append(diags, diag)
+											}
+											return diags
+										},
+									},
+									"disabled": {
+										Description: "Flag to disable the trigger.",
+										Type:        schema.TypeBool,
+										Optional:    true,
+										Default:     false,
+									},
+									"expression": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateDiagFunc: func(v interface{}, path cty.Path) (diags diag.Diagnostics) {
+											expression := v.(string)
+
+											// Cron expression requirements: 6 fields, with ability to use descriptors (e.g. @yearly)
+											parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
+											if _, err := parser.Parse(expression); err != nil {
+												diags = append(diags, diag.Diagnostic{
+													Severity: diag.Error,
+													Summary:  "Invalid cron expression.",
+													Detail:   fmt.Sprintf("The cron expression %q is invalid: %s", expression, err),
+												})
+											}
+
+											return
+										},
+									},
+									"message": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateDiagFunc: func(v interface{}, path cty.Path) (diags diag.Diagnostics) {
+											message := v.(string)
+
+											// https://github.com/codefresh-io/hermes/blob/6d75b347cb8ff471ce970a766b2285788e5e19fe/pkg/backend/dev_compose_types.json#L226
+											re := regexp.MustCompile(`^[a-zA-Z0-9_+\s-#?.:]{2,128}$`)
+
+											if !re.MatchString(message) {
+												diags = append(diags, diag.Diagnostic{
+													Severity: diag.Error,
+													Summary:  "Invalid message.",
+													Detail:   fmt.Sprintf("The message %q is invalid (must match %q).", message, re.String()),
+												})
+											}
+
+											return
+										},
+									},
+									"git_trigger_id": {
+										Description: "Related git-trigger id. Will by used to take all possible git information by branch.",
+										Type:        schema.TypeString,
+										Optional:    true,
+									},
+									"branch": {
+										Description: "Branch that should be passed for build triggered by this cron trigger.",
+										Type:        schema.TypeString,
+										Optional:    true,
+									},
+									"options": {
+										Description: "The trigger's options.",
+										Type:        schema.TypeList,
+										Optional:    true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"no_cache": {
+													Description: "If true, docker layer cache is disabled.",
+													Type:        schema.TypeBool,
+													Optional:    true,
+													Default:     false,
+												},
+												"no_cf_cache": {
+													Description: "If true, extra Codefresh caching is disabled.",
+													Type:        schema.TypeBool,
+													Optional:    true,
+													Default:     false,
+												},
+												"reset_volume": {
+													Description: "If true, all files on volume will be deleted before each execution.",
+													Type:        schema.TypeBool,
+													Optional:    true,
+													Default:     false,
+												},
+												"enable_notifications": {
+													Description: "If false the pipeline will not send notifications to Slack and status updates back to the Git provider.",
+													Type:        schema.TypeBool,
+													Optional:    true,
+													Default:     false,
+												},
+											},
+										},
+									},
+									"runtime_environment": {
+										Description: "The runtime environment for the trigger.",
+										Type:        schema.TypeList,
+										Optional:    true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Description: "The name of the runtime environment.",
+													Type:        schema.TypeString,
+													Optional:    true,
+												},
+												"memory": {
+													Description: "The memory allocated to the runtime environment.",
+													Type:        schema.TypeString,
+													Optional:    true,
+												},
+												"cpu": {
+													Description: "The CPU allocated to the runtime environment.",
+													Type:        schema.TypeString,
+													Optional:    true,
+												},
+												"dind_storage": {
+													Description: "The storage allocated to the runtime environment.",
+													Type:        schema.TypeString,
+													Optional:    true,
+												},
+												"required_available_storage": {
+													Description: "Minimum disk space required for build filesystem ( unit Gi is required).",
+													Type:        schema.TypeString,
+													Optional:    true,
+												},
+											},
+										},
+									},
+									"variables": {
+										Description: "Trigger variables.",
+										Type:        schema.TypeMap,
+										Optional:    true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
 						"contexts": {
 							Description: "A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be configured for the pipeline.",
 							Type:        schema.TypeList,
@@ -610,6 +775,10 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 		m["trigger"] = flattenTriggers(spec.Triggers)
 	}
 
+	if len(spec.CronTriggers) > 0 {
+		m["cron_trigger"] = flattenCronTriggers(spec.CronTriggers)
+	}
+
 	if spec.SpecTemplate != nil {
 		m["spec_template"] = flattenSpecTemplate(*spec.SpecTemplate)
 	}
@@ -752,6 +921,29 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 	return res
 }
 
+func flattenCronTriggers(cronTriggers []cfClient.CronTrigger) []map[string]interface{} {
+	var res = make([]map[string]interface{}, len(cronTriggers))
+	for i, trigger := range cronTriggers {
+		m := make(map[string]interface{})
+		m["name"] = trigger.Name
+		m["type"] = trigger.Type
+		m["expression"] = trigger.Expression
+		m["message"] = trigger.Message
+		m["disabled"] = trigger.Disabled
+		m["git_trigger_id"] = trigger.GitTriggerId
+		m["branch"] = trigger.Branch
+		m["variables"] = convertVariables(trigger.Variables)
+		if trigger.Options != nil {
+			m["options"] = flattenTriggerOptions(*trigger.Options)
+		}
+		if trigger.RuntimeEnvironment != nil {
+			m["runtime_environment"] = flattenSpecRuntimeEnvironment(*trigger.RuntimeEnvironment)
+		}
+		res[i] = m
+	}
+	return res
+}
+
 func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 
 	tags := d.Get("tags").(*schema.Set).List()
@@ -807,56 +999,95 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 		}
 	}
 
-	contexts := d.Get("spec.0.contexts").([]interface{})
-	pipeline.Spec.Contexts = contexts
+	if contexts, ok := d.GetOk("spec.0.contexts"); ok {
+		pipeline.Spec.Contexts = contexts.([]interface{})
+	}
 
-	variables := d.Get("spec.0.variables").(map[string]interface{})
-	pipeline.SetVariables(variables)
+	if variables, ok := d.GetOk("spec.0.variables"); ok {
+		pipeline.SetVariables(variables.(map[string]interface{}))
+	}
 
-	triggers := d.Get("spec.0.trigger").([]interface{})
-	for idx := range triggers {
-		events := d.Get(fmt.Sprintf("spec.0.trigger.%v.events", idx)).([]interface{})
-		contexts := d.Get(fmt.Sprintf("spec.0.trigger.%v.contexts", idx)).([]interface{})
-		codefreshTrigger := cfClient.Trigger{
-			Name:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.name", idx)).(string),
-			Description:                  d.Get(fmt.Sprintf("spec.0.trigger.%v.description", idx)).(string),
-			Type:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.type", idx)).(string),
-			Repo:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.repo", idx)).(string),
-			BranchRegex:                  d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex", idx)).(string),
-			BranchRegexInput:             d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex_input", idx)).(string),
-			PullRequestTargetBranchRegex: d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_target_branch_regex", idx)).(string),
-			CommentRegex:                 d.Get(fmt.Sprintf("spec.0.trigger.%v.comment_regex", idx)).(string),
-			ModifiedFilesGlob:            d.Get(fmt.Sprintf("spec.0.trigger.%v.modified_files_glob", idx)).(string),
-			Provider:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.provider", idx)).(string),
-			Disabled:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.disabled", idx)).(bool),
-			PullRequestAllowForkEvents:   d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_allow_fork_events", idx)).(bool),
-			CommitStatusTitle:            d.Get(fmt.Sprintf("spec.0.trigger.%v.commit_status_title", idx)).(string),
-			Context:                      d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
-			Contexts:                     convertStringArr(contexts),
-			Events:                       convertStringArr(events),
-		}
-		variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
-		codefreshTrigger.SetVariables(variables)
-		if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.options", idx)); ok {
-			options := cfClient.TriggerOptions{
-				NoCache:             d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cache", idx)).(bool),
-				NoCfCache:           d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cf_cache", idx)).(bool),
-				ResetVolume:         d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.reset_volume", idx)).(bool),
-				EnableNotifications: d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.enable_notifications", idx)).(bool),
+	if triggers, ok := d.GetOk("spec.0.trigger"); ok {
+		for idx := range triggers.([]interface{}) {
+			events := d.Get(fmt.Sprintf("spec.0.trigger.%v.events", idx)).([]interface{})
+			contexts := d.Get(fmt.Sprintf("spec.0.trigger.%v.contexts", idx)).([]interface{})
+			codefreshTrigger := cfClient.Trigger{
+				Name:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.name", idx)).(string),
+				Description:                  d.Get(fmt.Sprintf("spec.0.trigger.%v.description", idx)).(string),
+				Type:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.type", idx)).(string),
+				Repo:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.repo", idx)).(string),
+				BranchRegex:                  d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex", idx)).(string),
+				BranchRegexInput:             d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex_input", idx)).(string),
+				PullRequestTargetBranchRegex: d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_target_branch_regex", idx)).(string),
+				CommentRegex:                 d.Get(fmt.Sprintf("spec.0.trigger.%v.comment_regex", idx)).(string),
+				ModifiedFilesGlob:            d.Get(fmt.Sprintf("spec.0.trigger.%v.modified_files_glob", idx)).(string),
+				Provider:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.provider", idx)).(string),
+				Disabled:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.disabled", idx)).(bool),
+				PullRequestAllowForkEvents:   d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_allow_fork_events", idx)).(bool),
+				CommitStatusTitle:            d.Get(fmt.Sprintf("spec.0.trigger.%v.commit_status_title", idx)).(string),
+				Context:                      d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
+				Contexts:                     convertStringArr(contexts),
+				Events:                       convertStringArr(events),
 			}
-			codefreshTrigger.Options = &options
-		}
-		if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.runtime_environment", idx)); ok {
-			triggerRuntime := cfClient.RuntimeEnvironment{
-				Name:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.name", idx)).(string),
-				Memory:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.memory", idx)).(string),
-				CPU:                      d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.cpu", idx)).(string),
-				DindStorage:              d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.dind_storage", idx)).(string),
-				RequiredAvailableStorage: d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.required_available_storage", idx)).(string),
+			variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
+			codefreshTrigger.SetVariables(variables)
+			if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.options", idx)); ok {
+				options := cfClient.TriggerOptions{
+					NoCache:             d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cache", idx)).(bool),
+					NoCfCache:           d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cf_cache", idx)).(bool),
+					ResetVolume:         d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.reset_volume", idx)).(bool),
+					EnableNotifications: d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.enable_notifications", idx)).(bool),
+				}
+				codefreshTrigger.Options = &options
 			}
-			codefreshTrigger.RuntimeEnvironment = &triggerRuntime
+			if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.runtime_environment", idx)); ok {
+				triggerRuntime := cfClient.RuntimeEnvironment{
+					Name:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.name", idx)).(string),
+					Memory:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.memory", idx)).(string),
+					CPU:                      d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.cpu", idx)).(string),
+					DindStorage:              d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.dind_storage", idx)).(string),
+					RequiredAvailableStorage: d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.required_available_storage", idx)).(string),
+				}
+				codefreshTrigger.RuntimeEnvironment = &triggerRuntime
+			}
+			pipeline.Spec.Triggers = append(pipeline.Spec.Triggers, codefreshTrigger)
 		}
-		pipeline.Spec.Triggers = append(pipeline.Spec.Triggers, codefreshTrigger)
+	}
+
+	if cronTriggers, ok := d.GetOk("spec.0.cron_trigger"); ok {
+		for idx := range cronTriggers.([]interface{}) {
+			codefreshCronTrigger := cfClient.CronTrigger{
+				Name:         d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.name", idx)).(string),
+				Type:         d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.type", idx)).(string),
+				Expression:   d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.expression", idx)).(string),
+				Message:      d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.message", idx)).(string),
+				Disabled:     d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.disabled", idx)).(bool),
+				GitTriggerId: d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.git_trigger_id", idx)).(string),
+				Branch:       d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.branch", idx)).(string),
+			}
+			variables := d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.variables", idx)).(map[string]interface{})
+			codefreshCronTrigger.SetVariables(variables)
+			if _, ok := d.GetOk(fmt.Sprintf("spec.0.cron_trigger.%v.options", idx)); ok {
+				options := cfClient.TriggerOptions{
+					NoCache:             d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.options.0.no_cache", idx)).(bool),
+					NoCfCache:           d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.options.0.no_cf_cache", idx)).(bool),
+					ResetVolume:         d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.options.0.reset_volume", idx)).(bool),
+					EnableNotifications: d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.options.0.enable_notifications", idx)).(bool),
+				}
+				codefreshCronTrigger.Options = &options
+			}
+			if _, ok := d.GetOk(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment", idx)); ok {
+				triggerRuntime := cfClient.RuntimeEnvironment{
+					Name:                     d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment.0.name", idx)).(string),
+					Memory:                   d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment.0.memory", idx)).(string),
+					CPU:                      d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment.0.cpu", idx)).(string),
+					DindStorage:              d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment.0.dind_storage", idx)).(string),
+					RequiredAvailableStorage: d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment.0.required_available_storage", idx)).(string),
+				}
+				codefreshCronTrigger.RuntimeEnvironment = &triggerRuntime
+			}
+			pipeline.Spec.CronTriggers = append(pipeline.Spec.CronTriggers, codefreshCronTrigger)
+		}
 	}
 
 	var codefreshTerminationPolicy []map[string]interface{}
