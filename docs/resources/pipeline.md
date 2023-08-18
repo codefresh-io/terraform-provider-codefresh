@@ -11,6 +11,8 @@ The central component of the Codefresh Platform. Pipelines are workflows that co
 
 See the [documentation](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/introduction-to-codefresh-pipelines/) for the details.
 
+~> **NOTE:** `cron_trigger` conflicts with the deprecated [codefresh_pipeline_cron_trigger](https://registry.terraform.io/providers/codefresh-io/codefresh/latest/docs/resources/pipeline_cron_trigger) resource.
+
 ## Example Usage
 
 ```hcl
@@ -125,7 +127,7 @@ Optional:
 - `branch_concurrency` (Number) The maximum amount of concurrent builds that may run for each branch. Zero is unlimited (default: `0`).
 - `concurrency` (Number) The maximum amount of concurrent builds. Zero is unlimited (default: `0`).
 - `contexts` (List of String) A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be configured for the pipeline.
-- `cron_trigger` (Block List) The pipeline's cron triggers. (see [below for nested schema](#nestedblock--spec--cron_trigger))
+- `cron_trigger` (Block List) The pipeline's cron triggers. Conflicts with the deprecated [codefresh_pipeline_cron_trigger](https://registry.terraform.io/providers/codefresh-io/codefresh/latest/docs/resources/pipeline_cron_trigger) resource. (see [below for nested schema](#nestedblock--spec--cron_trigger))
 - `options` (Block List, Max: 1) The options for the pipeline. (see [below for nested schema](#nestedblock--spec--options))
 - `pack_id` (String) SAAS pack (`5cd1746617313f468d669013` for Small; `5cd1746717313f468d669014` for Medium; `5cd1746817313f468d669015` for Large; `5cd1746817313f468d669017` for XL; `5cd1746817313f468d669018` for XXL).
 - `priority` (Number) Helps to organize the order of builds execution in case of reaching the concurrency limit (default: `0`).
@@ -162,7 +164,7 @@ Optional:
 Optional:
 
 - `enable_notifications` (Boolean) If false the pipeline will not send notifications to Slack and status updates back to the Git provider.
-- `no_cache` (Boolean) If true, docker layer cache is disabled
+- `no_cache` (Boolean) If true, docker layer cache is disabled.
 - `no_cf_cache` (Boolean) If true, extra Codefresh caching is disabled.
 - `reset_volume` (Boolean) If true, all files on volume will be deleted before each execution.
 

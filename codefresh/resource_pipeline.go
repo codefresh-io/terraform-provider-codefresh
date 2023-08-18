@@ -343,7 +343,7 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 							},
 						},
 						"cron_trigger": {
-							Description: "The pipeline's cron triggers.",
+							Description: "The pipeline's cron triggers. Conflicts with the deprecated [codefresh_pipeline_cron_trigger](https://registry.terraform.io/providers/codefresh-io/codefresh/latest/docs/resources/pipeline_cron_trigger) resource.",
 							Type:        schema.TypeList,
 							Optional:    true,
 							Elem: &schema.Resource{
@@ -435,7 +435,7 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"no_cache": {
-													Description: "If true, docker layer cache is disabled",
+													Description: "If true, docker layer cache is disabled.",
 													Type:        schema.TypeBool,
 													Optional:    true,
 													Default:     false,
