@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/stretchr/objx"
 )
 
@@ -11,13 +12,15 @@ type CurrentAccountUser struct {
 	ID       string `json:"id,omitempty"`
 	UserName string `json:"name,omitempty"`
 	Email    string `json:"email,omitempty"`
+	Status   string `json:"status,omitempty"`
 }
 
 // CurrentAccount spec
 type CurrentAccount struct {
-	ID    string
-	Name  string
-	Users []CurrentAccountUser
+	ID     string
+	Name   string
+	Users  []CurrentAccountUser
+	Admins []CurrentAccountUser
 }
 
 // GetCurrentAccount -
@@ -42,8 +45,9 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 		return nil, fmt.Errorf("GetCurrentAccount - cannot get activeAccountName")
 	}
 	currentAccount := &CurrentAccount{
-		Name:  activeAccountName,
-		Users: make([]CurrentAccountUser, 0),
+		Name:   activeAccountName,
+		Users:  make([]CurrentAccountUser, 0),
+		Admins: make([]CurrentAccountUser, 0),
 	}
 
 	allAccountsI := currentAccountX.Get("account").InterSlice()
@@ -51,6 +55,19 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 		accX := objx.New(accI)
 		if accX.Get("name").String() == activeAccountName {
 			currentAccount.ID = accX.Get("id").String()
+			admins := accX.Get("admins").InterSlice()
+			for _, adminI := range admins {
+				admin, err := client.GetUserByID(adminI.(string))
+				if err != nil {
+					return nil, err
+				}
+				currentAccount.Admins = append(currentAccount.Admins, CurrentAccountUser{
+					ID:       admin.ID,
+					UserName: admin.UserName,
+					Email:    admin.Email,
+					Status:   admin.Status,
+				})
+			}
 			break
 		}
 	}
@@ -69,17 +86,19 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 
 	accountUsersI := make([]interface{}, 0)
 	if e := json.Unmarshal(accountUsersResp, &accountUsersI); e != nil {
-		return nil, fmt.Errorf("Cannot unmarshal accountUsers responce for accountId=%s: %v", currentAccount.ID, e)
+		return nil, fmt.Errorf("cannot unmarshal accountUsers responce for accountId=%s: %v", currentAccount.ID, e)
 	}
 	for _, userI := range accountUsersI {
 		userX := objx.New(userI)
 		userName := userX.Get("userName").String()
 		email := userX.Get("email").String()
+		status := userX.Get("status").String()
 		userID := userX.Get("_id").String()
 		currentAccount.Users = append(currentAccount.Users, CurrentAccountUser{
 			ID:       userID,
 			UserName: userName,
 			Email:    email,
+			Status:   status,
 		})
 	}
 

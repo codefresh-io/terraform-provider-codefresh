@@ -65,7 +65,11 @@ type UserAccounts struct {
 
 func (client *Client) AddNewUserToAccount(accountId, userName, userEmail string) (*User, error) {
 
-	userDetails := fmt.Sprintf(`{"userName": "%s", "email": "%s"}`, userName, userEmail)
+	// For whatever reason, this endpoint accep
+	userDetails := fmt.Sprintf(`{"userDetails": "%s"}`, userEmail) 
+	if userName != "" {
+		userDetails = fmt.Sprintf(`{"userName": "%s", "email": "%s"}`, userName, userEmail)
+	}
 
 	fullPath := fmt.Sprintf("/accounts/%s/adduser", accountId)
 
