@@ -129,7 +129,7 @@ func resourceUsersCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfClient.Client)
 
-	user := mapResourceToUser(d)
+	user := mapResourceToNewUser(d)
 
 	resp, err := client.AddPendingUser(user)
 	if err != nil {
@@ -265,7 +265,7 @@ func flattenUserLogins(logins *[]cfClient.Login) []map[string]interface{} {
 	return res
 }
 
-func mapResourceToUser(d *schema.ResourceData) *cfClient.NewUser {
+func mapResourceToNewUser(d *schema.ResourceData) *cfClient.NewUser {
 
 	roles := d.Get("roles").(*schema.Set).List()
 	accounts := d.Get("accounts").(*schema.Set).List()

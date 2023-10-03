@@ -3,18 +3,20 @@ package codefresh
 import (
 	"bytes"
 	"fmt"
-	"github.com/sclevine/yj/convert"
+	"io/ioutil"
 	"log"
 	"regexp"
 	"strings"
+
+	"github.com/sclevine/yj/convert"
 
 	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
 	"github.com/dlclark/regexp2"
 	"github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/mikefarah/yq/v4/pkg/yqlib"
 	logging "gopkg.in/op/go-logging.v1"
-	"io/ioutil"
 )
 
 func convertStringArr(ifaceArr []interface{}) []string {
@@ -160,4 +162,12 @@ func yamlToJson(yamlString string) (string, error) {
 	}
 
 	return jsonBuffer.String(), nil
+}
+
+func testAccGetResourceId(s *terraform.State, resourceName string) (string, error) {
+	rs, ok := s.RootModule().Resources[resourceName]
+	if !ok {
+		return "", fmt.Errorf("resource %s not found", resourceName)
+	}
+	return rs.Primary.ID, nil
 }

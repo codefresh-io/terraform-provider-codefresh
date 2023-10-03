@@ -24,7 +24,7 @@ func TestProvider(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	if v := os.Getenv("CODEFRESH_API_KEY"); v == "" {
-		t.Fatal("CODEFRESH_API_KEY must be set for acceptance tests")
+	if v := os.Getenv(ENV_CODEFRESH_API_KEY); v == "" {
+		t.Fatalf("%s must be set for acceptance tests", ENV_CODEFRESH_API_KEY)
 	}
 }
