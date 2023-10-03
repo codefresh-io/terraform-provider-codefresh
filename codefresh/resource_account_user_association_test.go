@@ -37,7 +37,7 @@ func TestAccCodefreshAccountUserAssociation_Activation(t *testing.T) {
 
 	testUserEmail := testAccCodefreshAccountUserAssociationGenerateUserEmail()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -78,7 +78,7 @@ func TestAccCodefreshAccountUserAssociation_StatusPending_Email_ForceNew(t *test
 	var resourceId string
 	var err error
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -98,7 +98,6 @@ func TestAccCodefreshAccountUserAssociation_StatusPending_Email_ForceNew(t *test
 				},
 			},
 			{
-				// Test that an email change on a pending user does NOT force a new resource
 				PreConfig: func() {
 					testUserEmail = testAccCodefreshAccountUserAssociationGenerateUserEmail()
 				},
@@ -107,17 +106,21 @@ func TestAccCodefreshAccountUserAssociation_StatusPending_Email_ForceNew(t *test
 					resource.TestCheckResourceAttr(resourceName, "email", testUserEmail),
 					resource.TestCheckResourceAttr(resourceName, "admin", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", "pending"),
-					func(s *terraform.State) error {
-						newResourceId, err := testAccGetResourceId(s, resourceName)
-						if err != nil {
-							return err
-						}
-						if resourceId != newResourceId {
-							return fmt.Errorf("did not expect email change on pending user to force a new resource")
-						}
-						return nil
-					},
 				),
+			},
+			{
+				// Test that an email change on a pending user does NOT force a new resource
+				RefreshState: true,
+				Check: func(s *terraform.State) error {
+					newResourceId, err := testAccGetResourceId(s, resourceName)
+					if err != nil {
+						return err
+					}
+					if resourceId != newResourceId {
+						return fmt.Errorf("did not expect email change on pending user to force a new resource")
+					}
+					return nil
+				},
 			},
 		},
 	})
@@ -128,8 +131,9 @@ func TestAccCodefreshAccountUserAssociation_StatusNew_Email_ForceNew(t *testing.
 
 	testUserEmail := testAccCodefreshAccountUserAssociationGenerateUserEmail()
 	var resourceId string
+	var err error
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -144,7 +148,7 @@ func TestAccCodefreshAccountUserAssociation_StatusNew_Email_ForceNew(t *testing.
 			{
 				RefreshState: true,
 				Check: func(s *terraform.State) error {
-					_, err := testAccGetResourceId(s, resourceName)
+					resourceId, err = testAccGetResourceId(s, resourceName)
 					return err
 				},
 			},
@@ -164,17 +168,20 @@ func TestAccCodefreshAccountUserAssociation_StatusNew_Email_ForceNew(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "email", testUserEmail),
 					resource.TestCheckResourceAttr(resourceName, "admin", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", "new"),
-					func(s *terraform.State) error {
-						newResourceId, err := testAccGetResourceId(s, resourceName)
-						if err != nil {
-							return err
-						}
-						if resourceId == newResourceId {
-							return fmt.Errorf("expected email change on activated user to force a new resource")
-						}
-						return nil
-					},
 				),
+			},
+			{
+				RefreshState: true,
+				Check: func(s *terraform.State) error {
+					newResourceId, err := testAccGetResourceId(s, resourceName)
+					if err != nil {
+						return err
+					}
+					if resourceId == newResourceId {
+						return fmt.Errorf("expected email change on activated user to force a new resource")
+					}
+					return nil
+				},
 			},
 		},
 	})

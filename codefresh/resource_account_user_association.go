@@ -37,6 +37,11 @@ func resourceAccountUserAssociation() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 			},
+			"username": {
+				Computed:    true,
+				Type:        schema.TypeString,
+				Description: "The username of the associated user.",
+			},
 			"status": {
 				Computed:    true,
 				Type:        schema.TypeString,
@@ -94,6 +99,7 @@ func resourceAccountUserAssociationRead(d *schema.ResourceData, meta interface{}
 	for _, user := range currentAccount.Users {
 		if user.ID == userID {
 			d.Set("email", user.Email)
+			d.Set("username", user.UserName)
 			d.Set("status", user.Status)
 			d.Set("admin", false) // avoid missing attributes after import
 			for _, admin := range currentAccount.Admins {
@@ -117,6 +123,16 @@ func resourceAccountUserAssociationUpdate(d *schema.ResourceData, meta interface
 	currentAccount, err := client.GetCurrentAccount()
 	if err != nil {
 		return err
+	}
+
+	if d.HasChange("email") {
+		user, err := client.UpdateUserDetails(currentAccount.ID, d.Id(), d.Get("username").(string), d.Get("email").(string))
+		if err != nil {
+			return err
+		}
+		if user.Email != d.Get("email").(string) {
+			return fmt.Errorf("failed to update user email, despite successful API response")
+		}
 	}
 
 	if d.HasChange("admin") {

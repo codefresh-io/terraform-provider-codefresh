@@ -63,20 +63,22 @@ type UserAccounts struct {
 	Account  []Account `json:"account"`
 }
 
-func (client *Client) AddNewUserToAccount(accountId, userName, userEmail string) (*User, error) {
-
-	// For whatever reason, this endpoint accep
-	userDetails := fmt.Sprintf(`{"userDetails": "%s"}`, userEmail) 
+// The API accepts two different schemas when updating the user details
+func generateUserDetailsBody(userName, userEmail string) string {
+	userDetails := fmt.Sprintf(`{"userDetails": "%s"}`, userEmail)
 	if userName != "" {
 		userDetails = fmt.Sprintf(`{"userName": "%s", "email": "%s"}`, userName, userEmail)
 	}
+	return userDetails
+}
+
+func (client *Client) AddNewUserToAccount(accountId, userName, userEmail string) (*User, error) {
 
 	fullPath := fmt.Sprintf("/accounts/%s/adduser", accountId)
-
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "POST",
-		Body:   []byte(userDetails),
+		Body:   []byte(generateUserDetailsBody(userName, userEmail)),
 	}
 
 	resp, err := client.RequestAPI(&opts)
@@ -341,4 +343,28 @@ func (client *Client) UpdateUserAccounts(userId string, accounts []Account) erro
 	}
 
 	return nil
+}
+
+func (client *Client) UpdateUserDetails(accountId, userId, userName, userEmail string) (*User, error) {
+
+	fullPath := fmt.Sprintf("/accounts/%s/%s/updateuser", accountId, userId)
+	opts := RequestOptions{
+		Path:   fullPath,
+		Method: "POST",
+		Body:   []byte(generateUserDetailsBody(userName, userEmail)),
+	}
+
+	resp, err := client.RequestAPI(&opts)
+	if err != nil {
+		return nil, err
+	}
+
+	var respUser User
+
+	err = DecodeResponseInto(resp, &respUser)
+	if err != nil {
+		return nil, err
+	}
+
+	return &respUser, nil
 }
