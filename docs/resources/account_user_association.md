@@ -55,6 +55,7 @@ resource "codefresh_account_user_association" "users" {
 
 - `id` (String) The ID of this resource.
 - `status` (String) The status of the association.
+- `username` (String) The username of the associated user.
 
 ## Import
 
