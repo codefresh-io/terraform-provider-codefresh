@@ -74,7 +74,8 @@ func TestAccCodefreshAccountUserAssociation_Activation(t *testing.T) {
 func TestAccCodefreshAccountUserAssociation_StatusPending_Email_ForceNew(t *testing.T) {
 	resourceName := "codefresh_account_user_association.test_user"
 
-	testUserEmail := testAccCodefreshAccountUserAssociationGenerateUserEmail()
+	testUserEmailBefore := testAccCodefreshAccountUserAssociationGenerateUserEmail()
+	testUserEmailAfter := testAccCodefreshAccountUserAssociationGenerateUserEmail()
 	var resourceId string
 	var err error
 
@@ -83,9 +84,9 @@ func TestAccCodefreshAccountUserAssociation_StatusPending_Email_ForceNew(t *test
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshAccountUserAssociationConfig(testUserEmail, true),
+				Config: testAccCodefreshAccountUserAssociationConfig(testUserEmailBefore, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "email", testUserEmail),
+					resource.TestCheckResourceAttr(resourceName, "email", testUserEmailBefore),
 					resource.TestCheckResourceAttr(resourceName, "admin", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", "pending"),
 				),
@@ -98,12 +99,9 @@ func TestAccCodefreshAccountUserAssociation_StatusPending_Email_ForceNew(t *test
 				},
 			},
 			{
-				PreConfig: func() {
-					testUserEmail = testAccCodefreshAccountUserAssociationGenerateUserEmail()
-				},
-				Config: testAccCodefreshAccountUserAssociationConfig(testUserEmail, true),
+				Config: testAccCodefreshAccountUserAssociationConfig(testUserEmailAfter, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "email", testUserEmail),
+					resource.TestCheckResourceAttr(resourceName, "email", testUserEmailAfter),
 					resource.TestCheckResourceAttr(resourceName, "admin", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", "pending"),
 				),
@@ -129,7 +127,8 @@ func TestAccCodefreshAccountUserAssociation_StatusPending_Email_ForceNew(t *test
 func TestAccCodefreshAccountUserAssociation_StatusNew_Email_ForceNew(t *testing.T) {
 	resourceName := "codefresh_account_user_association.test_user"
 
-	testUserEmail := testAccCodefreshAccountUserAssociationGenerateUserEmail()
+	testUserEmailBefore := testAccCodefreshAccountUserAssociationGenerateUserEmail()
+	testUserEmailAfter := testAccCodefreshAccountUserAssociationGenerateUserEmail()
 	var resourceId string
 	var err error
 
@@ -138,9 +137,9 @@ func TestAccCodefreshAccountUserAssociation_StatusNew_Email_ForceNew(t *testing.
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshAccountUserAssociationConfig(testUserEmail, true),
+				Config: testAccCodefreshAccountUserAssociationConfig(testUserEmailBefore, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "email", testUserEmail),
+					resource.TestCheckResourceAttr(resourceName, "email", testUserEmailBefore),
 					resource.TestCheckResourceAttr(resourceName, "admin", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", "pending"),
 				),
@@ -155,19 +154,16 @@ func TestAccCodefreshAccountUserAssociation_StatusNew_Email_ForceNew(t *testing.
 			{
 				RefreshState: true,
 				Check: func(s *terraform.State) error {
-					return testAccCodefreshActivateUser(s, testUserEmail)
+					return testAccCodefreshActivateUser(s, testUserEmailBefore)
 				},
 			},
 			{
 				// Test that an email change on an activated user DOES force a new resource
-				PreConfig: func() {
-					testUserEmail = testAccCodefreshAccountUserAssociationGenerateUserEmail()
-				},
-				Config: testAccCodefreshAccountUserAssociationConfig(testUserEmail, true),
+				Config: testAccCodefreshAccountUserAssociationConfig(testUserEmailAfter, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "email", testUserEmail),
+					resource.TestCheckResourceAttr(resourceName, "email", testUserEmailAfter),
 					resource.TestCheckResourceAttr(resourceName, "admin", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "new"),
+					resource.TestCheckResourceAttr(resourceName, "status", "pending"), // status should be pending because a new resource was forced
 				),
 			},
 			{
