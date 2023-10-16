@@ -12,22 +12,13 @@ import (
 
 // StringValidationOptions contains options for validating strings.
 type StringValidationOptions struct {
-	RegexOptions regexp2.RegexOptions
+	regexOptions regexp2.RegexOptions
 }
 
-// SetRegexOptions sets the regexp2 package options.
-//
 // See: https://github.com/dlclark/regexp2/blob/03d34d8ad254ae4e2fb4f58e0723420efa1c7c07/regexp.go#L124-L142
-func (o *ValidationOptions) SetRegexOptions(regexOptions regexp2.RegexOptions) *ValidationOptions {
-	o.StringValidationOptions.RegexOptions = regexOptions
+func (o *ValidationOptions) setRegexOptions(regexOptions regexp2.RegexOptions) *ValidationOptions {
+	o.stringValidationOptions.regexOptions = regexOptions
 	return o
-}
-
-// GetRegexType returns the regexp2 package options.
-//
-// See notes on SetRegexOptions.
-func (o *ValidationOptions) GetRegexOptions() regexp2.RegexOptions {
-	return o.StringValidationOptions.RegexOptions
 }
 
 // StringIsValidRegExp returns a SchemaValidateDiagFunc which validates that a string is a valid regular expression.
@@ -40,19 +31,19 @@ func (o *ValidationOptions) GetRegexOptions() regexp2.RegexOptions {
 // It has also been modified to conform to the SchemaValidateDiagFunc type instead of the deprecated SchemaValidateFunc type.
 func StringIsValidRegExp(opts ...ValidationOptionSetter) schema.SchemaValidateDiagFunc {
 	options := NewValidationOptions().
-		SetSeverity(diag.Error).
-		SetSummary("Invalid regular expression.").
-		SetDetailFormat("%q: %s").
-		Apply(opts)
+		setSeverity(diag.Error).
+		setSummary("Invalid regular expression.").
+		setDetailFormat("%q: %s").
+		apply(opts)
 
 	return func(v any, p cty.Path) diag.Diagnostics {
 		value := v.(string)
 		var diags diag.Diagnostics
 		if _, err := regexp2.Compile(value, regexp2.RE2); err != nil {
 			diag := diag.Diagnostic{
-				Severity: options.GetSeverity(),
-				Summary:  options.GetSummary(),
-				Detail:   fmt.Sprintf(options.GetDetailFormat(), p, err),
+				Severity: options.severity,
+				Summary:  options.summary,
+				Detail:   fmt.Sprintf(options.detailFormat, p, err),
 			}
 			diags = append(diags, diag)
 		}
@@ -64,19 +55,19 @@ func StringIsValidRegExp(opts ...ValidationOptionSetter) schema.SchemaValidateDi
 // StringIsValidYaml returns a SchemaValidateDiagFunc which validates that a string is valid YAML.
 func StringIsValidYaml(opts ...ValidationOptionSetter) schema.SchemaValidateDiagFunc {
 	options := NewValidationOptions().
-		SetSeverity(diag.Error).
-		SetSummary("Invalid YAML").
-		SetDetailFormat("%s is not valid YAML: %s").
-		Apply(opts)
+		setSeverity(diag.Error).
+		setSummary("Invalid YAML").
+		setDetailFormat("%s is not valid YAML: %s").
+		apply(opts)
 
 	return func(v any, p cty.Path) diag.Diagnostics {
 		value := v.(string)
 		var diags diag.Diagnostics
 		if _, err := NormalizeYamlString(value); err != nil {
 			diags = append(diags, diag.Diagnostic{
-				Severity: options.GetSeverity(),
-				Summary:  options.GetSummary(),
-				Detail:   fmt.Sprintf(options.GetDetailFormat(), p, err),
+				Severity: options.severity,
+				Summary:  options.summary,
+				Detail:   fmt.Sprintf(options.detailFormat, p, err),
 			})
 		}
 		return diags
@@ -86,11 +77,11 @@ func StringIsValidYaml(opts ...ValidationOptionSetter) schema.SchemaValidateDiag
 // StringMatchesRegExp returns a SchemaValidateDiagFunc which validates that a string matches a regular expression.
 func StringMatchesRegExp(regex string, opts ...ValidationOptionSetter) schema.SchemaValidateDiagFunc {
 	options := NewValidationOptions().
-		SetSeverity(diag.Error).
-		SetSummary("Invalid value").
-		SetDetailFormat("%s is invalid (must match %q)").
-		SetRegexOptions(regexp2.RE2).
-		Apply(opts)
+		setSeverity(diag.Error).
+		setSummary("Invalid value").
+		setDetailFormat("%s is invalid (must match %q)").
+		setRegexOptions(regexp2.RE2).
+		apply(opts)
 
 	return func(v any, p cty.Path) diag.Diagnostics {
 		value := v.(string)
@@ -98,9 +89,9 @@ func StringMatchesRegExp(regex string, opts ...ValidationOptionSetter) schema.Sc
 		re := regexp.MustCompile(regex)
 		if !re.MatchString(value) {
 			diags = append(diags, diag.Diagnostic{
-				Severity: options.GetSeverity(),
-				Summary:  options.GetSummary(),
-				Detail:   fmt.Sprintf(options.GetDetailFormat(), value, re.String()),
+				Severity: options.severity,
+				Summary:  options.summary,
+				Detail:   fmt.Sprintf(options.detailFormat, value, re.String()),
 			})
 		}
 		return diags

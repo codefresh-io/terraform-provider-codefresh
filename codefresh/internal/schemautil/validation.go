@@ -10,74 +10,83 @@ type ValidationOptions struct {
 	severity                diag.Severity
 	summary                 string
 	detailFormat            string
-	CronValidationOptions   *CronValidationOptions
-	StringValidationOptions *StringValidationOptions
+	cronValidationOptions   *CronValidationOptions
+	stringValidationOptions *StringValidationOptions
 }
 
 type ValidationOptionSetter func(*ValidationOptions)
 
+// NewValidationOptions returns a new ValidationOptions struct with default values.
 func NewValidationOptions() *ValidationOptions {
 	return &ValidationOptions{
 		severity:     diag.Error,
 		summary:      "",
 		detailFormat: "",
-		CronValidationOptions: &CronValidationOptions{
-			Parser: cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow),
+		cronValidationOptions: &CronValidationOptions{
+			parser: cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow),
 		},
-		StringValidationOptions: &StringValidationOptions{
+		stringValidationOptions: &StringValidationOptions{
 			regexp2.RE2,
 		},
 	}
 }
 
+// WithSeverity overrides the severity of the validation error.
 func WithSeverity(severity diag.Severity) ValidationOptionSetter {
 	return func(o *ValidationOptions) {
-		o.SetSeverity(severity)
+		o.setSeverity(severity)
 	}
 }
 
+// WithSummary overrides the summary of the validation error.
 func WithSummary(summary string) ValidationOptionSetter {
 	return func(o *ValidationOptions) {
-		o.SetSummary(summary)
+		o.setSummary(summary)
 	}
 }
 
+// WithDetailFormat overrides the detail format string of the validation error.
+//
+// This string is passed to fmt.Sprintf.
+// The verbs used in the format string depend on the implementation of the validation function.
 func WithDetailFormat(detailFormat string) ValidationOptionSetter {
 	return func(o *ValidationOptions) {
-		o.SetDetailFormat(detailFormat)
+		o.setDetailFormat(detailFormat)
 	}
 }
 
-func (o *ValidationOptions) Apply(setters []ValidationOptionSetter) *ValidationOptions {
+// WithParser overrides the cron parser used to validate cron expressions.
+func WithCronParser(parser cron.Parser) ValidationOptionSetter {
+	return func(o *ValidationOptions) {
+		o.setCronParser(parser)
+	}
+}
+
+// WithRegexOptions overrides the regex options used to validate regular expressions.
+func WithRegexOptions(options regexp2.RegexOptions) ValidationOptionSetter {
+	return func(o *ValidationOptions) {
+		o.setRegexOptions(options)
+	}
+}
+
+func (o *ValidationOptions) apply(setters []ValidationOptionSetter) *ValidationOptions {
 	for _, opt := range setters {
 		opt(o)
 	}
 	return o
 }
 
-func (o *ValidationOptions) SetSeverity(severity diag.Severity) *ValidationOptions {
+func (o *ValidationOptions) setSeverity(severity diag.Severity) *ValidationOptions {
 	o.severity = severity
 	return o
 }
 
-func (o *ValidationOptions) SetSummary(summary string) *ValidationOptions {
+func (o *ValidationOptions) setSummary(summary string) *ValidationOptions {
 	o.summary = summary
 	return o
 }
 
-func (o *ValidationOptions) SetDetailFormat(detailFormat string) *ValidationOptions {
+func (o *ValidationOptions) setDetailFormat(detailFormat string) *ValidationOptions {
 	o.detailFormat = detailFormat
 	return o
-}
-
-func (o *ValidationOptions) GetSeverity() diag.Severity {
-	return o.severity
-}
-
-func (o *ValidationOptions) GetSummary() string {
-	return o.summary
-}
-
-func (o *ValidationOptions) GetDetailFormat() string {
-	return o.detailFormat
 }

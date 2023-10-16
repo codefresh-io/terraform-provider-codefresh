@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/robfig/cron"
 )
 
 func resourcePipelineCronTrigger() *schema.Resource {
@@ -43,9 +44,12 @@ func resourcePipelineCronTrigger() *schema.Resource {
 				Required: true,
 			},
 			"expression": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: schemautil.CronExpression(),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateDiagFunc: schemautil.CronExpression(
+					// Legacy cron parser, still used by standalone cron triggers
+					schemautil.WithCronParser(cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)),
+				),
 			},
 			"message": {
 				Type:     schema.TypeString,
