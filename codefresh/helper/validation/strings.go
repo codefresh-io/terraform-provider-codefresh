@@ -44,6 +44,7 @@ func StringMatchesRegExp(regex string, opts ...validationopts.OptionSetter) sche
 		SetSeverity(diag.Error).
 		SetSummary("Invalid value").
 		SetDetailFormat("%s is invalid (must match %q)").
+		SetRegexType(regexp2.RE2).
 		Apply(opts)
 
 	return func(v any, p cty.Path) diag.Diagnostics {
@@ -53,7 +54,7 @@ func StringMatchesRegExp(regex string, opts ...validationopts.OptionSetter) sche
 		if !re.MatchString(value) {
 			diags = append(diags, diag.Diagnostic{
 				Severity: options.GetSeverity(),
-				Summary:  fmt.Sprintf(options.GetSummary(), p),
+				Summary:  options.GetSummary(),
 				Detail:   fmt.Sprintf(options.GetDetailFormat(), value, re.String()),
 			})
 		}

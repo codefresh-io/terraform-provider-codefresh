@@ -10,47 +10,47 @@ type ValidationOptions struct {
 	severity                diag.Severity
 	summary                 string
 	detailFormat            string
-	CronValidationOptions   CronValidationOptions
-	StringValidationOptions StringValidationOptions
+	CronValidationOptions   *CronValidationOptions
+	StringValidationOptions *StringValidationOptions
 }
 
-type OptionSetter func(ValidationOptions)
+type OptionSetter func(*ValidationOptions)
 
 func NewValidationOptions() *ValidationOptions {
 	return &ValidationOptions{
 		severity:     diag.Error,
 		summary:      "",
 		detailFormat: "",
-		CronValidationOptions: CronValidationOptions{
+		CronValidationOptions: &CronValidationOptions{
 			Parser: cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow),
 		},
-		StringValidationOptions: StringValidationOptions{
+		StringValidationOptions: &StringValidationOptions{
 			regexp2.RE2,
 		},
 	}
 }
 
 func WithSeverity(severity diag.Severity) OptionSetter {
-	return func(o ValidationOptions) {
+	return func(o *ValidationOptions) {
 		o.SetSeverity(severity)
 	}
 }
 
 func WithSummary(summary string) OptionSetter {
-	return func(o ValidationOptions) {
+	return func(o *ValidationOptions) {
 		o.SetSummary(summary)
 	}
 }
 
 func WithDetailFormat(detailFormat string) OptionSetter {
-	return func(o ValidationOptions) {
+	return func(o *ValidationOptions) {
 		o.SetDetailFormat(detailFormat)
 	}
 }
 
 func (o *ValidationOptions) Apply(setters []OptionSetter) *ValidationOptions {
 	for _, opt := range setters {
-		opt(*o)
+		opt(o)
 	}
 	return o
 }
