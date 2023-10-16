@@ -345,10 +345,10 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Required:    true,
 									},
 									"type": {
-										Description:      "The type of the trigger (default: `cron`; see notes above).",
-										Type:             schema.TypeString,
-										Optional:         true,
-										Default:          "cron",
+										Description: "The type of the trigger (default: `cron`; see notes above).",
+										Type:        schema.TypeString,
+										Optional:    true,
+										Default:     "cron",
 										ValidateDiagFunc: validation.StringMatchesRegExp(
 											"cron",
 											validationopts.WithSummary("Invalid cron trigger type"),
