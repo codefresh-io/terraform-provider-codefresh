@@ -2,6 +2,7 @@ package codefresh
 
 import (
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -43,7 +44,7 @@ func resourceAccountAdminsCreate(d *schema.ResourceData, meta interface{}) error
 
 	accountId := d.Get("account_id").(string)
 
-	for _, admin := range convertStringArr(admins) {
+	for _, admin := range datautil.ConvertStringArr(admins) {
 		err := client.SetUserAsAccountAdmin(accountId, admin)
 		if err != nil {
 			return err
@@ -64,7 +65,7 @@ func resourceAccountAdminsDelete(d *schema.ResourceData, meta interface{}) error
 
 	accountId := d.Get("account_id").(string)
 
-	for _, admin := range convertStringArr(admins) {
+	for _, admin := range datautil.ConvertStringArr(admins) {
 		err := client.DeleteUserAsAccountAdmin(accountId, admin)
 		if err != nil {
 			return err
@@ -106,7 +107,7 @@ func resourceAccountAdminsUpdate(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	adminsToAdd, AdminsToDelete := cfclient.GetAccountAdminsDiff(convertStringArr(desiredAdmins), account.Admins)
+	adminsToAdd, AdminsToDelete := cfclient.GetAccountAdminsDiff(datautil.ConvertStringArr(desiredAdmins), account.Admins)
 
 	for _, userId := range AdminsToDelete {
 		err := client.DeleteUserAsAccountAdmin(accountId, userId)

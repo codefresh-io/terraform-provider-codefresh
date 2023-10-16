@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	funk "github.com/thoas/go-funk"
@@ -218,7 +219,7 @@ func mapResourceToPermission(d *schema.ResourceData) *cfclient.Permission {
 	tagsI := d.Get("tags").(*schema.Set).List()
 	var tags []string
 	if len(tagsI) > 0 {
-		tags = convertStringArr(tagsI)
+		tags = datautil.ConvertStringArr(tagsI)
 	} else {
 		tags = []string{"*", "untagged"}
 	}

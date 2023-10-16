@@ -4,6 +4,7 @@ import (
 	"log"
 
 	storageContext "github.com/codefresh-io/terraform-provider-codefresh/codefresh/context"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/schemautil"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/ghodss/yaml"
@@ -29,9 +30,9 @@ var supportedContextType = []string{
 
 func getConflictingContexts(context string) []string {
 	var conflictingTypes []string
-	normalizedContext := normalizeFieldName(context)
+	normalizedContext := schemautil.MustNormalizeFieldName(context)
 	for _, value := range supportedContextType {
-		normlizedValue := normalizeFieldName(value)
+		normlizedValue := schemautil.MustNormalizeFieldName(value)
 		if normlizedValue != normalizedContext {
 			conflictingTypes = append(conflictingTypes, "spec.0."+normlizedValue)
 		}
@@ -63,7 +64,7 @@ func resourceContext() *schema.Resource {
 				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						normalizeFieldName(contextConfig): {
+						schemautil.MustNormalizeFieldName(contextConfig): {
 							Type:          schema.TypeList,
 							ForceNew:      true,
 							Optional:      true,
@@ -82,7 +83,7 @@ func resourceContext() *schema.Resource {
 								},
 							},
 						},
-						normalizeFieldName(contextSecret): {
+						schemautil.MustNormalizeFieldName(contextSecret): {
 							Type:          schema.TypeList,
 							Optional:      true,
 							ForceNew:      true,
@@ -102,7 +103,7 @@ func resourceContext() *schema.Resource {
 								},
 							},
 						},
-						normalizeFieldName(contextYaml): {
+						schemautil.MustNormalizeFieldName(contextYaml): {
 							Type:          schema.TypeList,
 							Optional:      true,
 							ForceNew:      true,
@@ -114,17 +115,16 @@ func resourceContext() *schema.Resource {
 										Description:      "The YAML string representing the shared config.",
 										Type:             schema.TypeString,
 										Required:         true,
-										ValidateFunc:     stringIsYaml,
-										DiffSuppressFunc: suppressEquivalentYamlDiffs,
+										ValidateDiagFunc: schemautil.StringIsValidYaml(),
+										DiffSuppressFunc: schemautil.SuppressEquivalentYamlDiffs(),
 										StateFunc: func(v interface{}) string {
-											template, _ := normalizeYamlString(v)
-											return template
+											return schemautil.MustNormalizeYamlString(v)
 										},
 									},
 								},
 							},
 						},
-						normalizeFieldName(contextSecretYaml): {
+						schemautil.MustNormalizeFieldName(contextSecretYaml): {
 							Type:          schema.TypeList,
 							Optional:      true,
 							ForceNew:      true,
@@ -137,19 +137,18 @@ func resourceContext() *schema.Resource {
 										Type:             schema.TypeString,
 										Required:         true,
 										Sensitive:        true,
-										ValidateFunc:     stringIsYaml,
-										DiffSuppressFunc: suppressEquivalentYamlDiffs,
+										ValidateDiagFunc: schemautil.StringIsValidYaml(),
+										DiffSuppressFunc: schemautil.SuppressEquivalentYamlDiffs(),
 										StateFunc: func(v interface{}) string {
-											template, _ := normalizeYamlString(v)
-											return template
+											return schemautil.MustNormalizeYamlString(v)
 										},
 									},
 								},
 							},
 						},
-						normalizeFieldName(contextGoogleStorage): storageContext.GcsSchema(),
-						normalizeFieldName(contextS3Storage):     storageContext.S3Schema(),
-						normalizeFieldName(contextAzureStorage):  storageContext.AzureStorage(),
+						schemautil.MustNormalizeFieldName(contextGoogleStorage): storageContext.GcsSchema(),
+						schemautil.MustNormalizeFieldName(contextS3Storage):     storageContext.S3Schema(),
+						schemautil.MustNormalizeFieldName(contextAzureStorage):  storageContext.AzureStorage(),
 					},
 				},
 			},
@@ -246,13 +245,13 @@ func flattenContextSpec(spec cfclient.ContextSpec) []interface{} {
 
 	switch currentContextType := spec.Type; currentContextType {
 	case contextConfig, contextSecret:
-		m[normalizeFieldName(currentContextType)] = flattenContextConfig(spec)
+		m[schemautil.MustNormalizeFieldName(currentContextType)] = flattenContextConfig(spec)
 	case contextYaml, contextSecretYaml:
-		m[normalizeFieldName(currentContextType)] = flattenContextYaml(spec)
+		m[schemautil.MustNormalizeFieldName(currentContextType)] = flattenContextYaml(spec)
 	case contextGoogleStorage, contextS3Storage:
-		m[normalizeFieldName(currentContextType)] = storageContext.FlattenJsonConfigStorageContextConfig(spec)
+		m[schemautil.MustNormalizeFieldName(currentContextType)] = storageContext.FlattenJsonConfigStorageContextConfig(spec)
 	case contextAzureStorage:
-		m[normalizeFieldName(currentContextType)] = storageContext.FlattenAzureStorageContextConfig(spec)
+		m[schemautil.MustNormalizeFieldName(currentContextType)] = storageContext.FlattenAzureStorageContextConfig(spec)
 	default:
 		log.Printf("[DEBUG] Invalid context type = %v", currentContextType)
 		return nil
@@ -287,25 +286,25 @@ func mapResourceToContext(d *schema.ResourceData) *cfclient.Context {
 	var normalizedContextType string
 	var normalizedContextData map[string]interface{}
 
-	if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextConfig) + ".0.data"); ok {
+	if data, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextConfig) + ".0.data"); ok {
 		normalizedContextType = contextConfig
 		normalizedContextData = data.(map[string]interface{})
-	} else if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextSecret) + ".0.data"); ok {
+	} else if data, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextSecret) + ".0.data"); ok {
 		normalizedContextType = contextSecret
 		normalizedContextData = data.(map[string]interface{})
-	} else if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextYaml) + ".0.data"); ok {
+	} else if data, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextYaml) + ".0.data"); ok {
 		normalizedContextType = contextYaml
 		_ = yaml.Unmarshal([]byte(data.(string)), &normalizedContextData)
-	} else if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextSecretYaml) + ".0.data"); ok {
+	} else if data, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextSecretYaml) + ".0.data"); ok {
 		normalizedContextType = contextSecretYaml
 		_ = yaml.Unmarshal([]byte(data.(string)), &normalizedContextData)
-	} else if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextGoogleStorage) + ".0.data"); ok {
+	} else if data, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextGoogleStorage) + ".0.data"); ok {
 		normalizedContextType = contextGoogleStorage
 		normalizedContextData = storageContext.ConvertJsonConfigStorageContext(data.([]interface{}))
-	} else if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextS3Storage) + ".0.data"); ok {
+	} else if data, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextS3Storage) + ".0.data"); ok {
 		normalizedContextType = contextS3Storage
 		normalizedContextData = storageContext.ConvertJsonConfigStorageContext(data.([]interface{}))
-	} else if data, ok := d.GetOk("spec.0." + normalizeFieldName(contextAzureStorage) + ".0.data"); ok {
+	} else if data, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextAzureStorage) + ".0.data"); ok {
 		normalizedContextType = contextAzureStorage
 		normalizedContextData = storageContext.ConvertAzureStorageContext(data.([]interface{}))
 	}

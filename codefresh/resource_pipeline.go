@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
-	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/helper/validation"
-	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/helper/validation/validationopts"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/schemautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	hvalidation "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var terminationPolicyOnCreateBranchAttributes = []string{"branchName", "ignoreTrigger", "ignoreBranch"}
@@ -166,10 +166,10 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Type:        schema.TypeString,
 										Optional:    true,
 										Default:     "git",
-										ValidateDiagFunc: validation.StringMatchesRegExp(
+										ValidateDiagFunc: schemautil.StringMatchesRegExp(
 											"git",
-											validationopts.WithSummary("Invalid trigger type"),
-											validationopts.WithDetailFormat("The trigger type %s is invalid. The only supported type is %s."),
+											schemautil.WithSummary("Invalid trigger type"),
+											schemautil.WithDetailFormat("The trigger type %s is invalid. The only supported type is %s."),
 										),
 									},
 									"repo": {
@@ -182,27 +182,27 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Type:             schema.TypeString,
 										Optional:         true,
 										Default:          "/.*/gi",
-										ValidateDiagFunc: validation.StringIsValidRegExp(),
+										ValidateDiagFunc: schemautil.StringIsValidRegExp(),
 									},
 									"branch_regex_input": {
 										Description:  "Flag to manage how the `branch_regex` field is interpreted. Possible values: `multiselect-exclude`, `multiselect`, `regex` (default: `regex`).",
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "regex",
-										ValidateFunc: hvalidation.StringInSlice([]string{"multiselect-exclude", "multiselect", "regex"}, false),
+										ValidateFunc: validation.StringInSlice([]string{"multiselect-exclude", "multiselect", "regex"}, false),
 									},
 									"pull_request_target_branch_regex": {
 										Description:      "A regular expression and will only trigger for pull requests to branches that match this naming pattern.",
 										Type:             schema.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: validation.StringIsValidRegExp(),
+										ValidateDiagFunc: schemautil.StringIsValidRegExp(),
 									},
 									"comment_regex": {
 										Description:      " A regular expression and will only trigger for pull requests where a comment matches this naming pattern (default: `/.*/gi`).",
 										Type:             schema.TypeString,
 										Optional:         true,
 										Default:          "/.*/gi",
-										ValidateDiagFunc: validation.StringIsValidRegExp(),
+										ValidateDiagFunc: schemautil.StringIsValidRegExp(),
 									},
 									"modified_files_glob": {
 										Description: "Allows to constrain the build and trigger it only if the modified files from the commit match this glob expression (default: `\"\"`).",
@@ -349,10 +349,10 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Type:        schema.TypeString,
 										Optional:    true,
 										Default:     "cron",
-										ValidateDiagFunc: validation.StringMatchesRegExp(
+										ValidateDiagFunc: schemautil.StringMatchesRegExp(
 											"cron",
-											validationopts.WithSummary("Invalid cron trigger type"),
-											validationopts.WithDetailFormat("The cron trigger type %s is invalid. The only supported type is %s."),
+											schemautil.WithSummary("Invalid cron trigger type"),
+											schemautil.WithDetailFormat("The cron trigger type %s is invalid. The only supported type is %s."),
 										),
 									},
 									"disabled": {
@@ -364,16 +364,16 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 									"expression": {
 										Type:             schema.TypeString,
 										Required:         true,
-										ValidateDiagFunc: validation.CronExpression(),
+										ValidateDiagFunc: schemautil.CronExpression(),
 									},
 									"message": {
 										Type:     schema.TypeString,
 										Required: true,
-										ValidateDiagFunc: validation.StringMatchesRegExp(
-											validation.ValidCronMessageRegex,
-											validationopts.WithSeverity(diag.Error),
-											validationopts.WithSummary("Invalid cron trigger message"),
-											validationopts.WithDetailFormat("The message %q is invalid (must match %q)."),
+										ValidateDiagFunc: schemautil.StringMatchesRegExp(
+											schemautil.ValidCronMessageRegex,
+											schemautil.WithSeverity(diag.Error),
+											schemautil.WithSummary("Invalid cron trigger message"),
+											schemautil.WithDetailFormat("The message %q is invalid (must match %q)."),
 										),
 									},
 									"git_trigger_id": {
@@ -504,7 +504,7 @@ The following table presents how to configure this block based on the options av
 													Description:      "A regular expression to filter the branches on with the termination policy applies.",
 													Type:             schema.TypeString,
 													Optional:         true,
-													ValidateDiagFunc: validation.StringIsValidRegExp(),
+													ValidateDiagFunc: schemautil.StringIsValidRegExp(),
 													ConflictsWith:    []string{"spec.0.termination_policy.0.on_create_branch.0.ignore_branch"},
 												},
 												"ignore_trigger": {
@@ -742,7 +742,7 @@ func flattenSpec(spec cfclient.Spec) []interface{} {
 	}
 
 	if len(spec.Variables) != 0 {
-		m["variables"] = convertVariables(spec.Variables)
+		m["variables"] = datautil.ConvertVariables(spec.Variables)
 	}
 
 	if spec.RuntimeEnvironment != (cfclient.RuntimeEnvironment{}) {
@@ -870,7 +870,7 @@ func flattenTriggers(triggers []cfclient.Trigger) []map[string]interface{} {
 		m["provider"] = trigger.Provider
 		m["type"] = trigger.Type
 		m["events"] = trigger.Events
-		m["variables"] = convertVariables(trigger.Variables)
+		m["variables"] = datautil.ConvertVariables(trigger.Variables)
 		if trigger.RuntimeEnvironment != nil {
 			m["runtime_environment"] = flattenSpecRuntimeEnvironment(*trigger.RuntimeEnvironment)
 		}
@@ -890,7 +890,7 @@ func flattenCronTriggers(cronTriggers []cfclient.CronTrigger) []map[string]inter
 		m["disabled"] = trigger.Disabled
 		m["git_trigger_id"] = trigger.GitTriggerId
 		m["branch"] = trigger.Branch
-		m["variables"] = convertVariables(trigger.Variables)
+		m["variables"] = datautil.ConvertVariables(trigger.Variables)
 		if trigger.Options != nil {
 			m["options"] = flattenTriggerOptions(*trigger.Options)
 		}
@@ -918,7 +918,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 			ProjectId: d.Get("project_id").(string),
 			IsPublic:  d.Get("is_public").(bool),
 			Labels: cfclient.Labels{
-				Tags: convertStringArr(tags),
+				Tags: datautil.ConvertStringArr(tags),
 			},
 			OriginalYamlString: originalYamlString,
 		},
@@ -984,8 +984,8 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 				PullRequestAllowForkEvents:   d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_allow_fork_events", idx)).(bool),
 				CommitStatusTitle:            d.Get(fmt.Sprintf("spec.0.trigger.%v.commit_status_title", idx)).(string),
 				Context:                      d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
-				Contexts:                     convertStringArr(contexts),
-				Events:                       convertStringArr(events),
+				Contexts:                     datautil.ConvertStringArr(contexts),
+				Events:                       datautil.ConvertStringArr(events),
 			}
 			variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
 			codefreshTrigger.SetVariables(variables)
@@ -1090,14 +1090,14 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 // Luckily, the yj package introduces a MapSlice type that preserves the order Map items (see utils.go).
 func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfclient.Pipeline) error {
 	for _, attribute := range []string{"stages", "steps", "hooks"} {
-		yamlString, err := yq(fmt.Sprintf(".%s", attribute), originalYamlString)
+		yamlString, err := datautil.Yq(fmt.Sprintf(".%s", attribute), originalYamlString)
 		if err != nil {
 			return fmt.Errorf("error while extracting '%s' from original YAML string: %v", attribute, err)
 		} else if yamlString == "" {
 			continue
 		}
 
-		attributeJson, err := yamlToJson(yamlString)
+		attributeJson, err := datautil.YamlToJson(yamlString)
 		if err != nil {
 			return fmt.Errorf("error while converting '%s' YAML to JSON: %v", attribute, err)
 		}
@@ -1118,14 +1118,14 @@ func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipe
 		}
 	}
 
-	mode, err := yq(".mode", originalYamlString)
+	mode, err := datautil.Yq(".mode", originalYamlString)
 	if err != nil {
 		return fmt.Errorf("error while extracting 'mode' from original YAML string: %v", err)
 	} else if mode != "" {
 		pipeline.Spec.Mode = mode
 	}
 
-	ff, err := yq(".fail_fast", originalYamlString)
+	ff, err := datautil.Yq(".fail_fast", originalYamlString)
 	if err != nil {
 		return fmt.Errorf("error while extracting 'mode' from original YAML string: %v", err)
 	} else if ff != "" {

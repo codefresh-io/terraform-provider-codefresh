@@ -2,6 +2,7 @@ package codefresh
 
 import (
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -40,7 +41,7 @@ func resourceAccountIDPCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfclient.Client)
 
-	accountIds := convertStringArr(d.Get("account_ids").(*schema.Set).List())
+	accountIds := datautil.ConvertStringArr(d.Get("account_ids").(*schema.Set).List())
 
 	idpID := d.Get("idp_id").(string)
 
@@ -105,7 +106,7 @@ func resourceAccountIDPUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	existingAccounts := idp.Accounts
 
-	desiredAccounts := convertStringArr(d.Get("account_ids").(*schema.Set).List())
+	desiredAccounts := datautil.ConvertStringArr(d.Get("account_ids").(*schema.Set).List())
 
 	for _, account := range desiredAccounts {
 		if ok := cfclient.FindInSlice(existingAccounts, account); !ok {

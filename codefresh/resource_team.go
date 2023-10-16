@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -116,7 +117,7 @@ func resourceTeamUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	desiredUsers := d.Get("users").(*schema.Set).List()
 
-	usersToAdd, usersToDelete := cfclient.GetUsersDiff(convertStringArr(desiredUsers), existingTeam.Users)
+	usersToAdd, usersToDelete := cfclient.GetUsersDiff(datautil.ConvertStringArr(desiredUsers), existingTeam.Users)
 
 	for _, userId := range usersToDelete {
 		err := client.DeleteUserFromTeam(team.ID, userId)
@@ -194,7 +195,7 @@ func mapResourceToTeam(d *schema.ResourceData) *cfclient.Team {
 		Name:    d.Get("name").(string),
 		Type:    d.Get("type").(string),
 		Account: d.Get("account_id").(string),
-		Tags:    convertStringArr(tags),
+		Tags:    datautil.ConvertStringArr(tags),
 	}
 
 	if _, ok := d.GetOk("users"); ok {

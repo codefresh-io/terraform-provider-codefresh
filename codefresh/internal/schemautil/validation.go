@@ -1,4 +1,4 @@
-package validationopts
+package schemautil
 
 import (
 	"github.com/dlclark/regexp2"
@@ -14,7 +14,7 @@ type ValidationOptions struct {
 	StringValidationOptions *StringValidationOptions
 }
 
-type OptionSetter func(*ValidationOptions)
+type ValidationOptionSetter func(*ValidationOptions)
 
 func NewValidationOptions() *ValidationOptions {
 	return &ValidationOptions{
@@ -30,25 +30,25 @@ func NewValidationOptions() *ValidationOptions {
 	}
 }
 
-func WithSeverity(severity diag.Severity) OptionSetter {
+func WithSeverity(severity diag.Severity) ValidationOptionSetter {
 	return func(o *ValidationOptions) {
 		o.SetSeverity(severity)
 	}
 }
 
-func WithSummary(summary string) OptionSetter {
+func WithSummary(summary string) ValidationOptionSetter {
 	return func(o *ValidationOptions) {
 		o.SetSummary(summary)
 	}
 }
 
-func WithDetailFormat(detailFormat string) OptionSetter {
+func WithDetailFormat(detailFormat string) ValidationOptionSetter {
 	return func(o *ValidationOptions) {
 		o.SetDetailFormat(detailFormat)
 	}
 }
 
-func (o *ValidationOptions) Apply(setters []OptionSetter) *ValidationOptions {
+func (o *ValidationOptions) Apply(setters []ValidationOptionSetter) *ValidationOptions {
 	for _, opt := range setters {
 		opt(o)
 	}

@@ -11,6 +11,7 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/schemautil"
 	ghodss "github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -57,8 +58,8 @@ The resource allows to handle the life-cycle of the version by allowing specifyi
 							Description:      "YAML containing a valid definition of a typed plugin",
 							Type:             schema.TypeString,
 							Required:         true,
-							ValidateFunc:     stringIsYaml,
-							DiffSuppressFunc: suppressEquivalentYamlDiffs,
+							ValidateDiagFunc: schemautil.StringIsValidYaml(),
+							DiffSuppressFunc: schemautil.SuppressEquivalentYamlDiffs(),
 							StateFunc: func(v interface{}) string {
 								template, _ := normalizeYamlStringStepTypes(v)
 								return template

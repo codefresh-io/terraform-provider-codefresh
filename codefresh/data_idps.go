@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -132,7 +133,7 @@ func mapDataIdpToResource(idp cfclient.IDP, d *schema.ResourceData) error {
 
 	d.Set("access_token", idp.Access_token) //    string   `json:"access_token,omitempty"`
 
-	d.Set("accounts", flattenStringArr(idp.Accounts)) //
+	d.Set("accounts", datautil.FlattenStringArr(idp.Accounts)) //
 	//d.Set("apiHost", idp.ApiHost) //         string   `json:"apiHost,omitempty"`
 	//d.Set("apiPathPrefix", idp.ApiPathPrefix) //   string   `json:"apiPathPrefix,omitempty"`
 	//d.Set("apiURL", idp.ApiURL) //          string   `json:"apiURL,omitempty"`
@@ -152,7 +153,7 @@ func mapDataIdpToResource(idp cfclient.IDP, d *schema.ResourceData) error {
 	//d.Set("redirectUiUrl", idp.RedirectUiUrl) //   string   `json:"redirectUiUrl,omitempty"`
 	//d.Set("redirectUrl", idp.RedirectUrl) //     string   `json:"redirectUrl,omitempty"`
 	//d.Set("refreshTokenURL", idp.RefreshTokenURL) // string   `json:"refreshTokenURL,omitempty"`
-	d.Set("scopes", flattenStringArr(idp.Scopes)) //          []string `json:"scopes,omitempty"`
+	d.Set("scopes", datautil.FlattenStringArr(idp.Scopes)) //          []string `json:"scopes,omitempty"`
 	d.Set("tenant", idp.Tenant)                   //          string   `json:"tenant,omitempty"`
 	//d.Set("tokenSecret", idp.TokenSecret) //     string   `json:"tokenSecret,omitempty"`
 	//d.Set("tokenURL", idp.TokenURL) //        string   `json:"tokenURL,omitempty"`

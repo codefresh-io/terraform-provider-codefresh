@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -201,7 +202,7 @@ func mapResourceToApiKey(d *schema.ResourceData) *cfclient.ApiKey {
 	apiKey := &cfclient.ApiKey{
 		ID:     d.Id(),
 		Name:   d.Get("name").(string),
-		Scopes: convertStringArr(scopes),
+		Scopes: datautil.ConvertStringArr(scopes),
 	}
 	return apiKey
 }

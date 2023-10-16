@@ -7,8 +7,7 @@ import (
 	"strings"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
-	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/helper/validation"
-	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/helper/validation/validationopts"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/schemautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -46,16 +45,16 @@ func resourcePipelineCronTrigger() *schema.Resource {
 			"expression": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validation.CronExpression(),
+				ValidateDiagFunc: schemautil.CronExpression(),
 			},
 			"message": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateDiagFunc: validation.StringMatchesRegExp(
-					validation.ValidCronMessageRegex,
-					validationopts.WithSeverity(diag.Error),
-					validationopts.WithSummary("Invalid cron trigger message"),
-					validationopts.WithDetailFormat("The message %q is invalid (must match %q)."),
+				ValidateDiagFunc: schemautil.StringMatchesRegExp(
+					schemautil.ValidCronMessageRegex,
+					schemautil.WithSeverity(diag.Error),
+					schemautil.WithSummary("Invalid cron trigger message"),
+					schemautil.WithDetailFormat("The message %q is invalid (must match %q)."),
 				),
 			},
 		},

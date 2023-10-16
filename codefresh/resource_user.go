@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -183,7 +184,7 @@ func resourceUsersUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	userId := d.Id()
 
-	accounts, err := client.GetAccountsList(convertStringArr(accountList))
+	accounts, err := client.GetAccountsList(datautil.ConvertStringArr(accountList))
 	if err != nil {
 		return err
 	}
@@ -274,8 +275,8 @@ func mapResourceToNewUser(d *schema.ResourceData) *cfclient.NewUser {
 		ID:       d.Id(),
 		UserName: d.Get("user_name").(string),
 		Email:    d.Get("email").(string),
-		Roles:    convertStringArr(roles),
-		Account:  convertStringArr(accounts),
+		Roles:    datautil.ConvertStringArr(roles),
+		Account:  datautil.ConvertStringArr(accounts),
 	}
 
 	if _, ok := d.GetOk("personal"); ok {
@@ -311,7 +312,7 @@ func mapResourceToNewUser(d *schema.ResourceData) *cfclient.NewUser {
 
 	// for idx := range logins {
 
-	// 	permissions := convertStringArr(d.Get(fmt.Sprintf("login.%v.credentials.0.permissions", idx)).([]interface{}))
+	// 	permissions := datautil.ConvertStringArr(d.Get(fmt.Sprintf("login.%v.credentials.0.permissions", idx)).([]interface{}))
 	// 	login := cfclient.Login{
 	// 		Credentials: cfclient.Credentials{
 	// 			Permissions: permissions,

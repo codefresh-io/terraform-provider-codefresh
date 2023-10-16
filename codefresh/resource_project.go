@@ -6,6 +6,7 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -132,7 +133,7 @@ func mapProjectToResource(project *cfclient.Project, d *schema.ResourceData) err
 		return err
 	}
 
-	err = d.Set("variables", convertVariables(project.Variables))
+	err = d.Set("variables", datautil.ConvertVariables(project.Variables))
 	if err != nil {
 		return err
 	}
@@ -144,7 +145,7 @@ func mapResourceToProject(d *schema.ResourceData) *cfclient.Project {
 	project := &cfclient.Project{
 		ID:          d.Id(),
 		ProjectName: d.Get("name").(string),
-		Tags:        convertStringArr(tags),
+		Tags:        datautil.ConvertStringArr(tags),
 	}
 	variables := d.Get("variables").(map[string]interface{})
 	project.SetVariables(variables)

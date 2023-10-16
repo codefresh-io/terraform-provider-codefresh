@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -241,7 +242,7 @@ func mapResourceToGitopsAbacRule(d *schema.ResourceData) *cfclient.GitopsAbacRul
 	tagsI := d.Get("tags").(*schema.Set).List()
 	var tags []string
 	if len(tagsI) > 0 {
-		tags = convertStringArr(tagsI)
+		tags = datautil.ConvertStringArr(tagsI)
 	} else {
 		tags = []string{"*", "untagged"}
 	}
@@ -249,9 +250,9 @@ func mapResourceToGitopsAbacRule(d *schema.ResourceData) *cfclient.GitopsAbacRul
 	abacRule := &cfclient.GitopsAbacRule{
 		ID:         d.Id(),
 		EntityType: d.Get("entity_type").(string),
-		Teams:      convertStringArr(d.Get("teams").(*schema.Set).List()),
+		Teams:      datautil.ConvertStringArr(d.Get("teams").(*schema.Set).List()),
 		Tags:       tags,
-		Actions:    convertStringArr(d.Get("actions").(*schema.Set).List()),
+		Actions:    datautil.ConvertStringArr(d.Get("actions").(*schema.Set).List()),
 		Attributes: []cfclient.EntityAbacAttribute{},
 	}
 
