@@ -2,17 +2,17 @@ package codefresh
 
 import (
 	"fmt"
-	"github.com/robfig/cron"
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
-	"github.com/hashicorp/go-cty/cty"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/helper/validation"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/helper/validation/validationopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	hvalidation "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var terminationPolicyOnCreateBranchAttributes = []string{"branchName", "ignoreTrigger", "ignoreBranch"}
@@ -166,20 +166,11 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Type:        schema.TypeString,
 										Optional:    true,
 										Default:     "git",
-										ValidateDiagFunc: func(v any, p cty.Path) diag.Diagnostics {
-											value := v.(string)
-											expected := "git"
-											var diags diag.Diagnostics
-											if value != expected {
-												diag := diag.Diagnostic{
-													Severity: diag.Error,
-													Summary:  "Only triggers of type git are supported for nested triggers. For other trigger types, use the codefresh_pipeline_*_trigger resources.",
-													Detail:   fmt.Sprintf("%q is not %q", value, expected),
-												}
-												diags = append(diags, diag)
-											}
-											return diags
-										},
+										ValidateDiagFunc: validation.StringMatchesRegExp(
+											"git",
+											validationopts.WithSummary("Invalid trigger type"),
+											validationopts.WithDetailFormat("The trigger type %s is invalid. The only supported type is %s."),
+										),
 									},
 									"repo": {
 										Description: "The repository name, (owner/repo)",
@@ -187,31 +178,31 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Optional:    true,
 									},
 									"branch_regex": {
-										Description:  " A regular expression and will only trigger for branches that match this naming pattern (default: `/.*/gi`).",
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "/.*/gi",
-										ValidateFunc: stringIsValidRe2RegExp,
+										Description:      " A regular expression and will only trigger for branches that match this naming pattern (default: `/.*/gi`).",
+										Type:             schema.TypeString,
+										Optional:         true,
+										Default:          "/.*/gi",
+										ValidateDiagFunc: validation.StringIsValidRegExp(),
 									},
 									"branch_regex_input": {
 										Description:  "Flag to manage how the `branch_regex` field is interpreted. Possible values: `multiselect-exclude`, `multiselect`, `regex` (default: `regex`).",
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "regex",
-										ValidateFunc: validation.StringInSlice([]string{"multiselect-exclude", "multiselect", "regex"}, false),
+										ValidateFunc: hvalidation.StringInSlice([]string{"multiselect-exclude", "multiselect", "regex"}, false),
 									},
 									"pull_request_target_branch_regex": {
-										Description:  "A regular expression and will only trigger for pull requests to branches that match this naming pattern.",
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: stringIsValidRe2RegExp,
+										Description:      "A regular expression and will only trigger for pull requests to branches that match this naming pattern.",
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: validation.StringIsValidRegExp(),
 									},
 									"comment_regex": {
-										Description:  " A regular expression and will only trigger for pull requests where a comment matches this naming pattern (default: `/.*/gi`).",
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "/.*/gi",
-										ValidateFunc: stringIsValidRe2RegExp,
+										Description:      " A regular expression and will only trigger for pull requests where a comment matches this naming pattern (default: `/.*/gi`).",
+										Type:             schema.TypeString,
+										Optional:         true,
+										Default:          "/.*/gi",
+										ValidateDiagFunc: validation.StringIsValidRegExp(),
 									},
 									"modified_files_glob": {
 										Description: "Allows to constrain the build and trigger it only if the modified files from the commit match this glob expression (default: `\"\"`).",
@@ -354,24 +345,15 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Required:    true,
 									},
 									"type": {
-										Description: "The type of the trigger (default: `cron`; see notes above).",
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "cron",
-										ValidateDiagFunc: func(v any, p cty.Path) diag.Diagnostics {
-											value := v.(string)
-											expected := "cron"
-											var diags diag.Diagnostics
-											if value != expected {
-												diag := diag.Diagnostic{
-													Severity: diag.Error,
-													Summary:  "Only triggers of type cron are supported for cron triggers. For other trigger types, use the codefresh_pipeline_*_trigger resources.",
-													Detail:   fmt.Sprintf("%q is not %q", value, expected),
-												}
-												diags = append(diags, diag)
-											}
-											return diags
-										},
+										Description:      "The type of the trigger (default: `cron`; see notes above).",
+										Type:             schema.TypeString,
+										Optional:         true,
+										Default:          "cron",
+										ValidateDiagFunc: validation.StringMatchesRegExp(
+											"cron",
+											validationopts.WithSummary("Invalid cron trigger type"),
+											validationopts.WithDetailFormat("The cron trigger type %s is invalid. The only supported type is %s."),
+										),
 									},
 									"disabled": {
 										Description: "Flag to disable the trigger.",
@@ -380,43 +362,19 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Default:     false,
 									},
 									"expression": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateDiagFunc: func(v interface{}, path cty.Path) (diags diag.Diagnostics) {
-											expression := v.(string)
-
-											// Cron expression requirements: 6 fields, with ability to use descriptors (e.g. @yearly)
-											parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
-											if _, err := parser.Parse(expression); err != nil {
-												diags = append(diags, diag.Diagnostic{
-													Severity: diag.Error,
-													Summary:  "Invalid cron expression.",
-													Detail:   fmt.Sprintf("The cron expression %q is invalid: %s", expression, err),
-												})
-											}
-
-											return
-										},
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validation.CronExpression(),
 									},
 									"message": {
 										Type:     schema.TypeString,
 										Required: true,
-										ValidateDiagFunc: func(v interface{}, path cty.Path) (diags diag.Diagnostics) {
-											message := v.(string)
-
-											// https://github.com/codefresh-io/hermes/blob/6d75b347cb8ff471ce970a766b2285788e5e19fe/pkg/backend/dev_compose_types.json#L226
-											re := regexp.MustCompile(`^[a-zA-Z0-9_+\s-#?.:]{2,128}$`)
-
-											if !re.MatchString(message) {
-												diags = append(diags, diag.Diagnostic{
-													Severity: diag.Error,
-													Summary:  "Invalid message.",
-													Detail:   fmt.Sprintf("The message %q is invalid (must match %q).", message, re.String()),
-												})
-											}
-
-											return
-										},
+										ValidateDiagFunc: validation.StringMatchesRegExp(
+											validation.ValidCronMessageRegex,
+											validationopts.WithSeverity(diag.Error),
+											validationopts.WithSummary("Invalid cron trigger message"),
+											validationopts.WithDetailFormat("The message %q is invalid (must match %q)."),
+										),
 									},
 									"git_trigger_id": {
 										Description: "Related git-trigger id. Will by used to take all possible git information by branch.",
@@ -543,11 +501,11 @@ The following table presents how to configure this block based on the options av
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"branch_name": {
-													Description:   "A regular expression to filter the branches on with the termination policy applies.",
-													Type:          schema.TypeString,
-													Optional:      true,
-													ValidateFunc:  stringIsValidRe2RegExp,
-													ConflictsWith: []string{"spec.0.termination_policy.0.on_create_branch.0.ignore_branch"},
+													Description:      "A regular expression to filter the branches on with the termination policy applies.",
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: validation.StringIsValidRegExp(),
+													ConflictsWith:    []string{"spec.0.termination_policy.0.on_create_branch.0.ignore_branch"},
 												},
 												"ignore_trigger": {
 													Description: "Whether to ignore the trigger.",
@@ -654,7 +612,7 @@ Pipeline concurrency policy: Builds on 'Pending Approval' state should be:
 
 func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	pipeline, err := mapResourceToPipeline(d)
 	if err != nil {
@@ -673,7 +631,7 @@ func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	pipelineID := d.Id()
 
@@ -697,7 +655,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	pipeline, err := mapResourceToPipeline(d)
 	if err != nil {
@@ -716,7 +674,7 @@ func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	err := client.DeletePipeline(d.Id())
 	if err != nil {
@@ -726,7 +684,7 @@ func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mapPipelineToResource(pipeline cfClient.Pipeline, d *schema.ResourceData) error {
+func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) error {
 
 	err := d.Set("name", pipeline.Metadata.Name)
 	if err != nil {
@@ -766,7 +724,7 @@ func mapPipelineToResource(pipeline cfClient.Pipeline, d *schema.ResourceData) e
 	return nil
 }
 
-func flattenSpec(spec cfClient.Spec) []interface{} {
+func flattenSpec(spec cfclient.Spec) []interface{} {
 
 	var res = make([]interface{}, 0)
 	m := make(map[string]interface{})
@@ -787,7 +745,7 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 		m["variables"] = convertVariables(spec.Variables)
 	}
 
-	if spec.RuntimeEnvironment != (cfClient.RuntimeEnvironment{}) {
+	if spec.RuntimeEnvironment != (cfclient.RuntimeEnvironment{}) {
 		m["runtime_environment"] = flattenSpecRuntimeEnvironment(spec.RuntimeEnvironment)
 	}
 
@@ -854,7 +812,7 @@ func flattenSpecTerminationPolicy(terminationPolicy []map[string]interface{}) []
 	return res
 }
 
-func flattenSpecTemplate(spec cfClient.SpecTemplate) []map[string]interface{} {
+func flattenSpecTemplate(spec cfclient.SpecTemplate) []map[string]interface{} {
 	return []map[string]interface{}{
 		{
 			"location": spec.Location,
@@ -866,7 +824,7 @@ func flattenSpecTemplate(spec cfClient.SpecTemplate) []map[string]interface{} {
 	}
 }
 
-func flattenSpecRuntimeEnvironment(spec cfClient.RuntimeEnvironment) []map[string]interface{} {
+func flattenSpecRuntimeEnvironment(spec cfclient.RuntimeEnvironment) []map[string]interface{} {
 	return []map[string]interface{}{
 		{
 			"name":                       spec.Name,
@@ -878,7 +836,7 @@ func flattenSpecRuntimeEnvironment(spec cfClient.RuntimeEnvironment) []map[strin
 	}
 }
 
-func flattenTriggerOptions(options cfClient.TriggerOptions) []map[string]interface{} {
+func flattenTriggerOptions(options cfclient.TriggerOptions) []map[string]interface{} {
 	return []map[string]interface{}{
 		{
 			"no_cache":             options.NoCache,
@@ -889,7 +847,7 @@ func flattenTriggerOptions(options cfClient.TriggerOptions) []map[string]interfa
 	}
 }
 
-func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
+func flattenTriggers(triggers []cfclient.Trigger) []map[string]interface{} {
 	var res = make([]map[string]interface{}, len(triggers))
 	for i, trigger := range triggers {
 		m := make(map[string]interface{})
@@ -921,7 +879,7 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 	return res
 }
 
-func flattenCronTriggers(cronTriggers []cfClient.CronTrigger) []map[string]interface{} {
+func flattenCronTriggers(cronTriggers []cfclient.CronTrigger) []map[string]interface{} {
 	var res = make([]map[string]interface{}, len(cronTriggers))
 	for i, trigger := range cronTriggers {
 		m := make(map[string]interface{})
@@ -944,7 +902,7 @@ func flattenCronTriggers(cronTriggers []cfClient.CronTrigger) []map[string]inter
 	return res
 }
 
-func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
+func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 
 	tags := d.Get("tags").(*schema.Set).List()
 
@@ -953,18 +911,18 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 		"\n",
 		"\n",
 		-1)
-	pipeline := &cfClient.Pipeline{
-		Metadata: cfClient.Metadata{
+	pipeline := &cfclient.Pipeline{
+		Metadata: cfclient.Metadata{
 			Name:      d.Get("name").(string),
 			Revision:  d.Get("revision").(int),
 			ProjectId: d.Get("project_id").(string),
 			IsPublic:  d.Get("is_public").(bool),
-			Labels: cfClient.Labels{
+			Labels: cfclient.Labels{
 				Tags: convertStringArr(tags),
 			},
 			OriginalYamlString: originalYamlString,
 		},
-		Spec: cfClient.Spec{
+		Spec: cfclient.Spec{
 			PackId:                   d.Get("spec.0.pack_id").(string),
 			RequiredAvailableStorage: d.Get("spec.0.required_available_storage").(string),
 			Priority:                 d.Get("spec.0.priority").(int),
@@ -975,7 +933,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 	}
 
 	if _, ok := d.GetOk("spec.0.spec_template"); ok {
-		pipeline.Spec.SpecTemplate = &cfClient.SpecTemplate{
+		pipeline.Spec.SpecTemplate = &cfclient.SpecTemplate{
 			Location: d.Get("spec.0.spec_template.0.location").(string),
 			Repo:     d.Get("spec.0.spec_template.0.repo").(string),
 			Path:     d.Get("spec.0.spec_template.0.path").(string),
@@ -990,7 +948,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 	}
 
 	if _, ok := d.GetOk("spec.0.runtime_environment"); ok {
-		pipeline.Spec.RuntimeEnvironment = cfClient.RuntimeEnvironment{
+		pipeline.Spec.RuntimeEnvironment = cfclient.RuntimeEnvironment{
 			Name:                     d.Get("spec.0.runtime_environment.0.name").(string),
 			Memory:                   d.Get("spec.0.runtime_environment.0.memory").(string),
 			CPU:                      d.Get("spec.0.runtime_environment.0.cpu").(string),
@@ -1011,7 +969,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 		for idx := range triggers.([]interface{}) {
 			events := d.Get(fmt.Sprintf("spec.0.trigger.%v.events", idx)).([]interface{})
 			contexts := d.Get(fmt.Sprintf("spec.0.trigger.%v.contexts", idx)).([]interface{})
-			codefreshTrigger := cfClient.Trigger{
+			codefreshTrigger := cfclient.Trigger{
 				Name:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.name", idx)).(string),
 				Description:                  d.Get(fmt.Sprintf("spec.0.trigger.%v.description", idx)).(string),
 				Type:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.type", idx)).(string),
@@ -1032,7 +990,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 			variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
 			codefreshTrigger.SetVariables(variables)
 			if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.options", idx)); ok {
-				options := cfClient.TriggerOptions{
+				options := cfclient.TriggerOptions{
 					NoCache:             d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cache", idx)).(bool),
 					NoCfCache:           d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cf_cache", idx)).(bool),
 					ResetVolume:         d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.reset_volume", idx)).(bool),
@@ -1041,7 +999,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 				codefreshTrigger.Options = &options
 			}
 			if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.runtime_environment", idx)); ok {
-				triggerRuntime := cfClient.RuntimeEnvironment{
+				triggerRuntime := cfclient.RuntimeEnvironment{
 					Name:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.name", idx)).(string),
 					Memory:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.memory", idx)).(string),
 					CPU:                      d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.cpu", idx)).(string),
@@ -1056,7 +1014,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 
 	if cronTriggers, ok := d.GetOk("spec.0.cron_trigger"); ok {
 		for idx := range cronTriggers.([]interface{}) {
-			codefreshCronTrigger := cfClient.CronTrigger{
+			codefreshCronTrigger := cfclient.CronTrigger{
 				Name:         d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.name", idx)).(string),
 				Type:         d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.type", idx)).(string),
 				Expression:   d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.expression", idx)).(string),
@@ -1068,7 +1026,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 			variables := d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.variables", idx)).(map[string]interface{})
 			codefreshCronTrigger.SetVariables(variables)
 			if _, ok := d.GetOk(fmt.Sprintf("spec.0.cron_trigger.%v.options", idx)); ok {
-				options := cfClient.TriggerOptions{
+				options := cfclient.TriggerOptions{
 					NoCache:             d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.options.0.no_cache", idx)).(bool),
 					NoCfCache:           d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.options.0.no_cf_cache", idx)).(bool),
 					ResetVolume:         d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.options.0.reset_volume", idx)).(bool),
@@ -1077,7 +1035,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 				codefreshCronTrigger.Options = &options
 			}
 			if _, ok := d.GetOk(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment", idx)); ok {
-				triggerRuntime := cfClient.RuntimeEnvironment{
+				triggerRuntime := cfclient.RuntimeEnvironment{
 					Name:                     d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment.0.name", idx)).(string),
 					Memory:                   d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment.0.memory", idx)).(string),
 					CPU:                      d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment.0.cpu", idx)).(string),
@@ -1130,7 +1088,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 // Typically, unmarshalling the YAML string is problematic because the order of the attributes is not preserved.
 // Namely, we care a lot about the order of the steps and stages attributes.
 // Luckily, the yj package introduces a MapSlice type that preserves the order Map items (see utils.go).
-func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfClient.Pipeline) error {
+func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfclient.Pipeline) error {
 	for _, attribute := range []string{"stages", "steps", "hooks"} {
 		yamlString, err := yq(fmt.Sprintf(".%s", attribute), originalYamlString)
 		if err != nil {
@@ -1146,15 +1104,15 @@ func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipe
 
 		switch attribute {
 		case "stages":
-			pipeline.Spec.Stages = &cfClient.Stages{
+			pipeline.Spec.Stages = &cfclient.Stages{
 				Stages: attributeJson,
 			}
 		case "steps":
-			pipeline.Spec.Steps = &cfClient.Steps{
+			pipeline.Spec.Steps = &cfclient.Steps{
 				Steps: attributeJson,
 			}
 		case "hooks":
-			pipeline.Spec.Hooks = &cfClient.Hooks{
+			pipeline.Spec.Hooks = &cfclient.Hooks{
 				Hooks: attributeJson,
 			}
 		}

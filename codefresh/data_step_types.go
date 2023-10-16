@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -39,14 +39,14 @@ func dataSourceStepTypes() *schema.Resource {
 
 func dataSourceStepTypesRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 	var err error
 	var versions []string
 	stepTypesIdentifier := d.Get("name").(string)
 
 	d.SetId(stepTypesIdentifier)
 	if versions, err = client.GetStepTypesVersions(stepTypesIdentifier); err == nil {
-		var stepVersions cfClient.StepTypesVersions
+		var stepVersions cfclient.StepTypesVersions
 		stepVersions.Name = stepTypesIdentifier
 		d.Set("versions", versions)
 		for _, version := range versions {
@@ -54,7 +54,7 @@ func dataSourceStepTypesRead(d *schema.ResourceData, meta interface{}) error {
 			if err != nil {
 				log.Printf("[DEBUG] Skipping version %v due to error %v", version, err)
 			} else {
-				stepVersion := cfClient.StepTypesVersion{
+				stepVersion := cfclient.StepTypesVersion{
 					VersionNumber: version,
 					StepTypes:     *stepTypes,
 				}
@@ -68,7 +68,7 @@ func dataSourceStepTypesRead(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func mapDataSetTypesToResource(stepTypesVersions cfClient.StepTypesVersions, d *schema.ResourceData) error {
+func mapDataSetTypesToResource(stepTypesVersions cfclient.StepTypesVersions, d *schema.ResourceData) error {
 	err := d.Set("name", stepTypesVersions.Name)
 	if err != nil {
 		return err

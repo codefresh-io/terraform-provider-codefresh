@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver"
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	ghodss "github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -95,14 +95,14 @@ func normalizeYamlStringStepTypes(yamlString interface{}) (string, error) {
 
 func resourceStepTypesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 	stepTypes := *mapResourceToStepTypesVersions(d)
 
 	name := d.Get("name").(string)
 	d.SetId(name)
 
 	// Extract all the versions so that we can order the set based on semantic versioning
-	mapVersion := make(map[string]cfClient.StepTypes)
+	mapVersion := make(map[string]cfclient.StepTypes)
 	var versions []string
 	for _, version := range stepTypes.Versions {
 		version.StepTypes.Metadata["name"] = name
@@ -129,7 +129,7 @@ func resourceStepTypesCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceStepTypesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	stepTypesIdentifier := d.Id()
 	if stepTypesIdentifier == "" {
@@ -146,7 +146,7 @@ func resourceStepTypesRead(ctx context.Context, d *schema.ResourceData, meta int
 		return nil
 	}
 
-	var stepVersions cfClient.StepTypesVersions
+	var stepVersions cfclient.StepTypesVersions
 	name := stepTypes.Metadata["name"].(string)
 	stepVersions.Name = name
 	versions := d.Get("version").(*schema.Set)
@@ -161,7 +161,7 @@ func resourceStepTypesRead(ctx context.Context, d *schema.ResourceData, meta int
 				log.Printf("[DEBUG] StepVersion not found %v. Error = %v", stepTypesIdentifier+":"+version, err)
 			} else {
 				cleanUpStepFromTransientValues(stepTypes, name, version)
-				stepVersion := cfClient.StepTypesVersion{
+				stepVersion := cfclient.StepTypesVersion{
 					VersionNumber: version,
 					StepTypes:     *stepTypes,
 				}
@@ -182,10 +182,10 @@ func resourceStepTypesRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceStepTypesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 	name := d.Get("name").(string)
 	stepTypesVersions := mapResourceToStepTypesVersions(d)
-	mapVersionToCreate := make(map[string]cfClient.StepTypes)
+	mapVersionToCreate := make(map[string]cfclient.StepTypes)
 	versionsPreviouslyDefined := make(map[string]string)
 	versionsDefined := make(map[string]string)
 	// Name is set to ForceNew so if we reach this function "version" is changed. Skipping check on HasChange
@@ -254,7 +254,7 @@ func resourceStepTypesUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceStepTypesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 	log.Printf("[DEBUG] Deleting step type: %s", d.Id())
 	err := client.DeleteStepTypes(d.Id())
 	if err != nil {
@@ -264,7 +264,7 @@ func resourceStepTypesDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func cleanUpStepFromTransientValues(stepTypes *cfClient.StepTypes, name, version string) {
+func cleanUpStepFromTransientValues(stepTypes *cfclient.StepTypes, name, version string) {
 	if stepTypes != nil {
 		// Remove transient attributes from metadata
 		for _, attribute := range []string{"created_at", "accountId", "id", "updated_at"} {
@@ -310,7 +310,7 @@ func sortVersions(versions []string) []*semver.Version {
 	return vs
 }
 
-func mapStepTypesVersionsToResource(stepTypesVersions cfClient.StepTypesVersions, d *schema.ResourceData) error {
+func mapStepTypesVersionsToResource(stepTypesVersions cfclient.StepTypesVersions, d *schema.ResourceData) error {
 
 	err := d.Set("name", stepTypesVersions.Name)
 	if err != nil {
@@ -328,7 +328,7 @@ func resourceStepTypesVersionsConfigHash(v interface{}) int {
 	m := v.(map[string]interface{})
 
 	buf.WriteString(fmt.Sprintf("%s", m["version_number"].(string)))
-	var stepTypes cfClient.StepTypes
+	var stepTypes cfclient.StepTypes
 	stepTypesYaml := m["step_types_yaml"].(string)
 	ghodss.Unmarshal([]byte(stepTypesYaml), &stepTypes)
 	// Remove runtime attributes, name and version to avoid discrepancies when comparing hashes
@@ -339,7 +339,7 @@ func resourceStepTypesVersionsConfigHash(v interface{}) int {
 	return hash
 }
 
-func flattenVersions(name string, versions []cfClient.StepTypesVersion) *schema.Set {
+func flattenVersions(name string, versions []cfclient.StepTypesVersion) *schema.Set {
 
 	stepVersions := make([]interface{}, 0)
 	for _, version := range versions {
@@ -358,15 +358,15 @@ func flattenVersions(name string, versions []cfClient.StepTypesVersion) *schema.
 	return schema.NewSet(resourceStepTypesVersionsConfigHash, stepVersions)
 }
 
-func mapResourceToStepTypesVersions(d *schema.ResourceData) *cfClient.StepTypesVersions {
-	var stepTypesVersions cfClient.StepTypesVersions
+func mapResourceToStepTypesVersions(d *schema.ResourceData) *cfclient.StepTypesVersions {
+	var stepTypesVersions cfclient.StepTypesVersions
 	stepTypesVersions.Name = d.Get("name").(string)
 	versions := d.Get("version").(*schema.Set)
 
 	for _, step := range versions.List() {
 		version := step.(map[string]interface{})["version_number"].(string)
 		if version != "" {
-			var stepTypes cfClient.StepTypes
+			var stepTypes cfclient.StepTypes
 			stepTypesYaml := step.(map[string]interface{})["step_types_yaml"].(string)
 
 			err := ghodss.Unmarshal([]byte(stepTypesYaml), &stepTypes)
@@ -375,7 +375,7 @@ func mapResourceToStepTypesVersions(d *schema.ResourceData) *cfClient.StepTypesV
 			}
 
 			cleanUpStepFromTransientValues(&stepTypes, stepTypesVersions.Name, version)
-			stepVersion := cfClient.StepTypesVersion{
+			stepVersion := cfclient.StepTypesVersion{
 				VersionNumber: version,
 				StepTypes:     stepTypes,
 			}

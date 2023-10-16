@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -50,7 +50,7 @@ You are free to use projects as you see fit. For example, you could create a pro
 }
 
 func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	project := *mapResourceToProject(d)
 
@@ -66,7 +66,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	projectID := d.Id()
 	if projectID == "" {
@@ -88,7 +88,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	project := *mapResourceToProject(d)
 
@@ -101,7 +101,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 	// Adding a Retry backoff to address eventual consistency for the API
 	expBackoff := backoff.NewExponentialBackOff()
 	expBackoff.MaxElapsedTime = 2 * time.Second
@@ -120,7 +120,7 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mapProjectToResource(project *cfClient.Project, d *schema.ResourceData) error {
+func mapProjectToResource(project *cfclient.Project, d *schema.ResourceData) error {
 
 	err := d.Set("name", project.ProjectName)
 	if err != nil {
@@ -139,9 +139,9 @@ func mapProjectToResource(project *cfClient.Project, d *schema.ResourceData) err
 	return nil
 }
 
-func mapResourceToProject(d *schema.ResourceData) *cfClient.Project {
+func mapResourceToProject(d *schema.ResourceData) *cfclient.Project {
 	tags := d.Get("tags").(*schema.Set).List()
-	project := &cfClient.Project{
+	project := &cfclient.Project{
 		ID:          d.Id(),
 		ProjectName: d.Get("name").(string),
 		Tags:        convertStringArr(tags),

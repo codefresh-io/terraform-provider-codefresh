@@ -5,7 +5,7 @@ import (
 
 	storageContext "github.com/codefresh-io/terraform-provider-codefresh/codefresh/context"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -159,7 +159,7 @@ func resourceContext() *schema.Resource {
 
 func resourceContextCreate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 	resp, err := client.CreateContext(mapResourceToContext(d))
 	if err != nil {
 		log.Printf("[DEBUG] Error while creating context. Error = %v", err)
@@ -171,7 +171,7 @@ func resourceContextCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceContextRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	contextName := d.Id()
 
@@ -197,7 +197,7 @@ func resourceContextRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceContextUpdate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	context := *mapResourceToContext(d)
 	context.Metadata.Name = d.Id()
@@ -213,7 +213,7 @@ func resourceContextUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceContextDelete(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	err := client.DeleteContext(d.Id())
 	if err != nil {
@@ -223,7 +223,7 @@ func resourceContextDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mapContextToResource(context cfClient.Context, d *schema.ResourceData) error {
+func mapContextToResource(context cfclient.Context, d *schema.ResourceData) error {
 
 	err := d.Set("name", context.Metadata.Name)
 	if err != nil {
@@ -239,7 +239,7 @@ func mapContextToResource(context cfClient.Context, d *schema.ResourceData) erro
 	return nil
 }
 
-func flattenContextSpec(spec cfClient.ContextSpec) []interface{} {
+func flattenContextSpec(spec cfclient.ContextSpec) []interface{} {
 
 	var res = make([]interface{}, 0)
 	m := make(map[string]interface{})
@@ -262,7 +262,7 @@ func flattenContextSpec(spec cfClient.ContextSpec) []interface{} {
 	return res
 }
 
-func flattenContextConfig(spec cfClient.ContextSpec) []interface{} {
+func flattenContextConfig(spec cfclient.ContextSpec) []interface{} {
 	var res = make([]interface{}, 0)
 	m := make(map[string]interface{})
 	m["data"] = spec.Data
@@ -270,7 +270,7 @@ func flattenContextConfig(spec cfClient.ContextSpec) []interface{} {
 	return res
 }
 
-func flattenContextYaml(spec cfClient.ContextSpec) []interface{} {
+func flattenContextYaml(spec cfclient.ContextSpec) []interface{} {
 	var res = make([]interface{}, 0)
 	m := make(map[string]interface{})
 	data, err := yaml.Marshal(spec.Data)
@@ -282,7 +282,7 @@ func flattenContextYaml(spec cfClient.ContextSpec) []interface{} {
 	return res
 }
 
-func mapResourceToContext(d *schema.ResourceData) *cfClient.Context {
+func mapResourceToContext(d *schema.ResourceData) *cfclient.Context {
 
 	var normalizedContextType string
 	var normalizedContextData map[string]interface{}
@@ -310,11 +310,11 @@ func mapResourceToContext(d *schema.ResourceData) *cfClient.Context {
 		normalizedContextData = storageContext.ConvertAzureStorageContext(data.([]interface{}))
 	}
 
-	return &cfClient.Context{
-		Metadata: cfClient.ContextMetadata{
+	return &cfclient.Context{
+		Metadata: cfclient.ContextMetadata{
 			Name: d.Get("name").(string),
 		},
-		Spec: cfClient.ContextSpec{
+		Spec: cfclient.ContextSpec{
 			Type: normalizedContextType,
 			Data: normalizedContextData,
 		},

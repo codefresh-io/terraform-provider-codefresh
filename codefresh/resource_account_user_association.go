@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -58,7 +58,7 @@ func resourceAccountUserAssociation() *schema.Resource {
 }
 
 func resourceAccountUserAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 	currentAccount, err := client.GetCurrentAccount()
 	if err != nil {
 		return err
@@ -84,7 +84,7 @@ func resourceAccountUserAssociationCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAccountUserAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 	currentAccount, err := client.GetCurrentAccount()
 	if err != nil {
 		return err
@@ -118,7 +118,7 @@ func resourceAccountUserAssociationRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAccountUserAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	currentAccount, err := client.GetCurrentAccount()
 	if err != nil {
@@ -153,7 +153,7 @@ func resourceAccountUserAssociationUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAccountUserAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	currentAccount, err := client.GetCurrentAccount()
 	if err != nil {

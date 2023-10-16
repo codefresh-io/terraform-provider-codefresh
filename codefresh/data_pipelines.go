@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"time"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -59,7 +59,7 @@ func dataSourcePipelines() *schema.Resource {
 
 func dataSourcePipelinesRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	pipelines, err := client.GetPipelines()
 	if err != nil {
@@ -76,7 +76,7 @@ func dataSourcePipelinesRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mapDataPipelinesToResource(pipelines []cfClient.Pipeline, d *schema.ResourceData) error {
+func mapDataPipelinesToResource(pipelines []cfclient.Pipeline, d *schema.ResourceData) error {
 	var res = make([]map[string]interface{}, len(pipelines))
 	for i, p := range pipelines {
 		m := make(map[string]interface{})

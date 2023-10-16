@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	funk "github.com/thoas/go-funk"
@@ -114,7 +114,7 @@ func resourcePermissionCustomDiff(ctx context.Context, diff *schema.ResourceDiff
 }
 
 func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	permission := *mapResourceToPermission(d)
 
@@ -133,7 +133,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	permissionID := d.Id()
 	if permissionID == "" {
@@ -155,7 +155,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	permission := *mapResourceToPermission(d)
 	resp, err := client.CreatePermission(&permission)
@@ -173,7 +173,7 @@ func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	err := client.DeletePermission(d.Id())
 	if err != nil {
@@ -183,7 +183,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mapPermissionToResource(permission *cfClient.Permission, d *schema.ResourceData) error {
+func mapPermissionToResource(permission *cfclient.Permission, d *schema.ResourceData) error {
 
 	err := d.Set("_id", permission.ID)
 	if err != nil {
@@ -213,7 +213,7 @@ func mapPermissionToResource(permission *cfClient.Permission, d *schema.Resource
 	return nil
 }
 
-func mapResourceToPermission(d *schema.ResourceData) *cfClient.Permission {
+func mapResourceToPermission(d *schema.ResourceData) *cfclient.Permission {
 
 	tagsI := d.Get("tags").(*schema.Set).List()
 	var tags []string
@@ -222,7 +222,7 @@ func mapResourceToPermission(d *schema.ResourceData) *cfClient.Permission {
 	} else {
 		tags = []string{"*", "untagged"}
 	}
-	permission := &cfClient.Permission{
+	permission := &cfclient.Permission{
 		ID:       d.Id(),
 		Team:     d.Get("team").(string),
 		Action:   d.Get("action").(string),

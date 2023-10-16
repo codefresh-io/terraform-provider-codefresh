@@ -3,7 +3,7 @@ package codefresh
 import (
 	"fmt"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -85,7 +85,7 @@ func IdpSchema() map[string]*schema.Schema {
 
 func dataSourceIdpRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	idps, err := client.GetIDPs()
 	if err != nil {
@@ -126,7 +126,7 @@ func dataSourceIdpRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mapDataIdpToResource(idp cfClient.IDP, d *schema.ResourceData) error {
+func mapDataIdpToResource(idp cfclient.IDP, d *schema.ResourceData) error {
 
 	d.SetId(idp.ID)
 

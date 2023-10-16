@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/Masterminds/semver"
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,7 +20,7 @@ var stepTypesNamePrefix = "TerraformAccTest_"
 
 // Unit Testing
 func TestCleanUpStepFromTransientValues(t *testing.T) {
-	stepTypes := cfClient.StepTypes{
+	stepTypes := cfclient.StepTypes{
 		Metadata: map[string]interface{}{
 			"accountId":  "test",
 			"created_at": "test",
@@ -101,9 +101,9 @@ func TestExtractSteps(t *testing.T) {
 // Acceptance testing
 func TestAccCodefreshStepTypes(t *testing.T) {
 	// Adding check if we are executing Acceptance test
-	// This is needed to ensure we have cfClient initialised so that we can retrieve the accountName dynamically
+	// This is needed to ensure we have cfclient initialised so that we can retrieve the accountName dynamically
 	if os.Getenv("TF_ACC") == "1" {
-		apiClient := testAccProvider.Meta().(*cfClient.Client)
+		apiClient := testAccProvider.Meta().(*cfclient.Client)
 		var accountName string
 		if account, err := apiClient.GetCurrentAccount(); err == nil {
 			accountName = account.Name
@@ -167,7 +167,7 @@ func testAccCheckCodefreshStepTypesExists(resource string) resource.TestCheckFun
 
 		stepTypeID := rs.Primary.ID
 
-		apiClient := testAccProvider.Meta().(*cfClient.Client)
+		apiClient := testAccProvider.Meta().(*cfclient.Client)
 		_, err := apiClient.GetStepTypes(stepTypeID)
 
 		if err != nil {
@@ -178,7 +178,7 @@ func testAccCheckCodefreshStepTypesExists(resource string) resource.TestCheckFun
 }
 
 func testAccCheckCodefreshStepTypesDestroy(s *terraform.State) error {
-	apiClient := testAccProvider.Meta().(*cfClient.Client)
+	apiClient := testAccProvider.Meta().(*cfclient.Client)
 
 	for _, rs := range s.RootModule().Resources {
 

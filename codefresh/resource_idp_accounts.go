@@ -1,7 +1,7 @@
 package codefresh
 
 import (
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -38,7 +38,7 @@ Because of the current Codefresh API limitation it's impossible to remove accoun
 
 func resourceAccountIDPCreate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	accountIds := convertStringArr(d.Get("account_ids").(*schema.Set).List())
 
@@ -60,7 +60,7 @@ func resourceAccountIDPCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAccountIDPRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	idpID := d.Id()
 	if idpID == "" {
@@ -94,7 +94,7 @@ func resourceAccountIDPDelete(_ *schema.ResourceData, _ interface{}) error {
 
 func resourceAccountIDPUpdate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	idpID := d.Id()
 
@@ -108,7 +108,7 @@ func resourceAccountIDPUpdate(d *schema.ResourceData, meta interface{}) error {
 	desiredAccounts := convertStringArr(d.Get("account_ids").(*schema.Set).List())
 
 	for _, account := range desiredAccounts {
-		if ok := cfClient.FindInSlice(existingAccounts, account); !ok {
+		if ok := cfclient.FindInSlice(existingAccounts, account); !ok {
 			client.AddAccountToIDP(account, idp.ID)
 		}
 	}

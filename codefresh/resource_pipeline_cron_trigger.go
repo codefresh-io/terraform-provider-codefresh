@@ -6,22 +6,21 @@ import (
 	"regexp"
 	"strings"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/helper/validation"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/helper/validation/validationopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/robfig/cron"
 )
 
 func resourcePipelineCronTrigger() *schema.Resource {
 	return &schema.Resource{
 		DeprecationMessage: "This resource is deprecated and will be removed in a future version of the Codefresh Terraform provider. Please use the cron_triggers attribute of the codefresh_pipeline resource instead.",
-		Description: "This resource is used to create cron-based triggers for pipeilnes.",
-		Create:      resourcePipelineCronTriggerCreate,
-		Read:        resourcePipelineCronTriggerRead,
-		Update:      resourcePipelineCronTriggerUpdate,
-		Delete:      resourcePipelineCronTriggerDelete,
+		Description:        "This resource is used to create cron-based triggers for pipeilnes.",
+		Create:             resourcePipelineCronTriggerCreate,
+		Read:               resourcePipelineCronTriggerRead,
+		Update:             resourcePipelineCronTriggerUpdate,
+		Delete:             resourcePipelineCronTriggerDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ",")
@@ -44,43 +43,18 @@ func resourcePipelineCronTrigger() *schema.Resource {
 				Required: true,
 			},
 			"expression": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateDiagFunc: func(v interface{}, path cty.Path) (diags diag.Diagnostics) {
-					expression := v.(string)
-
-					// Cron expression requirements: 6 fields, with ability to use descriptors (e.g. @yearly)
-					parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
-					if _, err := parser.Parse(expression); err != nil {
-						diags = append(diags, diag.Diagnostic{
-							Severity: diag.Error,
-							Summary:  "Invalid cron expression.",
-							Detail:   fmt.Sprintf("The cron expression %q is invalid: %s", expression, err),
-						})
-					}
-
-					return
-				},
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validation.CronExpression(),
 			},
 			"message": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateDiagFunc: func(v interface{}, path cty.Path) (diags diag.Diagnostics) {
-					message := v.(string)
-
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validation.StringMatchesRegExp(
 					// https://github.com/codefresh-io/hermes/blob/6d75b347cb8ff471ce970a766b2285788e5e19fe/pkg/backend/dev_compose_types.json#L226
-					re := regexp.MustCompile(`^[a-zA-Z0-9_+\s-#?.:]{2,128}$`)
-
-					if !re.MatchString(message) {
-						diags = append(diags, diag.Diagnostic{
-							Severity: diag.Error,
-							Summary:  "Invalid message.",
-							Detail:   fmt.Sprintf("The message %q is invalid (must match %q).", message, re.String()),
-						})
-					}
-
-					return
-				},
+					`^[a-zA-Z0-9_+\s-#?.:]{2,128}$`,
+					validationopts.WithSummary("Invalid cron trigger message"),
+				),
 			},
 		},
 		// Force new resource if any field changes. This is because the Codefresh API does not support updating cron triggers.
@@ -99,9 +73,9 @@ func resourcePipelineCronTrigger() *schema.Resource {
 }
 
 func resourcePipelineCronTriggerCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
-	eventString, err := client.CreateHermesTriggerEvent(&cfClient.HermesTriggerEvent{
+	eventString, err := client.CreateHermesTriggerEvent(&cfclient.HermesTriggerEvent{
 		Type:   "cron",
 		Kind:   "codefresh",
 		Secret: "!generate",
@@ -128,7 +102,7 @@ func resourcePipelineCronTriggerCreate(d *schema.ResourceData, meta interface{})
 
 func resourcePipelineCronTriggerRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	event := d.Id()
 	pipeline := d.Get("pipeline_id").(string)
@@ -152,7 +126,7 @@ func resourcePipelineCronTriggerUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourcePipelineCronTriggerDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	hermesTrigger := *mapResourceToPipelineCronTrigger(d)
 
@@ -164,7 +138,7 @@ func resourcePipelineCronTriggerDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func mapPipelineCronTriggerToResource(hermesTrigger *cfClient.HermesTrigger, d *schema.ResourceData) error {
+func mapPipelineCronTriggerToResource(hermesTrigger *cfclient.HermesTrigger, d *schema.ResourceData) error {
 
 	d.SetId(hermesTrigger.Event)
 	d.Set("pipeline_id", hermesTrigger.PipelineID)
@@ -182,10 +156,10 @@ func mapPipelineCronTriggerToResource(hermesTrigger *cfClient.HermesTrigger, d *
 	return nil
 }
 
-func mapResourceToPipelineCronTrigger(d *schema.ResourceData) *cfClient.HermesTrigger {
+func mapResourceToPipelineCronTrigger(d *schema.ResourceData) *cfclient.HermesTrigger {
 
 	triggerId := d.Id()
-	hermesTrigger := &cfClient.HermesTrigger{
+	hermesTrigger := &cfclient.HermesTrigger{
 		Event:      triggerId,
 		PipelineID: d.Get("pipeline_id").(string),
 	}

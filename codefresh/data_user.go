@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -18,7 +18,7 @@ func dataSourceUser() *schema.Resource {
 
 func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	users, err := client.GetAllUsers()
 	if err != nil {
@@ -43,7 +43,7 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mapDataUserToResource(user cfClient.User, d *schema.ResourceData) error {
+func mapDataUserToResource(user cfclient.User, d *schema.ResourceData) error {
 
 	d.SetId(user.ID)
 	d.Set("user_id", user.ID)
@@ -63,7 +63,7 @@ func mapDataUserToResource(user cfClient.User, d *schema.ResourceData) error {
 	return nil
 }
 
-func flattenPersonal(personal *cfClient.Personal) []map[string]interface{} {
+func flattenPersonal(personal *cfclient.Personal) []map[string]interface{} {
 	return []map[string]interface{}{
 		{
 			"first_name":   personal.FirstName,
@@ -75,7 +75,7 @@ func flattenPersonal(personal *cfClient.Personal) []map[string]interface{} {
 	}
 }
 
-func flattenLogins(logins *[]cfClient.Login) []map[string]interface{} {
+func flattenLogins(logins *[]cfclient.Login) []map[string]interface{} {
 
 	var res = make([]map[string]interface{}, len(*logins))
 	for i, login := range *logins {
