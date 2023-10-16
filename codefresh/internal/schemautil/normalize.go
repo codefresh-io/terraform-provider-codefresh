@@ -47,7 +47,6 @@ func NormalizeYamlString(yamlString interface{}) (string, error) {
 	return string(bytes[:]), nil
 }
 
-
 // MustNormalizeYamlString is the same as NormalizeYamlString, but will log an error (legacy logging) instead of returning it.
 func MustNormalizeYamlString(yamlString interface{}) string {
 	normalizedYamlString, err := NormalizeYamlString(yamlString)

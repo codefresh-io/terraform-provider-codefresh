@@ -154,7 +154,7 @@ func mapDataIdpToResource(idp cfclient.IDP, d *schema.ResourceData) error {
 	//d.Set("redirectUrl", idp.RedirectUrl) //     string   `json:"redirectUrl,omitempty"`
 	//d.Set("refreshTokenURL", idp.RefreshTokenURL) // string   `json:"refreshTokenURL,omitempty"`
 	d.Set("scopes", datautil.FlattenStringArr(idp.Scopes)) //          []string `json:"scopes,omitempty"`
-	d.Set("tenant", idp.Tenant)                   //          string   `json:"tenant,omitempty"`
+	d.Set("tenant", idp.Tenant)                            //          string   `json:"tenant,omitempty"`
 	//d.Set("tokenSecret", idp.TokenSecret) //     string   `json:"tokenSecret,omitempty"`
 	//d.Set("tokenURL", idp.TokenURL) //        string   `json:"tokenURL,omitempty"`
 	//d.Set("userProfileURL", idp.UserProfileURL) //  string   `json:"userProfileURL,omitempty"`
