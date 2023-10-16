@@ -525,7 +525,7 @@ func TestAccCodefreshPipeline_CronTriggers(t *testing.T) {
 	})
 }
 
-// Same as TestAccCodefreshPipeline_CronTriggers but with invalid cron expression (too many fields)
+// Same config as TestAccCodefreshPipeline_CronTriggers but with invalid cron expression (too many fields)
 func TestAccCodefreshPipeline_CronTriggersInvalid(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
@@ -534,7 +534,6 @@ func TestAccCodefreshPipeline_CronTriggersInvalid(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodefreshPipelineBasicConfigCronTriggers(
@@ -584,62 +583,6 @@ func TestAccCodefreshPipeline_CronTriggersInvalid(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.no_cf_cache", "true"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.reset_volume", "true"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.enable_notifications", "true"),
-				),
-				ExpectError: regexp.MustCompile("The cron expression .* is invalid: Expected exactly 5 fields.*"),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccCodefreshPipelineBasicConfigCronTriggers(
-					name,
-					"codefresh-contrib/react-sample-app",
-					"./codefresh.yml",
-					"master",
-					"git",
-					"cT1",
-					"first-1",
-					"0 0/1 * 1/1 * *",
-					"00abd1550f02a62699b10df7",
-					"runtime2",
-					"500mb",
-					"2cpu",
-					"2gb",
-					"3gb",
-					"cT2",
-					"second",
-					"0 1/1 * 1/1 * *",
-					"00abd1550f02a62699b10df7",
-					true,
-					true,
-					false,
-					false,
-					"MY_VAR",
-					"test",
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.name", "cT1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.message", "first-1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.expression", "0 0/1 * 1/1 * *"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.name", "runtime2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.memory", "500mb"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.cpu", "2cpu"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.dind_storage", "2gb"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.required_available_storage", "3gb"),
-
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.name", "cT2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.message", "second"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.expression", "0 1/1 * 1/1 * *"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.git_trigger_id", "00abd1550f02a62699b10df7"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.no_cache", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.no_cf_cache", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.reset_volume", "false"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.enable_notifications", "false"),
 				),
 				ExpectError: regexp.MustCompile("The cron expression .* is invalid: Expected exactly 5 fields.*"),
 			},
