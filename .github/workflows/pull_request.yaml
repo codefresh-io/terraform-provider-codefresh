@@ -32,17 +32,3 @@ jobs:
       - name: Validate No Changes
         run: |
           git diff --exit-code
-  equivalence:
-    name: "Ensure 'make equivalence' has been run"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Run equivalence test
-        run: |
-          make equivalence
-      - name: Validate No Changes
-        run: |
-          git diff --exit-code

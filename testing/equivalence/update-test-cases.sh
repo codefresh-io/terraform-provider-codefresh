@@ -2,10 +2,15 @@
 
 source $(realpath $(dirname $0))/lib.sh
 
-if [[ "$OSTYPE" == "darwin"* ]] && ! command -v grealpath &> /dev/null;
+if [[ "$OSTYPE" == "darwin"* ]];
 then
-    print_style "ERROR: This script requires grealpath when run on Mac. Please install it with 'brew install coreutils'\n" "danger"
-    exit 1
+    if ! command -v grealpath &> /dev/null;
+    then
+        print_style "ERROR: This script requires grealpath when run on Mac. Please install it with 'brew install coreutils'\n" "danger"
+        exit 1
+    else
+        alias realpath=grealpath
+    fi
 fi
 
 test_case_dirname="test_cases"
