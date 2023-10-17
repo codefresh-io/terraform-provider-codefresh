@@ -1,13 +1,13 @@
 resource "codefresh_context" "gcs" {
   for_each = toset(["create"])
-  name = "gcs"
+  name     = "gcs"
   spec {
     storagegc {
       data {
         auth {
           type = "basic"
           json_config = tomap({
-            "config": "cf"
+            "config" : "cf"
           })
         }
       }
@@ -17,14 +17,14 @@ resource "codefresh_context" "gcs" {
 
 resource "codefresh_context" "s3" {
   for_each = toset(["create"])
-  name = "s3"
+  name     = "s3"
   spec {
     storages3 {
       data {
         auth {
           type = "basic"
           json_config = tomap({
-            "config": "cf"
+            "config" : "cf"
           })
         }
       }
@@ -34,14 +34,14 @@ resource "codefresh_context" "s3" {
 
 resource "codefresh_context" "azure" {
   for_each = toset(["create"])
-  name = "azure"
+  name     = "azure"
   spec {
     storageazuref {
       data {
         auth {
-          type = "basic"
+          type         = "basic"
           account_name = "accName"
-          account_key = "accKey"
+          account_key  = "accKey"
         }
       }
     }

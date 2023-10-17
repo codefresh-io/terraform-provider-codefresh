@@ -12,10 +12,10 @@ resource "codefresh_abac_rules" "app_rule" {
   actions     = ["REFRESH", "SYNC", "TERMINATE_SYNC", "VIEW_POD_LOGS", "APP_ROLLBACK"]
 
   attribute {
-    name = "LABEL"
-    key = "KEY"
+    name  = "LABEL"
+    key   = "KEY"
     value = "VALUE"
   }
 
-  tags        = ["dev", "untagged"]
+  tags = ["dev", "untagged"]
 }
