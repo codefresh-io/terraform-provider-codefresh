@@ -18,15 +18,15 @@ if [[ ! -d ${test_case_dirname} ]]; then
     mkdir -p ${test_case_dirname}
 fi
 
-for i in $(find $(dirname $(grealpath $0))/../../examples -mindepth 1 -prune -path '**/*/.*' -type d); do
+for i in $(find $(dirname $(grealpath $0))/../../examples -mindepth 1 -maxdepth 1 -type d -not -path "**/.modules"); do
     print_style "Found example directory: "
-    print_style "${i}\n"
+    print_style "$(grealpath --relative-to=$(dirname $0) ${i})\n"
     expected_test_dir="$(dirname $(grealpath $0))/${test_case_dirname}/${test_case_prefix}$(basename ${i})"
 
     if [[ ! -d ${expected_test_dir} ]]; then
-        print_style "  * creating missing directory "
-        print_sytle "$(grealpath --relative-to=$(dirname $0) ${expected_test_dir})\n" "warning"
         mkdir -p ${expected_test_dir}
+        print_style "  * created missing directory "
+        print_style "$(grealpath --relative-to=$(dirname $0) ${expected_test_dir})\n" "warning"
     fi
 
     print_style "  * updating "
