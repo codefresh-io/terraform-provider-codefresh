@@ -3,7 +3,7 @@ package codefresh
 import (
 	"fmt"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -31,8 +31,8 @@ func dataSourceContext() *schema.Resource {
 
 func dataSourceContextRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
-	var context *cfClient.Context
+	client := meta.(*cfclient.Client)
+	var context *cfclient.Context
 	var err error
 
 	if name, nameOk := d.GetOk("name"); nameOk {
@@ -51,7 +51,7 @@ func dataSourceContextRead(d *schema.ResourceData, meta interface{}) error {
 	return mapDataContextToResource(context, d)
 }
 
-func mapDataContextToResource(context *cfClient.Context, d *schema.ResourceData) error {
+func mapDataContextToResource(context *cfclient.Context, d *schema.ResourceData) error {
 
 	if context == nil || context.Metadata.Name == "" {
 		return fmt.Errorf("data.codefresh_context - failed to mapDataContextToResource")

@@ -3,7 +3,7 @@ package codefresh
 import (
 	"fmt"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -33,8 +33,8 @@ func dataSourceAccount() *schema.Resource {
 
 func dataSourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
-	var account *cfClient.Account
+	client := meta.(*cfclient.Client)
+	var account *cfclient.Account
 	var err error
 
 	if _id, _idOk := d.GetOk("_id"); _idOk {
@@ -55,7 +55,7 @@ func dataSourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	return mapDataAccountToResource(account, d)
 }
 
-func mapDataAccountToResource(account *cfClient.Account, d *schema.ResourceData) error {
+func mapDataAccountToResource(account *cfclient.Account, d *schema.ResourceData) error {
 
 	if account == nil || account.ID == "" {
 		return fmt.Errorf("data.codefresh_account - failed to mapDataAccountToResource")

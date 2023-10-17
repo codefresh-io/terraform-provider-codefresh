@@ -1,7 +1,7 @@
 package context
 
 import (
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -30,7 +30,7 @@ func ConvertAzureStorageContext(context []interface{}) map[string]interface{} {
 	return convertStorageContext(context, auth)
 }
 
-func flattenStorageContextConfig(spec cfClient.ContextSpec, auth map[string]interface{}) []interface{} {
+func flattenStorageContextConfig(spec cfclient.ContextSpec, auth map[string]interface{}) []interface{} {
 
 	var res = make([]interface{}, 0)
 	m := make(map[string]interface{})
@@ -51,14 +51,14 @@ func flattenStorageContextConfig(spec cfClient.ContextSpec, auth map[string]inte
 
 }
 
-func FlattenJsonConfigStorageContextConfig(spec cfClient.ContextSpec) []interface{} {
+func FlattenJsonConfigStorageContextConfig(spec cfclient.ContextSpec) []interface{} {
 	auth := make(map[string]interface{})
 	auth["json_config"] = spec.Data["auth"].(map[string]interface{})["jsonConfig"]
 	auth["type"] = spec.Data["type"]
 	return flattenStorageContextConfig(spec, auth)
 }
 
-func FlattenAzureStorageContextConfig(spec cfClient.ContextSpec) []interface{} {
+func FlattenAzureStorageContextConfig(spec cfclient.ContextSpec) []interface{} {
 	auth := make(map[string]interface{})
 	authParams := spec.Data["auth"].(map[string]interface{})
 	auth["account_name"] = authParams["accountName"]

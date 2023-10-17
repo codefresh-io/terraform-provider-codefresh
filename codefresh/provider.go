@@ -3,7 +3,7 @@ package codefresh
 import (
 	"fmt"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"os"
@@ -81,5 +81,5 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	if token == "" {
 		token = os.Getenv(ENV_CODEFRESH_API_KEY)
 	}
-	return cfClient.NewClient(apiURL, apiURLV2, token, ""), nil
+	return cfclient.NewClient(apiURL, apiURLV2, token, ""), nil
 }

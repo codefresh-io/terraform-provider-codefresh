@@ -3,7 +3,7 @@ package codefresh
 import (
 	"fmt"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -50,8 +50,8 @@ func dataSourceRegistry() *schema.Resource {
 
 func dataSourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
-	var registry *cfClient.Registry
+	client := meta.(*cfclient.Client)
+	var registry *cfclient.Registry
 	var err error
 
 	if name, nameOk := d.GetOk("name"); nameOk {
@@ -70,7 +70,7 @@ func dataSourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 	return mapDataRegistryToResource(registry, d)
 }
 
-func mapDataRegistryToResource(registry *cfClient.Registry, d *schema.ResourceData) error {
+func mapDataRegistryToResource(registry *cfclient.Registry, d *schema.ResourceData) error {
 
 	if registry == nil || registry.Name == "" {
 		return fmt.Errorf("data.codefresh_registry - failed to mapDataRegistryToResource")

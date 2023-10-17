@@ -2,10 +2,11 @@ package codefresh
 
 import (
 	"fmt"
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"strings"
 	"testing"
+
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	funk "github.com/thoas/go-funk"
@@ -61,7 +62,7 @@ func testAccCheckCodefreshAbacRulesExists(resource string) resource.TestCheckFun
 
 		abacRuleID := rs.Primary.ID
 
-		apiClient := testAccProvider.Meta().(*cfClient.Client)
+		apiClient := testAccProvider.Meta().(*cfclient.Client)
 		_, err := apiClient.GetAbacRuleByID(abacRuleID)
 
 		if err != nil {

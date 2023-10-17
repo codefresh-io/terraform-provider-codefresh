@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/acctestutil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,7 +17,7 @@ func testAccCodefreshAccountUserAssociationGenerateUserEmail() string {
 }
 
 func testAccCodefreshActivateUser(s *terraform.State, email string) error {
-	c := testAccProvider.Meta().(*cfClient.Client)
+	c := testAccProvider.Meta().(*cfclient.Client)
 	currentAccount, err := c.GetCurrentAccount()
 	if err != nil {
 		return fmt.Errorf("failed to get current account: %s", err)
@@ -94,7 +95,7 @@ func TestAccCodefreshAccountUserAssociation_StatusPending_Email_ForceNew(t *test
 			{
 				RefreshState: true,
 				Check: func(s *terraform.State) error {
-					resourceId, err = testAccGetResourceId(s, resourceName)
+					resourceId, err = acctestutil.GetResourceId(s, resourceName)
 					return err
 				},
 			},
@@ -110,7 +111,7 @@ func TestAccCodefreshAccountUserAssociation_StatusPending_Email_ForceNew(t *test
 				// Test that an email change on a pending user does NOT force a new resource
 				RefreshState: true,
 				Check: func(s *terraform.State) error {
-					newResourceId, err := testAccGetResourceId(s, resourceName)
+					newResourceId, err := acctestutil.GetResourceId(s, resourceName)
 					if err != nil {
 						return err
 					}
@@ -147,7 +148,7 @@ func TestAccCodefreshAccountUserAssociation_StatusNew_Email_ForceNew(t *testing.
 			{
 				RefreshState: true,
 				Check: func(s *terraform.State) error {
-					resourceId, err = testAccGetResourceId(s, resourceName)
+					resourceId, err = acctestutil.GetResourceId(s, resourceName)
 					return err
 				},
 			},
@@ -169,7 +170,7 @@ func TestAccCodefreshAccountUserAssociation_StatusNew_Email_ForceNew(t *testing.
 			{
 				RefreshState: true,
 				Check: func(s *terraform.State) error {
-					newResourceId, err := testAccGetResourceId(s, resourceName)
+					newResourceId, err := acctestutil.GetResourceId(s, resourceName)
 					if err != nil {
 						return err
 					}

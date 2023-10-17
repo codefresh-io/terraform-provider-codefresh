@@ -3,7 +3,7 @@ package codefresh
 import (
 	"fmt"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -48,8 +48,8 @@ func dataSourceTeam() *schema.Resource {
 
 func dataSourceTeamRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
-	var team *cfClient.Team
+	client := meta.(*cfclient.Client)
+	var team *cfclient.Team
 	var err error
 
 	if _id, _idOk := d.GetOk("_id"); _idOk {
@@ -71,7 +71,7 @@ func dataSourceTeamRead(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func mapDataTeamToResource(team *cfClient.Team, d *schema.ResourceData) error {
+func mapDataTeamToResource(team *cfclient.Team, d *schema.ResourceData) error {
 
 	if team == nil || team.ID == "" {
 		return fmt.Errorf("data.codefresh_team - failed to mapDataTeamToResource")

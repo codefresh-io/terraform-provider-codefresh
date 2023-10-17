@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -307,7 +307,7 @@ func resourceRegistry() *schema.Resource {
 
 func resourceRegistryCreate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 	resp, err := client.CreateRegistry(mapResourceToRegistry(d))
 	if err != nil {
 		log.Printf("[DEBUG] Error while creating registry. Error = %v", err)
@@ -319,7 +319,7 @@ func resourceRegistryCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	registryId := d.Id()
 
@@ -345,7 +345,7 @@ func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	registry := *mapResourceToRegistry(d)
 	registry.Id = d.Id()
@@ -361,7 +361,7 @@ func resourceRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceRegistryDelete(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	err := client.DeleteRegistry(d.Id())
 	if err != nil {
@@ -371,8 +371,8 @@ func resourceRegistryDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mapResourceToRegistry(d *schema.ResourceData) *cfClient.Registry {
-	registry := &cfClient.Registry{
+func mapResourceToRegistry(d *schema.ResourceData) *cfclient.Registry {
+	registry := &cfclient.Registry{
 		Id:               d.Id(),
 		Name:             d.Get("name").(string),
 		Kind:             d.Get("kind").(string),
@@ -452,7 +452,7 @@ func mapResourceToRegistry(d *schema.ResourceData) *cfClient.Registry {
 	return registry
 }
 
-func mapRegistryToResource(registry cfClient.Registry, d *schema.ResourceData) error {
+func mapRegistryToResource(registry cfclient.Registry, d *schema.ResourceData) error {
 	d.SetId(registry.Id)
 	d.Set("name", registry.Name)
 	d.Set("kind", registry.Kind)

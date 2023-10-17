@@ -4,7 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -75,7 +76,7 @@ A list of access scopes for the API key. The possible values:
 }
 
 func resourceApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	apiKey := *mapResourceToApiKey(d)
 	accountID := d.Get("account_id").(string)
@@ -117,7 +118,7 @@ func resourceApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceApiKeyRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	keyID := d.Id()
 	if keyID == "" {
@@ -147,7 +148,7 @@ func resourceApiKeyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApiKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	apiKey := *mapResourceToApiKey(d)
 
@@ -167,7 +168,7 @@ func resourceApiKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApiKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	token := d.Get("token").(string)
 	if token == "" {
@@ -182,7 +183,7 @@ func resourceApiKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mapApiKeyToResource(apiKey *cfClient.ApiKey, d *schema.ResourceData) error {
+func mapApiKeyToResource(apiKey *cfclient.ApiKey, d *schema.ResourceData) error {
 
 	err := d.Set("name", apiKey.Name)
 	if err != nil {
@@ -196,12 +197,12 @@ func mapApiKeyToResource(apiKey *cfClient.ApiKey, d *schema.ResourceData) error 
 	return nil
 }
 
-func mapResourceToApiKey(d *schema.ResourceData) *cfClient.ApiKey {
+func mapResourceToApiKey(d *schema.ResourceData) *cfclient.ApiKey {
 	scopes := d.Get("scopes").(*schema.Set).List()
-	apiKey := &cfClient.ApiKey{
+	apiKey := &cfclient.ApiKey{
 		ID:     d.Id(),
 		Name:   d.Get("name").(string),
-		Scopes: convertStringArr(scopes),
+		Scopes: datautil.ConvertStringArr(scopes),
 	}
 	return apiKey
 }

@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -118,7 +119,7 @@ func contains(slice []string, element string) bool {
 }
 
 func resourceGitopsAbacRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	abacRule := *mapResourceToGitopsAbacRule(d)
 
@@ -137,7 +138,7 @@ func resourceGitopsAbacRuleCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceGitopsAbacRuleRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	abacRuleID := d.Id()
 	if abacRuleID == "" {
@@ -159,7 +160,7 @@ func resourceGitopsAbacRuleRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceGitopsAbacRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	abacRule := *mapResourceToGitopsAbacRule(d)
 	resp, err := client.CreateAbacRule(&abacRule)
@@ -177,7 +178,7 @@ func resourceGitopsAbacRuleUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceGitopsAbacRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	_, err := client.DeleteAbacRule(d.Id())
 	if err != nil {
@@ -187,7 +188,7 @@ func resourceGitopsAbacRuleDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func flattenAttributes(attributes []cfClient.EntityAbacAttribute) []map[string]interface{} {
+func flattenAttributes(attributes []cfclient.EntityAbacAttribute) []map[string]interface{} {
 	var res = make([]map[string]interface{}, len(attributes))
 	for i, attribute := range attributes {
 		m := make(map[string]interface{})
@@ -199,7 +200,7 @@ func flattenAttributes(attributes []cfClient.EntityAbacAttribute) []map[string]i
 	return res
 }
 
-func mapGitopsAbacRuleToResource(abacRule *cfClient.GitopsAbacRule, d *schema.ResourceData) error {
+func mapGitopsAbacRuleToResource(abacRule *cfclient.GitopsAbacRule, d *schema.ResourceData) error {
 
 	err := d.Set("id", abacRule.ID)
 	if err != nil {
@@ -236,28 +237,28 @@ func mapGitopsAbacRuleToResource(abacRule *cfClient.GitopsAbacRule, d *schema.Re
 	return nil
 }
 
-func mapResourceToGitopsAbacRule(d *schema.ResourceData) *cfClient.GitopsAbacRule {
+func mapResourceToGitopsAbacRule(d *schema.ResourceData) *cfclient.GitopsAbacRule {
 
 	tagsI := d.Get("tags").(*schema.Set).List()
 	var tags []string
 	if len(tagsI) > 0 {
-		tags = convertStringArr(tagsI)
+		tags = datautil.ConvertStringArr(tagsI)
 	} else {
 		tags = []string{"*", "untagged"}
 	}
 
-	abacRule := &cfClient.GitopsAbacRule{
+	abacRule := &cfclient.GitopsAbacRule{
 		ID:         d.Id(),
 		EntityType: d.Get("entity_type").(string),
-		Teams:      convertStringArr(d.Get("teams").(*schema.Set).List()),
+		Teams:      datautil.ConvertStringArr(d.Get("teams").(*schema.Set).List()),
 		Tags:       tags,
-		Actions:    convertStringArr(d.Get("actions").(*schema.Set).List()),
-		Attributes: []cfClient.EntityAbacAttribute{},
+		Actions:    datautil.ConvertStringArr(d.Get("actions").(*schema.Set).List()),
+		Attributes: []cfclient.EntityAbacAttribute{},
 	}
 
 	attributes := d.Get("attribute").([]interface{})
 	for idx := range attributes {
-		attr := cfClient.EntityAbacAttribute{
+		attr := cfclient.EntityAbacAttribute{
 			Name:  d.Get(fmt.Sprintf("attribute.%v.name", idx)).(string),
 			Key:   d.Get(fmt.Sprintf("attribute.%v.key", idx)).(string),
 			Value: d.Get(fmt.Sprintf("attribute.%v.value", idx)).(string),

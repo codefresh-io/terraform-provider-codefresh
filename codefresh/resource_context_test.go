@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"testing"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -158,7 +158,7 @@ func testAccCheckCodefreshContextExists(resource string) resource.TestCheckFunc 
 
 		contextID := rs.Primary.ID
 
-		apiClient := testAccProvider.Meta().(*cfClient.Client)
+		apiClient := testAccProvider.Meta().(*cfclient.Client)
 		_, err := apiClient.GetContext(contextID)
 
 		if err != nil {
@@ -169,7 +169,7 @@ func testAccCheckCodefreshContextExists(resource string) resource.TestCheckFunc 
 }
 
 func testAccCheckCodefreshContextDestroy(s *terraform.State) error {
-	apiClient := testAccProvider.Meta().(*cfClient.Client)
+	apiClient := testAccProvider.Meta().(*cfclient.Client)
 
 	for _, rs := range s.RootModule().Resources {
 

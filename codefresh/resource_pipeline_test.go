@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"testing"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,7 +17,7 @@ var pipelineNamePrefix = "TerraformAccTest_"
 func TestAccCodefreshPipeline_basic(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -45,7 +45,7 @@ func TestAccCodefreshPipeline_basic(t *testing.T) {
 func TestAccCodefreshPipeline_Concurrency(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -82,7 +82,7 @@ func TestAccCodefreshPipeline_Concurrency(t *testing.T) {
 func TestAccCodefreshPipeline_Tags(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -109,7 +109,7 @@ func TestAccCodefreshPipeline_Tags(t *testing.T) {
 func TestAccCodefreshPipeline_Variables(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -145,7 +145,7 @@ func TestAccCodefreshPipeline_RuntimeEnvironment(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
 	runtimeName := "system/default/hybrid/k8s" // must be present in test environment
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -186,16 +186,16 @@ steps:
     commands:
       - echo Hello World Third Step`
 
-	expectedSpecAttributes := &cfClient.Spec{
-		Steps: &cfClient.Steps{
+	expectedSpecAttributes := &cfclient.Spec{
+		Steps: &cfclient.Steps{
 			Steps: `{"cc_firstStep":{"image":"alpine","commands":["echo Hello World First Step"]},"bb_secondStep":{"image":"alpine","commands":["echo Hello World Second jStep"]},"aa_secondStep":{"image":"alpine","commands":["echo Hello World Third Step"]}}`,
 		},
-		Stages: &cfClient.Stages{
+		Stages: &cfclient.Stages{
 			Stages: `[]`,
 		},
 	}
 
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -262,19 +262,19 @@ steps:
     commands:
       - echo Hello World Second Step`
 
-	expectedSpecAttributes := &cfClient.Spec{
-		Steps: &cfClient.Steps{
+	expectedSpecAttributes := &cfclient.Spec{
+		Steps: &cfclient.Steps{
 			Steps: `{"zz_firstStep":{"stage":"test","image":"alpine","commands":["echo Hello World First Step"]},"aa_secondStep":{"stage":"test","image":"alpine","commands":["echo Hello World Second Step"]}}`,
 		},
-		Stages: &cfClient.Stages{
+		Stages: &cfclient.Stages{
 			Stages: `["test"]`,
 		},
-		Hooks: &cfClient.Hooks{
+		Hooks: &cfclient.Hooks{
 			Hooks: `{"on_finish":{"steps":{"secondmycleanup":{"commands":["echo echo cleanup step"],"image":"alpine:3.9"},"firstmynotification":{"commands":["echo Notify slack"],"image":"cloudposse/slack-notifier"}}},"on_elected":{"exec":{"commands":["echo 'Creating an adhoc test environment'"],"image":"alpine:3.9"},"annotations":{"set":[{"annotations":[{"my_annotation_example1":10.45},{"my_string_annotation":"Hello World"}],"entity_type":"build"}]}}}`,
 		},
 	}
 
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -302,7 +302,7 @@ steps:
 func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -409,12 +409,131 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 func TestAccCodefreshPipeline_CronTriggers(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineBasicConfigCronTriggers(
+					name,
+					"codefresh-contrib/react-sample-app",
+					"./codefresh.yml",
+					"master",
+					"git",
+					"cT1",
+					"first",
+					"0/1 * 1/1 * *",
+					"64abd1550f02a62699b10df7",
+					"runtime1",
+					"100mb",
+					"1cpu",
+					"1gb",
+					"1gb",
+					"cT2",
+					"second",
+					"0/1 * 1/1 * *",
+					"64abd1550f02a62699b10df7",
+					true,
+					true,
+					true,
+					true,
+					"MY_VAR",
+					"test",
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.name", "cT1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.message", "first"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.expression", "0/1 * 1/1 * *"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.name", "runtime1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.memory", "100mb"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.cpu", "1cpu"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.dind_storage", "1gb"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.required_available_storage", "1gb"),
+
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.name", "cT2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.message", "second"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.expression", "0/1 * 1/1 * *"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.git_trigger_id", "64abd1550f02a62699b10df7"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.no_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.no_cf_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.reset_volume", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.enable_notifications", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodefreshPipelineBasicConfigCronTriggers(
+					name,
+					"codefresh-contrib/react-sample-app",
+					"./codefresh.yml",
+					"master",
+					"git",
+					"cT1",
+					"first-1",
+					"0/1 * 1/1 * *",
+					"00abd1550f02a62699b10df7",
+					"runtime2",
+					"500mb",
+					"2cpu",
+					"2gb",
+					"3gb",
+					"cT2",
+					"second",
+					"1/1 * 1/1 * *",
+					"00abd1550f02a62699b10df7",
+					true,
+					true,
+					false,
+					false,
+					"MY_VAR",
+					"test",
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.name", "cT1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.message", "first-1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.expression", "0/1 * 1/1 * *"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.name", "runtime2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.memory", "500mb"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.cpu", "2cpu"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.dind_storage", "2gb"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.required_available_storage", "3gb"),
+
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.name", "cT2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.message", "second"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.expression", "1/1 * 1/1 * *"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.git_trigger_id", "00abd1550f02a62699b10df7"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.no_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.no_cf_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.reset_volume", "false"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.enable_notifications", "false"),
+				),
+			},
+		},
+	})
+}
+
+// Same config as TestAccCodefreshPipeline_CronTriggers but with invalid cron expression (too many fields)
+func TestAccCodefreshPipeline_CronTriggersInvalid(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+	var pipeline cfclient.Pipeline
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodefreshPipelineBasicConfigCronTriggers(
@@ -465,61 +584,7 @@ func TestAccCodefreshPipeline_CronTriggers(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.reset_volume", "true"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.enable_notifications", "true"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccCodefreshPipelineBasicConfigCronTriggers(
-					name,
-					"codefresh-contrib/react-sample-app",
-					"./codefresh.yml",
-					"master",
-					"git",
-					"cT1",
-					"first-1",
-					"0 0/1 * 1/1 * *",
-					"00abd1550f02a62699b10df7",
-					"runtime2",
-					"500mb",
-					"2cpu",
-					"2gb",
-					"3gb",
-					"cT2",
-					"second",
-					"0 1/1 * 1/1 * *",
-					"00abd1550f02a62699b10df7",
-					true,
-					true,
-					false,
-					false,
-					"MY_VAR",
-					"test",
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.name", "cT1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.message", "first-1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.expression", "0 0/1 * 1/1 * *"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.name", "runtime2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.memory", "500mb"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.cpu", "2cpu"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.dind_storage", "2gb"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.required_available_storage", "3gb"),
-
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.name", "cT2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.message", "second"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.expression", "0 1/1 * 1/1 * *"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.git_trigger_id", "00abd1550f02a62699b10df7"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.no_cache", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.no_cf_cache", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.reset_volume", "false"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.options.0.enable_notifications", "false"),
-				),
+				ExpectError: regexp.MustCompile("The cron expression .* is invalid: Expected exactly 5 fields.*"),
 			},
 		},
 	})
@@ -528,7 +593,7 @@ func TestAccCodefreshPipeline_CronTriggers(t *testing.T) {
 func TestAccCodefreshPipeline_Revision(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -561,7 +626,7 @@ func TestAccCodefreshPipeline_Revision(t *testing.T) {
 func TestAccCodefreshPipeline_IsPublic(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -594,7 +659,7 @@ func TestAccCodefreshPipeline_IsPublic(t *testing.T) {
 func TestAccCodefreshPipelineOnCreateBranchIgnoreTrigger(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -629,7 +694,7 @@ func TestAccCodefreshPipelineOnCreateBranchIgnoreTrigger(t *testing.T) {
 func TestAccCodefreshPipelineOptions(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -664,7 +729,7 @@ func TestAccCodefreshPipelineOptions(t *testing.T) {
 	})
 }
 
-func testAccCheckCodefreshPipelineExists(resource string, pipeline *cfClient.Pipeline) resource.TestCheckFunc {
+func testAccCheckCodefreshPipelineExists(resource string, pipeline *cfclient.Pipeline) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 
 		rs, ok := state.RootModule().Resources[resource]
@@ -677,7 +742,7 @@ func testAccCheckCodefreshPipelineExists(resource string, pipeline *cfClient.Pip
 
 		pipelineID := rs.Primary.ID
 
-		apiClient := testAccProvider.Meta().(*cfClient.Client)
+		apiClient := testAccProvider.Meta().(*cfclient.Client)
 		retrievedPipeline, err := apiClient.GetPipeline(pipelineID)
 
 		if err != nil {
@@ -691,7 +756,7 @@ func testAccCheckCodefreshPipelineExists(resource string, pipeline *cfClient.Pip
 }
 
 func testAccCheckCodefreshPipelineDestroy(s *terraform.State) error {
-	apiClient := testAccProvider.Meta().(*cfClient.Client)
+	apiClient := testAccProvider.Meta().(*cfclient.Client)
 
 	for _, rs := range s.RootModule().Resources {
 
@@ -716,7 +781,7 @@ func testAccCheckCodefreshPipelineDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCodefreshPipelineOriginalYamlStringAttributePropagation(resource string, spec *cfClient.Spec) resource.TestCheckFunc {
+func testAccCheckCodefreshPipelineOriginalYamlStringAttributePropagation(resource string, spec *cfclient.Spec) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 
 		rs, ok := state.RootModule().Resources[resource]
@@ -729,7 +794,7 @@ func testAccCheckCodefreshPipelineOriginalYamlStringAttributePropagation(resourc
 
 		pipelineID := rs.Primary.ID
 
-		apiClient := testAccProvider.Meta().(*cfClient.Client)
+		apiClient := testAccProvider.Meta().(*cfclient.Client)
 		pipeline, err := apiClient.GetPipeline(pipelineID)
 
 		if !reflect.DeepEqual(pipeline.Spec.Steps, spec.Steps) {
@@ -1181,7 +1246,7 @@ resource "codefresh_pipeline" "test" {
 func TestAccCodefreshPipeline_Contexts(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
-	var pipeline cfClient.Pipeline
+	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

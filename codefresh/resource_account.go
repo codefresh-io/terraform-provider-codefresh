@@ -1,7 +1,7 @@
 package codefresh
 
 import (
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -92,7 +92,7 @@ customKubernetesCluster: true
 
 func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	account := *mapResourceToAccount(d)
 
@@ -108,7 +108,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	accountID := d.Id()
 	if accountID == "" {
@@ -131,7 +131,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	account := *mapResourceToAccount(d)
 
@@ -144,7 +144,7 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	err := client.DeleteAccount(d.Id())
 	if err != nil {
@@ -154,7 +154,7 @@ func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mapAccountToResource(account *cfClient.Account, d *schema.ResourceData) error {
+func mapAccountToResource(account *cfclient.Account, d *schema.ResourceData) error {
 	err := d.Set("name", account.Name)
 	if err != nil {
 		return err
@@ -180,21 +180,21 @@ func mapAccountToResource(account *cfClient.Account, d *schema.ResourceData) err
 	return nil
 }
 
-func flattenLimits(limits cfClient.Limits) map[string]interface{} {
+func flattenLimits(limits cfclient.Limits) map[string]interface{} {
 	res := make(map[string]interface{})
 	res["collaborators"] = limits.Collaborators.Limit
 	res["data_retention_weeks"] = limits.DataRetention.Weeks
 	return res
 }
 
-func flattenBuild(build cfClient.Build) map[string]interface{} {
+func flattenBuild(build cfclient.Build) map[string]interface{} {
 	res := make(map[string]interface{})
 	res["parallel"] = build.Parallel
 	res["nodes"] = build.Nodes
 	return res
 }
-func mapResourceToAccount(d *schema.ResourceData) *cfClient.Account {
-	account := &cfClient.Account{
+func mapResourceToAccount(d *schema.ResourceData) *cfclient.Account {
+	account := &cfclient.Account{
 		ID:   d.Id(),
 		Name: d.Get("name").(string),
 	}
@@ -203,18 +203,18 @@ func mapResourceToAccount(d *schema.ResourceData) *cfClient.Account {
 		account.SetFeatures(d.Get("features").(map[string]interface{}))
 	}
 	if _, ok := d.GetOk("limits"); ok {
-		account.Limits = &cfClient.Limits{
-			Collaborators: cfClient.Collaborators{
+		account.Limits = &cfclient.Limits{
+			Collaborators: cfclient.Collaborators{
 				Limit: d.Get("limits.0.collaborators").(int),
 			},
-			DataRetention: cfClient.DataRetention{
+			DataRetention: cfclient.DataRetention{
 				Weeks: d.Get("limits.0.data_retention_weeks").(int),
 			},
 		}
 	}
 
 	if _, ok := d.GetOk("build"); ok {
-		account.Build = &cfClient.Build{
+		account.Build = &cfclient.Build{
 			Parallel: d.Get("build.0.parallel").(int),
 			Nodes:    d.Get("build.0.nodes").(int),
 		}

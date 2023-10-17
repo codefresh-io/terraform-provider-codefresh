@@ -3,7 +3,7 @@ package codefresh
 import (
 	"fmt"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -45,8 +45,8 @@ func dataSourceCurrentAccount() *schema.Resource {
 }
 
 func dataSourceCurrentAccountRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
-	var currentAccount *cfClient.CurrentAccount
+	client := meta.(*cfclient.Client)
+	var currentAccount *cfclient.CurrentAccount
 	var err error
 
 	currentAccount, err = client.GetCurrentAccount()
@@ -62,7 +62,7 @@ func dataSourceCurrentAccountRead(d *schema.ResourceData, meta interface{}) erro
 
 }
 
-func mapDataCurrentAccountToResource(currentAccount *cfClient.CurrentAccount, d *schema.ResourceData) error {
+func mapDataCurrentAccountToResource(currentAccount *cfclient.CurrentAccount, d *schema.ResourceData) error {
 
 	if currentAccount == nil || currentAccount.ID == "" {
 		return fmt.Errorf("data.codefresh_current_account - failed to mapDataCurrentAccountToResource")
