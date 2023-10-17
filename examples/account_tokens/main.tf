@@ -1,13 +1,3 @@
-variable "api_url" {
-  type = string
-}
-
-# 
-variable "token" {
-  type    = string
-  default = ""
-}
-
 ## Set of account names
 variable "accounts" {
   type = set(string)
@@ -15,7 +5,6 @@ variable "accounts" {
 
 module "account_tokens" {
   source   = "../.modules/account_tokens"
-  api_url  = var.api_url
   accounts = var.accounts
 }
 

@@ -11,6 +11,16 @@ fi
 test_case_dirname="test_cases"
 test_case_prefix="test_"
 
+skip_examples=(
+    # test environment not set up for the following examples
+    "registries"
+    "permissions"
+    "teams" # needs teams set up beforehand
+    "accounts_users" # needs idps
+    # the following examples require additional providers
+    "account_tokens" # hashicorp/random
+)
+
 if [[ ! -d ${test_case_dirname} ]]; then
     print_style "Creating test case directory"
     print_style "${test_case_dirname}" "info"
@@ -19,6 +29,12 @@ if [[ ! -d ${test_case_dirname} ]]; then
 fi
 
 for i in $(find $(dirname $(grealpath $0))/../../examples -mindepth 1 -maxdepth 1 -type d -not -path "**/.modules"); do
+    if [[ " ${skip_examples[@]} " =~ " $(basename ${i}) " ]]; then
+        print_style "Skipping example "
+        print_style "$(grealpath --relative-to=$(dirname $0) ${i})\n" "warning"
+        continue
+    fi
+
     print_style "Found example directory: "
     print_style "$(grealpath --relative-to=$(dirname $0) ${i})\n"
     expected_test_dir="$(dirname $(grealpath $0))/${test_case_dirname}/${test_case_prefix}$(basename ${i})"

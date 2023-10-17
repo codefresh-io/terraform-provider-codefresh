@@ -37,6 +37,11 @@ equivalence: build
 	@echo "==> Running equivalence tests for opentofu"
 	cd testing/equivalence;\
 	equivalence-testing update --binary=$$(which tofu) --goldens=results/opentofu --tests=test_cases --rewrites=rewrites.jsonc
+
+	@echo "==> Comparing results"
+	cd testing/equivalence;\
+	./compare-results.sh;\
+
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	gofmt -s -w $(GOFMT_FILES)
