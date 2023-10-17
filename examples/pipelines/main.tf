@@ -1,8 +1,3 @@
-provider "codefresh" {
-  api_url = var.api_url
-  token   = var.token
-}
-
 resource "codefresh_project" "test" {
   name = "myproject"
 

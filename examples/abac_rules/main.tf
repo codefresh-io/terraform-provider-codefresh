@@ -1,7 +1,3 @@
-data "codefresh_team" "admins" {
-  name = "admins"
-}
-
 data "codefresh_team" "users" {
   name = "users"
 }

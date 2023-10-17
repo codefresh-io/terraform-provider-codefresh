@@ -1,6 +1,3 @@
-api_url = "https://my-codefresh.example.com/api"
-token   = "cfAdmin-token"
-
 default_idps = {
   local = {
     display_name = "local"

@@ -1,5 +1,3 @@
-variable "api_url" {}
-
 variable "default_acccount_limits" {
   type = map(any)
   default = {
