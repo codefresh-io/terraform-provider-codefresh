@@ -530,7 +530,7 @@ The following table presents how to configure this block based on the options av
 							},
 						},
 						"pack_id": {
-							Description: "SAAS pack (`5cd1746617313f468d669013` for Small; `5cd1746717313f468d669014` for Medium; `5cd1746817313f468d669015` for Large; `5cd1746817313f468d669017` for XL; `5cd1746817313f468d669018` for XXL).",
+							Description: "SAAS pack (`5cd1746617313f468d669013` for Small; `5cd1746717313f468d669014` for Medium; `5cd1746817313f468d669015` for Large; `5cd1746817313f468d669017` for XL; `5cd1746817313f468d669018` for XXL); `5cd1746817313f468d669020` for 4XL).",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
