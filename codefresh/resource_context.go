@@ -42,7 +42,7 @@ func getConflictingContexts(context string) []string {
 
 func resourceContext() *schema.Resource {
 	return &schema.Resource{
-		Description: "A Context is an authentication/configuration that is used by the Codefresh system and engine.",
+		Description: "A Context is an authentication/configuration resource used by the Codefresh system and engine.",
 		Create:      resourceContextCreate,
 		Read:        resourceContextRead,
 		Update:      resourceContextUpdate,

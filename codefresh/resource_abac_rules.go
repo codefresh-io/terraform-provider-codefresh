@@ -15,7 +15,7 @@ var validSetValues = []string{"REFRESH", "SYNC", "TERMINATE_SYNC", "VIEW_POD_LOG
 
 func resourceGitopsAbacRule() *schema.Resource {
 	return &schema.Resource{
-		Description: "Gitops Abac Rules are used to setup access control and allow to define which teams have access to which resources based on tags and attributes.",
+		Description: "Gitops ABAC Rules are used to setup access control and allow to define which teams have access to which resources based on tags and attributes.",
 		Create:      resourceGitopsAbacRuleCreate,
 		Read:        resourceGitopsAbacRuleRead,
 		Update:      resourceGitopsAbacRuleUpdate,
@@ -32,7 +32,7 @@ func resourceGitopsAbacRule() *schema.Resource {
 			},
 			"entity_type": {
 				Description: `
-The type of resources the abac rules applies to. Possible values:
+The type of resources the ABAC rules applies to. Possible values:
 	* gitopsApplications
 				`,
 				Type:     schema.TypeString,
@@ -42,16 +42,16 @@ The type of resources the abac rules applies to. Possible values:
 				}, false),
 			},
 			"teams": {
-				Description: "The Ids of teams the abac rules apply to.",
+				Description: "The IDs of the teams the ABAC rules apply to.",
 				Type:        schema.TypeSet,
 				Required:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": {
 				Description: `
-The effective tags to apply the permission. It supports 2 custom tags:
-	* untagged is a “tag” which refers to all resources that don't have any tag.
-	* (the star character) means all tags.
+The effective tags of the resource to apply the permission to. There are two special tags:
+	* untagged: Apply to all resources without tags.
+	* * (asterisk): Apply to all resources with any tag.
 				`,
 				Type:     schema.TypeSet,
 				Optional: true,

@@ -27,11 +27,11 @@ func resourceAccount() *schema.Resource {
 				Description: `
 Features toggles for this account. Default:
 
-OfflineLogging: true
-ssoManagement: true
-teamsManagement: true
-abac: true
-customKubernetesCluster: true
+* OfflineLogging: true
+* ssoManagement: true
+* teamsManagement: true
+* abac: true
+* customKubernetesCluster: true
 `,
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -58,7 +58,7 @@ customKubernetesCluster: true
 							Required:    true,
 						},
 						"data_retention_weeks": {
-							Description: "Specifies how long, in weeks, the builds be stored (default: `5`).",
+							Description: "Specifies the number of weeks for which to store the builds (default: `5`).",
 							Type:        schema.TypeInt,
 							Optional:    true,
 							Default:     5,

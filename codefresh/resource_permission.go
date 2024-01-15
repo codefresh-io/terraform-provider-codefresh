@@ -14,7 +14,7 @@ import (
 
 func resourcePermission() *schema.Resource {
 	return &schema.Resource{
-		Description: "Permission are used to setup access control and allow to define which teams have access to which clusters and pipelines based on tags.",
+		Description: "Permissions are used to set up access control and define which teams have access to which clusters and pipelines based on tags.",
 		Create:      resourcePermissionCreate,
 		Read:        resourcePermissionRead,
 		Update:      resourcePermissionUpdate,
@@ -85,9 +85,9 @@ Action to be allowed. Possible values:
 			},
 			"tags": {
 				Description: `
-The effective tags to apply the permission. It supports 2 custom tags:
-	* untagged is a “tag” which refers to all clusters that don't have any tag.
-	* (the star character) means all tags.
+The tags for which to apply the permission. Supports two custom tags:
+	* untagged:  Apply to all resources without tags
+  * (asterisk): Apply to all resources with any tag
 				`,
 				Type:     schema.TypeSet,
 				Optional: true,
