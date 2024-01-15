@@ -2,14 +2,14 @@
 page_title: "codefresh_abac_rules Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  Gitops Abac Rules are used to setup access control and allow to define which teams have access to which resources based on tags and attributes.
+  Gitops ABAC Rules are used to setup access control and allow to define which teams have access to which resources based on tags and attributes.
 ---
 
 # codefresh_abac_rules (Resource)
 
-Gitops Abac Rules are used to setup access control and allow to define which teams have access to which resources based on tags and attributes.
+Gitops ABAC Rules are used to setup access control and allow to define which teams have access to which resources based on tags and attributes.
 
-See the [Access Control documentation](https://codefresh.io/docs/docs/administration/account-user-management/access-control/).
+See the [GitOps Access Control documentation](https://codefresh.io/docs/docs/administration/account-user-management/gitops-abac/).
 
 ## Example usage
 
@@ -48,17 +48,17 @@ resource "codefresh_abac_rules" "app_rule" {
 	* TERMINATE_SYNC
 	* VIEW_POD_LOGS
 	* APP_ROLLBACK
-- `entity_type` (String) The type of resources the abac rules applies to. Possible values:
+- `entity_type` (String) The type of resources the ABAC rules applies to. Possible values:
 	* gitopsApplications
-- `teams` (Set of String) The Ids of teams the abac rules apply to.
+- `teams` (Set of String) The IDs of the teams the ABAC rules apply to.
 
 ### Optional
 
 - `attribute` (Block List) Resource attribute that need to be validated (see [below for nested schema](#nestedblock--attribute))
 - `id` (String) The abac rule ID.
-- `tags` (Set of String) The effective tags to apply the permission. It supports 2 custom tags:
-	* untagged is a “tag” which refers to all resources that don't have any tag.
-	* (the star character) means all tags.
+- `tags` (Set of String) The effective tags of the resource to apply the permission to. There are two special tags:
+	* untagged: Apply to all resources without tags.
+	* * (asterisk): Apply to all resources with any tag.
 
 <a id="nestedblock--attribute"></a>
 ### Nested Schema for `attribute`
