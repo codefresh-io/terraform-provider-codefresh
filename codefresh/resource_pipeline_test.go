@@ -445,7 +445,7 @@ func TestAccCodefreshPipeline_CronTriggers(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.name", "cT1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.message", "first"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.expression", "0/1 * 1/1 * *"),
@@ -455,7 +455,7 @@ func TestAccCodefreshPipeline_CronTriggers(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.dind_storage", "1gb"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.0.runtime_environment.0.required_available_storage", "1gb"),
 
-					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.name", "cT2"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.message", "second"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.cron_trigger.1.expression", "0/1 * 1/1 * *"),
@@ -532,8 +532,8 @@ func TestAccCodefreshPipeline_CronTriggersInvalid(t *testing.T) {
 	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodefreshPipelineBasicConfigCronTriggers(
