@@ -27,7 +27,7 @@ func resourceIdp() *schema.Resource {
 			"name": {
 				Description: "Name of the IDP, will be generated if not set",
 				Type:        schema.TypeString,
-				Optional: 	 true,
+				Computed: 	 true,
 			},
 			"client_type": {
 				Description: "Type of the IDP",
