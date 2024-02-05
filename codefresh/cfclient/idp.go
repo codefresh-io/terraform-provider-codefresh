@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 )
 
 type IDP struct {
@@ -74,6 +75,52 @@ func (client *Client) CreateIDP(idp *IDP) (*IDP, error) {
 	}
 
 	return &respIDP, nil
+}
+
+func (client *Client) UpdateIDP(idp *IDP) (*IDP, error) {
+
+	body, err := EncodeToJSON(idp)
+
+	if err != nil {
+		return nil, err
+	}
+	opts := RequestOptions{
+		Path:   "/admin/idp",
+		Method: "PUT",
+		Body:   body,
+	}
+
+	resp, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		log.Printf("[DEBUG] Call to API for IDP update failed with Error = %v for Body %v", err, body)
+		return nil, err
+	}
+
+	var respIDP IDP
+	err = DecodeResponseInto(resp, &respIDP)
+	if err != nil {
+		return nil, err
+	}
+
+	return &respIDP, nil
+}
+
+func (client *Client) DeleteIDP(id string) error {
+
+	fullPath := fmt.Sprintf("/admin/idp/%s", url.PathEscape(id))
+	opts := RequestOptions{
+		Path:   fullPath,
+		Method: "DELETE",
+	}
+
+	_, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // get all idps

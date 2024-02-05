@@ -1,6 +1,7 @@
 package codefresh
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
@@ -28,6 +29,7 @@ func resourceIdp() *schema.Resource {
 				Description: "Name of the IDP, will be generated if not set",
 				Type:        schema.TypeString,
 				Computed: 	 true,
+				Optional: true,
 			},
 			"client_type": {
 				Description: "Type of the IDP",
@@ -48,11 +50,19 @@ func resourceIdp() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed: true,
 			},
+			"config_hash": {
+				Type:        schema.TypeString,
+				Computed: true,
+			},
 			"github": {
 				Description: "Settings for GitHub IDP",
 				Type:        schema.TypeList,
 				Optional:    true,
 				MaxItems: 1,
+				DiffSuppressOnRefresh: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									return true
+								},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"client_id": {
@@ -119,8 +129,12 @@ func resourceIDPRead(d *schema.ResourceData, meta interface{}) error {
 	cfClientIDP, err := client.GetIdpByID(idpID)
 
 	if err != nil {
+		if err.Error() == fmt.Sprintf("[ERROR] IDP with ID %s isn't found.", d.Id()) {
+			return nil
+		}
 		log.Printf("[DEBUG] Error while getting IDP. Error = %v", err)
 		return err
+		
 	}
 
 	err = mapIDPToResource(*cfClientIDP, d)
@@ -134,11 +148,28 @@ func resourceIDPRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIDPDelete(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*cfclient.Client)
+	err := client.DeleteIDP(d.Id())
+
+	if err != nil {
+		log.Printf("[DEBUG] Error while deleting IDP. Error = %v", err)
+		return err
+	}
 	return nil
 }
 
 func resourceIDPUpdate(d *schema.ResourceData, meta interface{}) error {
-	return nil
+
+	client := meta.(*cfclient.Client)
+
+	_, err := client.UpdateIDP(mapResourceToIDP(d))
+
+	if err != nil {
+		log.Printf("[DEBUG] Error while updating idp. Error = %v", err)
+		return err
+	}
+
+	return resourceIDPRead(d, meta)
 }
 
 func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
@@ -148,6 +179,7 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 	d.Set("redirect_url", cfClientIDP.RedirectUrl)
 	d.Set("redirect_ui_url", cfClientIDP.RedirectUiUrl)
 	d.Set("login_url", cfClientIDP.LoginUrl)
+	d.Set("client_type", cfClientIDP.ClientType)
 
 	if cfClientIDP.ClientType == "github" {
 		d.Set("github.0.client_id", cfClientIDP.ClientId)
@@ -156,7 +188,20 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 		d.Set("github.0.token_url", cfClientIDP.TokenURL)
 		d.Set("github.0.user_profile_url", cfClientIDP.UserProfileURL)
 		d.Set("github.0.api_host", cfClientIDP.ApiHost)
-		d.Set("github.0.api_path_prefix", cfClientIDP.ApiPathPrefix)	
+		d.Set("github.0.api_path_prefix", cfClientIDP.ApiPathPrefix)
+		
+		// mapSlice := []map[string]interface{}{}
+    	// map1 := map[string]interface{}{
+		// 	"client_id": cfClientIDP.ClientId,
+		// 	"client_secret": cfClientIDP.ClientSecret,
+		// 	"authentication_url": cfClientIDP.AuthURL,
+		// 	"token_url": cfClientIDP.TokenURL,
+		// 	"user_profile_url": cfClientIDP.UserProfileURL,
+		// 	"api_host": cfClientIDP.ApiHost,
+		// 	"api_path_prefix": cfClientIDP.ApiPathPrefix,
+		// }
+    	// mapSlice = append(mapSlice, map1)
+		// d.Set("github",mapSlice)
 	}
 
 	return nil
@@ -172,7 +217,6 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 		LoginUrl:         d.Get("login_url").(string),
 	}
 
-	// client_type - Set dynamically
 	if _, ok := d.GetOk("github"); ok {
 		cfClientIDP.ClientType = "github"
 		cfClientIDP.ClientId = d.Get("github.0.client_id").(string)
@@ -184,8 +228,17 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 		cfClientIDP.ApiPathPrefix = d.Get("github.0.api_path_prefix").(string)
 	}
 
+	// if idpAttributes, ok := d.GetOk("github"); ok {
+	// 	ghAttributes := idpAttributes.(*schema.Set).List()[0].(map[string]interface{})
+	// 	cfClientIDP.ClientType = "github"
+	// 	cfClientIDP.ClientId = ghAttributes["client_id"].(string)
+	// 	cfClientIDP.ClientSecret = ghAttributes["client_secret"].(string)
+	// 	cfClientIDP.AuthURL = ghAttributes["authentication_url"].(string) 
+	// 	cfClientIDP.TokenURL = ghAttributes["token_url"].(string)
+	// 	cfClientIDP.UserProfileURL = ghAttributes["user_profile_url"].(string)
+	// 	cfClientIDP.ApiHost = ghAttributes["api_host"].(string)
+	// 	cfClientIDP.ApiPathPrefix = ghAttributes["api_path_prefix"].(string)
+	// }
+
 	return cfClientIDP
 }
-
-
-
