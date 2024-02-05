@@ -34,6 +34,7 @@ func resourceIdp() *schema.Resource {
 			"client_type": {
 				Description: "Type of the IDP",
 				Type:        schema.TypeString,
+				ForceNew: true,
 				Computed: true,
 			},
 			"redirect_url": {
@@ -59,10 +60,7 @@ func resourceIdp() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				MaxItems: 1,
-				DiffSuppressOnRefresh: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-									return true
-								},
+				ExactlyOneOf: []string{"gitlab"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"client_id": {
@@ -98,6 +96,41 @@ func resourceIdp() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default: "/",
+						},
+					},
+				},
+			},
+			"gitlab": {
+				Description: "Settings for GitLab IDP",
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems: 1,
+				ExactlyOneOf: []string{"github"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"client_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"client_secret": {
+							Type:     schema.TypeString,
+							Required: true,
+							Sensitive: true,
+						},
+						"authentication_url": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default: "https://gitlab.com",
+						},
+						"user_profile_url": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default: "https://api.github.com/user",
+						},
+						"api_url": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default: "api.github.com",
 						},
 					},
 				},
@@ -204,6 +237,14 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 		// d.Set("github",mapSlice)
 	}
 
+	if cfClientIDP.ClientType == "gitlab" {
+		d.Set("gitlab.0.client_id", cfClientIDP.ClientId)
+		d.Set("gitlab.0.client_secret", cfClientIDP.ClientSecret)
+		d.Set("gitlab.0.authentication_url", cfClientIDP.AuthURL)
+		d.Set("gitlab.0.user_profile_url", cfClientIDP.UserProfileURL)
+		d.Set("gitlab.0.api_url", cfClientIDP.ApiURL)
+	}
+
 	return nil
 }
 
@@ -226,6 +267,15 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 		cfClientIDP.UserProfileURL = d.Get("github.0.user_profile_url").(string)
 		cfClientIDP.ApiHost = d.Get("github.0.api_host").(string)
 		cfClientIDP.ApiPathPrefix = d.Get("github.0.api_path_prefix").(string)
+	}
+
+	if _, ok := d.GetOk("gitlab"); ok {
+		cfClientIDP.ClientType = "gitlab"
+		cfClientIDP.ClientId = d.Get("gitlab.0.client_id").(string)
+		cfClientIDP.ClientSecret = d.Get("gitlab.0.client_secret").(string)
+		cfClientIDP.AuthURL = d.Get("gitlab.0.authentication_url").(string)
+		cfClientIDP.UserProfileURL = d.Get("gitlab.0.user_profile_url").(string)
+		cfClientIDP.ApiURL = d.Get("gitlab.0.api_url").(string)
 	}
 
 	// if idpAttributes, ok := d.GetOk("github"); ok {
