@@ -3,9 +3,11 @@ package codefresh
 import (
 	"fmt"
 	"log"
+	//"context"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	//"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 )
 
 
@@ -19,6 +21,14 @@ func resourceIdp() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+		// CustomizeDiff: customdiff.All(
+		// 	customdiff.ForceNewIf("client_type", func(_ context.Context, diff *schema.ResourceDiff, _ any) bool {
+		// 		_, newStatus := diff.GetChange("client_type")
+		// 		fmt.Print(newStatus)
+		// 		return true
+		// 		//return d.Get("status").(string) != "pending" && d.HasChange("email")
+		// 	}),
+		// ),
 		Schema: map[string]*schema.Schema{
 			"display_name": {
 				Description: "The display name for the IDP.",
@@ -34,7 +44,6 @@ func resourceIdp() *schema.Resource {
 			"client_type": {
 				Description: "Type of the IDP",
 				Type:        schema.TypeString,
-				ForceNew: true,
 				Computed: true,
 			},
 			"redirect_url": {
@@ -163,6 +172,7 @@ func resourceIDPRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		if err.Error() == fmt.Sprintf("[ERROR] IDP with ID %s isn't found.", d.Id()) {
+			d.SetId("")
 			return nil
 		}
 		log.Printf("[DEBUG] Error while getting IDP. Error = %v", err)
@@ -258,8 +268,16 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 		LoginUrl:         d.Get("login_url").(string),
 	}
 
+	if d.Get("client_type") != nil {
+		cfClientIDP.ClientType = d.Get("client_type").(string)
+	} else {
+		cfClientIDP.ClientType = ""
+	}
+
 	if _, ok := d.GetOk("github"); ok {
-		cfClientIDP.ClientType = "github"
+		if cfClientIDP.ClientType == "" {
+			cfClientIDP.ClientType = "github"
+		}
 		cfClientIDP.ClientId = d.Get("github.0.client_id").(string)
 		cfClientIDP.ClientSecret = d.Get("github.0.client_secret").(string)
 		cfClientIDP.AuthURL = d.Get("github.0.authentication_url").(string)
@@ -270,6 +288,9 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 	}
 
 	if _, ok := d.GetOk("gitlab"); ok {
+		if cfClientIDP.ClientType == "" {
+			cfClientIDP.ClientType = "gitlab"
+		}
 		cfClientIDP.ClientType = "gitlab"
 		cfClientIDP.ClientId = d.Get("gitlab.0.client_id").(string)
 		cfClientIDP.ClientSecret = d.Get("gitlab.0.client_secret").(string)
