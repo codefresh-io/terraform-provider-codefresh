@@ -238,7 +238,7 @@ func resourceIDPUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfclient.Client)
 
-	_, err := client.UpdateIDP(mapResourceToIDP(d))
+	err := client.UpdateIDP(mapResourceToIDP(d))
 
 	if err != nil {
 		log.Printf("[DEBUG] Error while updating idp. Error = %v", err)

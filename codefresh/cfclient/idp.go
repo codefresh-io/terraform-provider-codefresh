@@ -77,12 +77,14 @@ func (client *Client) CreateIDP(idp *IDP) (*IDP, error) {
 	return &respIDP, nil
 }
 
-func (client *Client) UpdateIDP(idp *IDP) (*IDP, error) {
+// Currently on update the API returns a different structure for accounts than on read making the client crash on decode
+// For now we are disabling response decode and in the resource will instead call the read function again
+func (client *Client) UpdateIDP(idp *IDP) error {
 
 	body, err := EncodeToJSON(idp)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 	opts := RequestOptions{
 		Path:   "/admin/idp",
@@ -90,20 +92,20 @@ func (client *Client) UpdateIDP(idp *IDP) (*IDP, error) {
 		Body:   body,
 	}
 
-	resp, err := client.RequestAPI(&opts)
+	_, err = client.RequestAPI(&opts)
 
 	if err != nil {
 		log.Printf("[DEBUG] Call to API for IDP update failed with Error = %v for Body %v", err, body)
-		return nil, err
+		return err
 	}
 
-	var respIDP IDP
-	err = DecodeResponseInto(resp, &respIDP)
-	if err != nil {
-		return nil, err
-	}
+	// var respIDP IDP
+	// err = DecodeResponseInto(resp, &respIDP)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	return &respIDP, nil
+	return nil
 }
 
 func (client *Client) DeleteIDP(id string) error {
