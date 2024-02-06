@@ -324,20 +324,5 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 		cfClientIDP.ApiURL = d.Get("gitlab.0.api_url").(string)
 	}
 
-	// if idpAttributes, ok := d.GetOk("github"); ok {
-	// 	if cfClientIDP.ClientType == "" {
-	// 		cfClientIDP.ClientType = "github"
-	// 	}
-	// 	ghAttributes := idpAttributes.(*schema.Set).List()[0].(map[string]interface{})
-	// 	cfClientIDP.ClientType = "github"
-	// 	cfClientIDP.ClientId = ghAttributes["client_id"].(string)
-	// 	cfClientIDP.ClientSecret = ghAttributes["client_secret"].(string)
-	// 	cfClientIDP.AuthURL = ghAttributes["authentication_url"].(string) 
-	// 	cfClientIDP.TokenURL = ghAttributes["token_url"].(string)
-	// 	cfClientIDP.UserProfileURL = ghAttributes["user_profile_url"].(string)
-	// 	cfClientIDP.ApiHost = ghAttributes["api_host"].(string)
-	// 	cfClientIDP.ApiPathPrefix = ghAttributes["api_path_prefix"].(string)
-	// }
-
 	return cfClientIDP
 }
