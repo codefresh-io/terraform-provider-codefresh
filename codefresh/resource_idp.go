@@ -3,11 +3,12 @@ package codefresh
 import (
 	"fmt"
 	"log"
-	//"context"
+	"errors"
+	"context"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	//"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 )
 
 
@@ -21,14 +22,23 @@ func resourceIdp() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		// CustomizeDiff: customdiff.All(
-		// 	customdiff.ForceNewIf("client_type", func(_ context.Context, diff *schema.ResourceDiff, _ any) bool {
-		// 		_, newStatus := diff.GetChange("client_type")
-		// 		fmt.Print(newStatus)
-		// 		return true
-		// 		//return d.Get("status").(string) != "pending" && d.HasChange("email")
-		// 	}),
-		// ),
+		CustomizeDiff: customdiff.All(
+			// Recreate idp if the type has changed - we cannot simply do ForceNew on client_type as it is computed
+			customdiff.ForceNewIf("client_type", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				clientTypeInState := d.Get("client_type").(string)
+				attributesForIdpTypeInState := d.Get(clientTypeInState)
+				// If there is a different type of idp in the state, the idp needs to be recreated
+				if attributesForIdpTypeInState == nil {
+					d.SetNewComputed("client_type")
+					return true
+				} else if len(attributesForIdpTypeInState.([]interface{})) < 1 {
+					d.SetNewComputed("client_type")
+					return true
+				} else {
+					return false
+				}
+			}),
+		),
 		Schema: map[string]*schema.Schema{
 			"display_name": {
 				Description: "The display name for the IDP.",
@@ -42,9 +52,10 @@ func resourceIdp() *schema.Resource {
 				Optional: true,
 			},
 			"client_type": {
-				Description: "Type of the IDP",
+				Description: "Type of the IDP. If not set it is derived from idp specific config object (github, gitlab etc)",
 				Type:        schema.TypeString,
 				Computed: true,
+				ForceNew: true,
 			},
 			"redirect_url": {
 				Description: "API Callback url for the identity provider",
@@ -80,6 +91,11 @@ func resourceIdp() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							Sensitive: true,
+						},
+						"client_secret_encrypted": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 						"authentication_url": {
 							Type:     schema.TypeString,
@@ -125,6 +141,11 @@ func resourceIdp() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							Sensitive: true,
+						},
+						"client_secret_encrypted": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 						"authentication_url": {
 							Type:     schema.TypeString,
@@ -192,7 +213,19 @@ func resourceIDPRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceIDPDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfclient.Client)
-	err := client.DeleteIDP(d.Id())
+	idpID := d.Id()
+	cfClientIDP, err := client.GetIdpByID(idpID)
+
+	if err != nil {
+		log.Printf("[DEBUG] Error while getting IDP. Error = %v", err)
+		return err
+	}
+
+	if len(cfClientIDP.Accounts) < 1 {
+		return errors.New("It is not allowed to delete IDPs without any assigned accounts as they are considered global")
+	}
+
+	err = client.DeleteIDP(d.Id())
 
 	if err != nil {
 		log.Printf("[DEBUG] Error while deleting IDP. Error = %v", err)
@@ -225,34 +258,37 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 	d.Set("client_type", cfClientIDP.ClientType)
 
 	if cfClientIDP.ClientType == "github" {
-		d.Set("github.0.client_id", cfClientIDP.ClientId)
-		d.Set("github.0.client_secret", cfClientIDP.ClientSecret)
-		d.Set("github.0.authentication_url", cfClientIDP.AuthURL)
-		d.Set("github.0.token_url", cfClientIDP.TokenURL)
-		d.Set("github.0.user_profile_url", cfClientIDP.UserProfileURL)
-		d.Set("github.0.api_host", cfClientIDP.ApiHost)
-		d.Set("github.0.api_path_prefix", cfClientIDP.ApiPathPrefix)
-		
-		// mapSlice := []map[string]interface{}{}
-    	// map1 := map[string]interface{}{
-		// 	"client_id": cfClientIDP.ClientId,
-		// 	"client_secret": cfClientIDP.ClientSecret,
-		// 	"authentication_url": cfClientIDP.AuthURL,
-		// 	"token_url": cfClientIDP.TokenURL,
-		// 	"user_profile_url": cfClientIDP.UserProfileURL,
-		// 	"api_host": cfClientIDP.ApiHost,
-		// 	"api_path_prefix": cfClientIDP.ApiPathPrefix,
-		// }
-    	// mapSlice = append(mapSlice, map1)
-		// d.Set("github",mapSlice)
+		attributes := []map[string]interface{}{{
+			"client_id":            		cfClientIDP.ClientId,
+			// Codefresh API Returns the client secret as an encrypted string on the server side
+			// hence we need to keep in the state the original secret the user provides along with the encrypted computed secret
+			// for Terraform to properly calculate the diff
+			"client_secret": 				d.Get("github.0.client_secret"),
+			"client_secret_encrypted": 		cfClientIDP.ClientSecret,
+			"authentication_url":   		cfClientIDP.AuthURL,
+			"token_url": 					cfClientIDP.TokenURL,
+			"user_profile_url": 			cfClientIDP.UserProfileURL,
+			"api_host": 					cfClientIDP.ApiHost,
+			"api_path_prefix":      		cfClientIDP.ApiPathPrefix,
+		}}
+
+		d.Set("github", attributes)
 	}
 
 	if cfClientIDP.ClientType == "gitlab" {
-		d.Set("gitlab.0.client_id", cfClientIDP.ClientId)
-		d.Set("gitlab.0.client_secret", cfClientIDP.ClientSecret)
-		d.Set("gitlab.0.authentication_url", cfClientIDP.AuthURL)
-		d.Set("gitlab.0.user_profile_url", cfClientIDP.UserProfileURL)
-		d.Set("gitlab.0.api_url", cfClientIDP.ApiURL)
+		attributes := []map[string]interface{}{{
+			"client_id":            		cfClientIDP.ClientId,
+			// Codefresh API Returns the client secret as an encrypted string on the server side
+			// hence we need to keep in the state the original secret the user provides along with the encrypted computed secret
+			// for Terraform to properly calculate the diff
+			"client_secret": 				d.Get("gitlab.0.client_secret"),
+			"client_secret_encrypted": 		cfClientIDP.ClientSecret,
+			"authentication_url":   		cfClientIDP.AuthURL,
+			"user_profile_url": 			cfClientIDP.UserProfileURL,
+			"api_url": 						cfClientIDP.ApiURL,
+		}}
+
+		d.Set("gitlab", attributes)
 	}
 
 	return nil
@@ -268,16 +304,8 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 		LoginUrl:         d.Get("login_url").(string),
 	}
 
-	if d.Get("client_type") != nil {
-		cfClientIDP.ClientType = d.Get("client_type").(string)
-	} else {
-		cfClientIDP.ClientType = ""
-	}
-
 	if _, ok := d.GetOk("github"); ok {
-		if cfClientIDP.ClientType == "" {
-			cfClientIDP.ClientType = "github"
-		}
+		cfClientIDP.ClientType = "github"
 		cfClientIDP.ClientId = d.Get("github.0.client_id").(string)
 		cfClientIDP.ClientSecret = d.Get("github.0.client_secret").(string)
 		cfClientIDP.AuthURL = d.Get("github.0.authentication_url").(string)
@@ -288,9 +316,6 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 	}
 
 	if _, ok := d.GetOk("gitlab"); ok {
-		if cfClientIDP.ClientType == "" {
-			cfClientIDP.ClientType = "gitlab"
-		}
 		cfClientIDP.ClientType = "gitlab"
 		cfClientIDP.ClientId = d.Get("gitlab.0.client_id").(string)
 		cfClientIDP.ClientSecret = d.Get("gitlab.0.client_secret").(string)
@@ -300,6 +325,9 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 	}
 
 	// if idpAttributes, ok := d.GetOk("github"); ok {
+	// 	if cfClientIDP.ClientType == "" {
+	// 		cfClientIDP.ClientType = "github"
+	// 	}
 	// 	ghAttributes := idpAttributes.(*schema.Set).List()[0].(map[string]interface{})
 	// 	cfClientIDP.ClientType = "github"
 	// 	cfClientIDP.ClientId = ghAttributes["client_id"].(string)
