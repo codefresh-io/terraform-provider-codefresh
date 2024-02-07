@@ -58,7 +58,7 @@ func resourceIdp() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"is_global": {
 				Type: schema.TypeBool,
-				Description: "If set to true IDP will be created globally for the entire platform - this requires a platform admin token. If false the IDP will be created at the level of a single account which is derived from the API token used. Defaults to false",
+				Description: "If set to true IDP will be created globally for the entire platform - this requires a platform admin token and is meant for on-prem installations of Codefresh. If false the IDP will be created at the level of a single account which is derived from the API token used. Defaults to false",
 				Optional: true,
 				Default: false,
 				ForceNew: true,
