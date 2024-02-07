@@ -9,6 +9,7 @@ import (
 
 type IDP struct {
 	ID            string   `json:"_id,omitempty"`
+	IsGlobal	  bool     `json:"isGlobal,omitempty"` // This is not part of the schema, rather it is used to determine if the IDP is gloal or not and choose endpoints accordingly
 	Access_token  string   `json:"access_token,omitempty"`
 	Accounts      []string `json:"accounts,omitempty"`
 	ClientName    string   `json:"clientName,omitempty"` // IDP name
@@ -46,6 +47,18 @@ type IDP struct {
 	TokenURL string `json:"tokenURL,omitempty"`
 	// Github, Gitlab
 	UserProfileURL string `json:"userProfileURL,omitempty"`
+	// Okta
+	SyncMirrorAccounts []string `json:"syncMirrorAccounts,omitempty"`
+}
+
+// Return the appropriate API endpoint for platform and account scoped IDPs
+func getAPIEndpoint(isGlobal bool) string {
+	// If IDP is platform scoped
+	if isGlobal {
+		return "/admin/idp"
+	} else {
+		return "/idp/account"
+	}
 }
 
 func (client *Client) CreateIDP(idp *IDP) (*IDP, error) {
@@ -56,7 +69,7 @@ func (client *Client) CreateIDP(idp *IDP) (*IDP, error) {
 		return nil, err
 	}
 	opts := RequestOptions{
-		Path:   "/admin/idp",
+		Path:   getAPIEndpoint(idp.IsGlobal),
 		Method: "POST",
 		Body:   body,
 	}
@@ -87,7 +100,7 @@ func (client *Client) UpdateIDP(idp *IDP) error {
 		return err
 	}
 	opts := RequestOptions{
-		Path:   "/admin/idp",
+		Path:   getAPIEndpoint(idp.IsGlobal),
 		Method: "PUT",
 		Body:   body,
 	}
@@ -109,8 +122,8 @@ func (client *Client) UpdateIDP(idp *IDP) error {
 }
 
 func (client *Client) DeleteIDP(id string) error {
-
-	fullPath := fmt.Sprintf("/admin/idp/%s", url.PathEscape(id))
+	baseUrl := getAPIEndpoint(true)
+	fullPath := fmt.Sprintf("%s/%s", baseUrl, url.PathEscape(id))
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "DELETE",
@@ -124,6 +137,31 @@ func (client *Client) DeleteIDP(id string) error {
 
 	return nil
 }
+
+func (client *Client) DeleteIDPAccount(id string) error {
+
+	body, err := EncodeToJSON(map[string]interface{}{"id": id})
+
+	if err != nil {
+		return err
+	}
+
+	opts := RequestOptions{
+		Path:   getAPIEndpoint(false),
+		Method: "DELETE",
+		Body: body,
+	}
+
+	_, err = client.RequestAPI(&opts)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
 
 // get all idps
 func (client *Client) GetIDPs() (*[]IDP, error) {
@@ -204,6 +242,22 @@ func (client *Client) GetAccountIDPs() (*[]IDP, error) {
 	}
 
 	return &idps, nil
+}
+
+func (client *Client) GetAccountIdpByID(idpID string) (*IDP, error) {
+
+	idpList, err := client.GetAccountIDPs()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, idp := range *idpList {
+		if idp.ID == idpID {
+			return &idp, nil
+		}
+	}
+
+	return nil, errors.New(fmt.Sprintf("[ERROR] IDP with ID %s isn't found.", idpID))
 }
 
 // add account to idp
