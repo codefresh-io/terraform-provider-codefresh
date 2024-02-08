@@ -14,7 +14,7 @@ import (
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 )
 
-var supportedIdps = []string{"github","gitlab", "okta"}
+var supportedIdps = []string{"github","gitlab", "okta", "google","auth0"}
 
 func resourceIdp() *schema.Resource {
 	return &schema.Resource{
@@ -255,6 +255,93 @@ func resourceIdp() *schema.Resource {
 					},
 				},
 			},
+			"google": {
+				Description: "Settings for Google IDP",
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems: 1,
+				ExactlyOneOf: supportedIdps,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"client_id": {
+							Type:     schema.TypeString,
+							Description: "Client ID in Google, must be unique across all identity providers in Codefresh",
+							Required: true,
+						},
+						"client_secret": {
+							Type:     schema.TypeString,
+							Description: "Client secret in Google",
+							Required: true,
+							Sensitive: true,
+						},
+						"client_secret_encrypted": {
+							Type:     schema.TypeString,
+							Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+							Optional: true,
+							Computed: true,
+						},
+						"admin_email": {
+							Type:     schema.TypeString,
+							Description: "Email of a user with admin permissions on google, relevant only for synchronization",
+							Optional: true,
+						},
+						"json_keyfile": {
+							Type:     schema.TypeString,
+							Description: "JSON keyfile for google service account used for synchronization",
+							Optional: true,
+						},
+						"json_keyfile_encrypted": {
+							Type:     schema.TypeString,
+							Description: "Computed app id in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+							Optional: true,
+							Computed: true,
+						},
+						"allowed_groups_for_sync": {
+							Type:     schema.TypeString,
+							Description: "Comma separated list of groups to sync",
+							Optional: true,
+						},
+						"sync_filed": {
+							Type:     schema.TypeString,
+							Description: "Relevant for custom schema-based synchronization only. See Codefresh documentation",
+							Optional: true,
+						},
+					},
+				},
+			},
+			"auth0": {
+				Description: "Settings for Auth0 IDP",
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems: 1,
+				ExactlyOneOf: supportedIdps,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"client_id": {
+							Type:     schema.TypeString,
+							Description: "Client ID from Auth0",
+							Required: true,
+						},
+						"client_secret": {
+							Type:     schema.TypeString,
+							Description: "Client secret from Auth0",
+							Required: true,
+							Sensitive: true,
+						},
+						"client_secret_encrypted": {
+							Type:     schema.TypeString,
+							Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+							Optional: true,
+							Computed: true,
+						},
+						"domain": {
+							Type:     schema.TypeString,
+							Description: "The domain of the Auth0 application",
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -417,6 +504,32 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 		d.Set("okta", attributes)
 	}
 
+	if cfClientIDP.ClientType == "google" {
+		attributes := []map[string]interface{}{{
+			"client_id":            		cfClientIDP.ClientId,
+			"client_secret": 				d.Get("google.0.client_secret"),
+			"client_secret_encrypted": 		cfClientIDP.ClientSecret,
+			"admin_email":   				cfClientIDP.Subject,
+			"json_keyfile": 				d.Get("google.0.json_keyfile"),
+			"json_keyfile_encrypted":       cfClientIDP.KeyFile,
+			"allowed_groups_for_sync": 		cfClientIDP.AllowedGroupsForSync,
+			"sync_filed":                   cfClientIDP.SyncField,
+		}}
+
+		d.Set("google", attributes)
+	}
+
+	if cfClientIDP.ClientType == "auth0" {
+		attributes := []map[string]interface{}{{
+			"client_id":            		cfClientIDP.ClientId,
+			"client_secret": 				d.Get("auth0.0.client_secret"),
+			"client_secret_encrypted": 		cfClientIDP.ClientSecret,
+			"domain":   					cfClientIDP.ClientHost,
+		}}
+
+		d.Set("auth0", attributes)
+	}
+
 	return nil
 }
 
@@ -458,6 +571,23 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 		cfClientIDP.ClientHost = d.Get("okta.0.client_host").(string)
 		cfClientIDP.AppId = d.Get("okta.0.app_id").(string)
 		cfClientIDP.SyncMirrorAccounts = datautil.ConvertStringArr(d.Get("okta.0.sync_mirror_accounts").([]interface{}))
+	}
+
+	if _, ok := d.GetOk("google"); ok {
+		cfClientIDP.ClientType = "google"
+		cfClientIDP.ClientId = d.Get("google.0.client_id").(string)
+		cfClientIDP.ClientSecret = d.Get("google.0.client_secret").(string)
+		cfClientIDP.KeyFile = d.Get("google.0.json_keyfile").(string)
+		cfClientIDP.Subject = d.Get("google.0.admin_email").(string)
+		cfClientIDP.AllowedGroupsForSync = d.Get("google.0.allowed_groups_for_sync").(string)
+		cfClientIDP.SyncField = d.Get("google.0.sync_filed").(string)
+	}
+
+	if _, ok := d.GetOk("auth0"); ok {
+		cfClientIDP.ClientType = "auth0"
+		cfClientIDP.ClientId = d.Get("auth0.0.client_id").(string)
+		cfClientIDP.ClientSecret = d.Get("auth0.0.client_secret").(string)
+		cfClientIDP.ClientHost = d.Get("auth0.0.domain").(string)
 	}
 
 	return cfClientIDP

@@ -49,6 +49,14 @@ type IDP struct {
 	UserProfileURL string `json:"userProfileURL,omitempty"`
 	// Okta
 	SyncMirrorAccounts []string `json:"syncMirrorAccounts,omitempty"`
+	// Google, Ldap
+	AllowedGroupsForSync string `json:"allowedGroupsForSync,omitempty"`
+	// Google
+	Subject string `json:"subject,omitempty"`
+	// Google
+	KeyFile string `json:"keyfile,omitempty"`
+	// Google
+	SyncField string `json:"syncField,omitempty"`
 }
 
 // Return the appropriate API endpoint for platform and account scoped IDPs
