@@ -57,6 +57,10 @@ type IDP struct {
 	KeyFile string `json:"keyfile,omitempty"`
 	// Google
 	SyncField string `json:"syncField,omitempty"`
+	// Azure
+	AutoGroupSync bool `json:"autoGroupSync,omitempty"`
+	// Azure
+	SyncInterval int `json:"syncInterval,string,omitempty"`	
 }
 
 // Return the appropriate API endpoint for platform and account scoped IDPs

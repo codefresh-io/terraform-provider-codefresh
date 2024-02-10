@@ -14,7 +14,7 @@ import (
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 )
 
-var supportedIdps = []string{"github","gitlab", "okta", "google","auth0"}
+var supportedIdps = []string{"github","gitlab", "okta", "google","auth0","azure"}
 
 func resourceIdp() *schema.Resource {
 	return &schema.Resource{
@@ -342,6 +342,55 @@ func resourceIdp() *schema.Resource {
 					},
 				},
 			},
+			"azure": {
+				Description: "Settings for Azure IDP",
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems: 1,
+				ExactlyOneOf: supportedIdps,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"client_secret": {
+							Type:     schema.TypeString,
+							Description: "Client secret from Azure",
+							Required: true,
+							Sensitive: true,
+						},
+						"client_secret_encrypted": {
+							Type:     schema.TypeString,
+							Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+							Optional: true,
+							Computed: true,
+						},
+						"app_id": {
+							Type:     schema.TypeString,
+							Description: "The Application ID from your Enterprise Application Properties in Azure AD",
+							Required: true,
+						},
+						"tenant": {
+							Type:     schema.TypeString,
+							Description: "Azure tenant",
+							Optional: true,
+						},
+						"object_id": {
+							Type:     schema.TypeString,
+							Description: "The Object ID from your Enterprise Application Properties in Azure AD",
+							Optional: true,
+						},
+						"autosync_teams_and_users": {
+							Type: schema.TypeBool,
+							Description: "Set to true to sync user accounts in Azure AD to your Codefresh account",
+							Optional: true,
+							Default: false,
+						},
+						"sync_interval": {
+							Type: schema.TypeInt,
+							Description: "Sync interval in hours for syncing user accounts in Azure AD to your Codefresh account. If not set the sync inteval will be 12 hours",
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -530,6 +579,20 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 		d.Set("auth0", attributes)
 	}
 
+	if cfClientIDP.ClientType == "azure" {
+		attributes := []map[string]interface{}{{
+			"app_id":            			cfClientIDP.ClientId,
+			"client_secret": 				d.Get("azure.0.client_secret"),
+			"client_secret_encrypted": 		cfClientIDP.ClientSecret,
+			"object_id":   					cfClientIDP.AppId,
+			"autosync_teams_and_users":		cfClientIDP.AutoGroupSync,
+			"sync_interval":				cfClientIDP.SyncInterval,
+			"tenant":						cfClientIDP.Tenant,
+		}}
+
+		d.Set("azure", attributes)
+	}
+
 	return nil
 }
 
@@ -588,6 +651,16 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 		cfClientIDP.ClientId = d.Get("auth0.0.client_id").(string)
 		cfClientIDP.ClientSecret = d.Get("auth0.0.client_secret").(string)
 		cfClientIDP.ClientHost = d.Get("auth0.0.domain").(string)
+	}
+
+	if _, ok := d.GetOk("azure"); ok {
+		cfClientIDP.ClientType = "azure"
+		cfClientIDP.ClientId = d.Get("azure.0.app_id").(string)
+		cfClientIDP.ClientSecret = d.Get("azure.0.client_secret").(string)
+		cfClientIDP.AppId = d.Get("azure.0.object_id").(string)
+		cfClientIDP.Tenant = d.Get("azure.0.tenant").(string)
+		cfClientIDP.AutoGroupSync = d.Get("azure.0.autosync_teams_and_users").(bool)
+		cfClientIDP.SyncInterval = d.Get("azure.0.sync_interval").(int)
 	}
 
 	return cfClientIDP
