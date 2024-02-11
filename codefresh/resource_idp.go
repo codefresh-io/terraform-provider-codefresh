@@ -565,7 +565,7 @@ func resourceIdp() *schema.Resource {
 						},
 						"json_keyfile": {
 							Type:     schema.TypeString,
-							Description: "JSON keyfile for google service account used for synchronization",
+							Description: "Valid for GSuite only: JSON keyfile for google service account used for synchronization",
 							Optional: true,
 						},
 						"json_keyfile_encrypted": {
@@ -576,12 +576,23 @@ func resourceIdp() *schema.Resource {
 						},
 						"admin_email": {
 							Type:     schema.TypeString,
-							Description: "Email of a user with admin permissions on google, relevant only for synchronization",
+							Description: "Valid for GSuite only: Email of a user with admin permissions on google, relevant only for synchronization",
 							Optional: true,
 						},
 						"admin_email_encrypted": {
 							Type:     schema.TypeString,
 							Description: "Admin email in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+							Optional: true,
+							Computed: true,
+						},
+						"access_token": {
+							Type:     schema.TypeString,
+							Description: "Valid for Okta only: The Okta API token generated in Okta, used to sync groups and their users from Okta to Codefresh",
+							Optional: true,
+						},
+						"access_token_encrypted": {
+							Type:     schema.TypeString,
+							Description: "Computed access token in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
 							Optional: true,
 							Computed: true,
 						},
@@ -862,6 +873,8 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 			"json_keyfile_encrypted":       			cfClientIDP.KeyFile,
 			"admin_email":   							d.Get("saml.0.admin_email"),
 			"admin_email_encrypted": 					cfClientIDP.Subject,
+			"access_token":   							d.Get("saml.0.access_token"),
+			"access_token_encrypted": 					cfClientIDP.Access_token,
 		}}
 
 		d.Set("saml", attributes)
@@ -969,6 +982,7 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 		cfClientIDP.ClientHost = d.Get("saml.0.client_host").(string)
 		cfClientIDP.KeyFile = d.Get("saml.0.json_keyfile").(string)
 		cfClientIDP.Subject = d.Get("saml.0.admin_email").(string)
+		cfClientIDP.Access_token = d.Get("saml.0.access_token").(string)
 	}
 
 	return cfClientIDP
