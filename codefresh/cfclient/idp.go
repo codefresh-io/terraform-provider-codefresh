@@ -9,7 +9,6 @@ import (
 
 type IDP struct {
 	ID            string   `json:"_id,omitempty"`
-	IsGlobal	  bool     `json:"isGlobal,omitempty"` // This is not part of the schema, rather it is used to determine if the IDP is gloal or not and choose endpoints accordingly
 	Access_token  string   `json:"access_token,omitempty"`
 	Accounts      []string `json:"accounts,omitempty"`
 	ClientName    string   `json:"clientName,omitempty"` // IDP name
@@ -60,7 +59,15 @@ type IDP struct {
 	// Azure
 	AutoGroupSync bool `json:"autoGroupSync,omitempty"`
 	// Azure
-	SyncInterval int `json:"syncInterval,string,omitempty"`	
+	SyncInterval string `json:"syncInterval,omitempty"`
+	// Onelogin
+	ApiClientId string `json:"apiClientId,omitempty"`
+	// Onelogin
+	ApiClientSecret string `json:"apiClientSecret,omitempty"`
+	// Keycloak
+	Host string `json:"host,omitempty"`
+	// keycloak
+	Realm string `json:"realm,omitempty"`
 }
 
 // Return the appropriate API endpoint for platform and account scoped IDPs
@@ -73,7 +80,7 @@ func getAPIEndpoint(isGlobal bool) string {
 	}
 }
 
-func (client *Client) CreateIDP(idp *IDP) (*IDP, error) {
+func (client *Client) CreateIDP(idp *IDP, isGlobal bool) (*IDP, error) {
 
 	body, err := EncodeToJSON(idp)
 
@@ -81,7 +88,7 @@ func (client *Client) CreateIDP(idp *IDP) (*IDP, error) {
 		return nil, err
 	}
 	opts := RequestOptions{
-		Path:   getAPIEndpoint(idp.IsGlobal),
+		Path:   getAPIEndpoint(isGlobal),
 		Method: "POST",
 		Body:   body,
 	}
@@ -104,7 +111,7 @@ func (client *Client) CreateIDP(idp *IDP) (*IDP, error) {
 
 // Currently on update the API returns a different structure for accounts than on read making the client crash on decode
 // For now we are disabling response decode and in the resource will instead call the read function again
-func (client *Client) UpdateIDP(idp *IDP) error {
+func (client *Client) UpdateIDP(idp *IDP, isGlobal bool) error {
 
 	body, err := EncodeToJSON(idp)
 
@@ -112,7 +119,7 @@ func (client *Client) UpdateIDP(idp *IDP) error {
 		return err
 	}
 	opts := RequestOptions{
-		Path:   getAPIEndpoint(idp.IsGlobal),
+		Path:   getAPIEndpoint(isGlobal),
 		Method: "PUT",
 		Body:   body,
 	}

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"context"
 	"regexp"
+	"strconv"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,7 +15,7 @@ import (
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 )
 
-var supportedIdps = []string{"github","gitlab", "okta", "google","auth0","azure"}
+var supportedIdps = []string{"github","gitlab", "okta", "google","auth0","azure","onelogin","keycloak"}
 
 func resourceIdp() *schema.Resource {
 	return &schema.Resource{
@@ -230,7 +231,7 @@ func resourceIdp() *schema.Resource {
 						"client_host": {
 							Type:     schema.TypeString,
 							Description: "The OKTA organization URL, for example, https://<company>.okta.com",
-							ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`^(https?:\\/\\/)(\\S+)(\\.okta(preview|-emea)?\\.com$)`), "must be a valid okta url"),
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(https?:\/\/)(\S+)(\.okta(preview|-emea)?\.com$)`), "must be a valid okta url"),
 							Required: true,
 						},
 						"app_id": {
@@ -391,6 +392,96 @@ func resourceIdp() *schema.Resource {
 					},
 				},
 			},
+			"onelogin": {
+				Description: "Settings for onelogin IDP",
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems: 1,
+				ExactlyOneOf: supportedIdps,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"client_id": {
+							Type:     schema.TypeString,
+							Description: "Client ID from Onelogin",
+							Required: true,
+						},
+						"client_secret": {
+							Type:     schema.TypeString,
+							Description: "Client secret from Onelogin",
+							Required: true,
+							Sensitive: true,
+						},
+						"client_secret_encrypted": {
+							Type:     schema.TypeString,
+							Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+							Optional: true,
+							Computed: true,
+						},
+						"domain": {
+							Type:     schema.TypeString,
+							Description: "The domain to be used for authentication",
+							Required: true,
+						},
+						"app_id": {
+							Type:     schema.TypeString,
+							Description: "The Codefresh application ID in your Onelogin",
+							Optional: true,
+						},
+						"api_client_id": {
+							Type:     schema.TypeString,
+							Description: "Client ID for onelogin API, only needed if syncing users and groups from Onelogin",
+							Optional: true,
+						},
+						"api_client_secret": {
+							Type:     schema.TypeString,
+							Description: "Client secret for onelogin API, only needed if syncing users and groups from Onelogin",
+							Optional: true,
+							// When onelogin IDP is created on account level, after the first apply the client secret is returned obfuscated 
+							//DiffSuppressFunc: surpressObfuscatedFields(),
+						},
+					},
+				},
+			},
+			"keycloak": {
+				Description: "Settings for Keycloak IDP",
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems: 1,
+				ExactlyOneOf: supportedIdps,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"client_id": {
+							Type:     schema.TypeString,
+							Description: "Client ID from Keycloak",
+							Required: true,
+						},
+						"client_secret": {
+							Type:     schema.TypeString,
+							Description: "Client secret from Keycloak",
+							Required: true,
+							Sensitive: true,
+						},
+						"client_secret_encrypted": {
+							Type:     schema.TypeString,
+							Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+							Optional: true,
+							Computed: true,
+						},
+						"host": {
+							Type:     schema.TypeString,
+							Description: "The Keycloak URL",
+							Required: true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(https?:\/\/)(\S+)$`), "must be a valid url"),
+						},
+						"realm": {
+							Type:     schema.TypeString,
+							Description: "The Realm ID for Codefresh in Keycloak. Defaults to master",
+							Optional: true,
+							Default: "master",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -399,7 +490,7 @@ func resourceIDPCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfclient.Client)
 
-	resp, err := client.CreateIDP(mapResourceToIDP(d))
+	resp, err := client.CreateIDP(mapResourceToIDP(d),d.Get("is_global").(bool))
 
 	if err != nil {
 		log.Printf("[DEBUG] Error while creating idp. Error = %v", err)
@@ -489,7 +580,7 @@ func resourceIDPUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfclient.Client)
 
-	err := client.UpdateIDP(mapResourceToIDP(d))
+	err := client.UpdateIDP(mapResourceToIDP(d), d.Get("is_global").(bool))
 
 	if err != nil {
 		log.Printf("[DEBUG] Error while updating idp. Error = %v", err)
@@ -500,6 +591,7 @@ func resourceIDPUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
+	isGlobal := d.Get("is_global").(bool)
 	d.SetId(cfClientIDP.ID)
 	d.Set("display_name", cfClientIDP.DisplayName)
 	d.Set("name", cfClientIDP.ClientName)
@@ -580,26 +672,66 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 	}
 
 	if cfClientIDP.ClientType == "azure" {
+
+		syncInterval, err := strconv.Atoi(cfClientIDP.SyncInterval)
+
+		if err != nil {
+			return err
+		}
+		
 		attributes := []map[string]interface{}{{
 			"app_id":            			cfClientIDP.ClientId,
 			"client_secret": 				d.Get("azure.0.client_secret"),
 			"client_secret_encrypted": 		cfClientIDP.ClientSecret,
 			"object_id":   					cfClientIDP.AppId,
 			"autosync_teams_and_users":		cfClientIDP.AutoGroupSync,
-			"sync_interval":				cfClientIDP.SyncInterval,
+			"sync_interval":				syncInterval,
 			"tenant":						cfClientIDP.Tenant,
 		}}
 
 		d.Set("azure", attributes)
 	}
 
+	if cfClientIDP.ClientType == "onelogin" {
+		attributes := []map[string]interface{}{{
+			"client_id":            		cfClientIDP.ClientId,
+			"client_secret": 				d.Get("onelogin.0.client_secret"),
+			"client_secret_encrypted": 		cfClientIDP.ClientSecret,
+			"domain":   					cfClientIDP.ClientHost,
+			"api_client_id":				cfClientIDP.ApiClientId,
+			
+			"api_client_secret":			cfClientIDP.ApiClientSecret,
+			"app_id":						cfClientIDP.AppId,
+		}}
+		// When account scoped, Client secret is returned obfuscated after first apply, causing diff to appear everytime.
+		// This behavior would always set the API clint secret from the resource, allowing at least changing the secret when the value in terraform configuration changes.
+		// Though it would not detect drift if the secret is changed from UI.
+		if !isGlobal{
+			attributes[0]["api_client_secret"] = d.Get("onelogin.0.api_client_secret")
+		}
+
+		d.Set("onelogin", attributes)
+	}
+
+	if cfClientIDP.ClientType == "keycloak" {
+		attributes := []map[string]interface{}{{
+			"client_id":            		cfClientIDP.ClientId,
+			"client_secret": 				d.Get("keycloak.0.client_secret"),
+			"client_secret_encrypted": 		cfClientIDP.ClientSecret,
+			"host":   						cfClientIDP.Host,
+			"realm":						cfClientIDP.Realm,
+		}}
+
+		d.Set("keycloak", attributes)
+	}
+
 	return nil
 }
 
 func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
+
 	cfClientIDP := &cfclient.IDP{
 		ID:               d.Id(),
-		IsGlobal: 		  d.Get("is_global").(bool),
 		DisplayName: 	  d.Get("display_name").(string),
 		ClientName:       d.Get("name").(string),
 		RedirectUrl:      d.Get("redirect_url").(string),
@@ -660,8 +792,37 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 		cfClientIDP.AppId = d.Get("azure.0.object_id").(string)
 		cfClientIDP.Tenant = d.Get("azure.0.tenant").(string)
 		cfClientIDP.AutoGroupSync = d.Get("azure.0.autosync_teams_and_users").(bool)
-		cfClientIDP.SyncInterval = d.Get("azure.0.sync_interval").(int)
+		cfClientIDP.SyncInterval = strconv.Itoa(d.Get("azure.0.sync_interval").(int))
+	}
+
+	if _, ok := d.GetOk("onelogin"); ok {
+		cfClientIDP.ClientType = "onelogin"
+		cfClientIDP.ClientId = d.Get("onelogin.0.client_id").(string)
+		cfClientIDP.ClientSecret = d.Get("onelogin.0.client_secret").(string)
+		cfClientIDP.ClientHost = d.Get("onelogin.0.domain").(string)
+		cfClientIDP.AppId = d.Get("onelogin.0.app_id").(string)
+		cfClientIDP.ApiClientId = d.Get("onelogin.0.api_client_id").(string)
+		cfClientIDP.ApiClientSecret = d.Get("onelogin.0.api_client_secret").(string)
+	}
+
+	if _, ok := d.GetOk("keycloak"); ok {
+		cfClientIDP.ClientType = "keycloak"
+		cfClientIDP.ClientId = d.Get("keycloak.0.client_id").(string)
+		cfClientIDP.ClientSecret = d.Get("keycloak.0.client_secret").(string)
+		cfClientIDP.Host = d.Get("keycloak.0.host").(string)
+		cfClientIDP.Realm = d.Get("keycloak.0.realm").(string)
 	}
 
 	return cfClientIDP
 }
+
+// func surpressObfuscatedFields() schema.SchemaDiffSuppressFunc {
+// 	return func(k, old, new string, d *schema.ResourceData) bool {
+// 		if old == "*****" {
+// 			return true
+// 		} else {
+// 			return false
+// 		}
+// 	}
+// }
+
