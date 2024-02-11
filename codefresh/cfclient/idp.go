@@ -58,6 +58,8 @@ type IDP struct {
 	SyncField string `json:"syncField,omitempty"`
 	// Azure
 	AutoGroupSync bool `json:"autoGroupSync,omitempty"`
+	// Google,Okta,saml
+	ActivateUserAfterSync bool `json:"activateUserAfterSync,omitempty"`
 	// Azure
 	SyncInterval string `json:"syncInterval,omitempty"`
 	// Onelogin
@@ -68,6 +70,12 @@ type IDP struct {
 	Host string `json:"host,omitempty"`
 	// keycloak
 	Realm string `json:"realm,omitempty"`
+	// SAML
+	EntryPoint string `json:"entryPoint,omitempty"`
+	// SAML
+	ApplicationCert string `json:"cert,omitempty"`
+	// SAML
+	SamlProvider string `json:"provider,omitempty"`
 }
 
 // Return the appropriate API endpoint for platform and account scoped IDPs
@@ -80,12 +88,17 @@ func getAPIEndpoint(isGlobal bool) string {
 	}
 }
 
-func (client *Client) CreateIDP(idp *IDP, isGlobal bool) (*IDP, error) {
+// Currently on create the API sometimes (like when creating saml idps) returns a different structure for accounts than on read making the client crash on decode
+// For now we are disabling response decode and in the resource will instead call the read function again
+func (client *Client) CreateIDP(idp *IDP, isGlobal bool) (id string, err error) {
 
 	body, err := EncodeToJSON(idp)
 
+	strBody := string(body)
+	fmt.Println(strBody)
+
 	if err != nil {
-		return nil, err
+		return "",err
 	}
 	opts := RequestOptions{
 		Path:   getAPIEndpoint(isGlobal),
@@ -97,16 +110,17 @@ func (client *Client) CreateIDP(idp *IDP, isGlobal bool) (*IDP, error) {
 
 	if err != nil {
 		log.Printf("[DEBUG] Call to API for IDP creation failed with Error = %v for Body %v", err, body)
-		return nil, err
+		return "",err
 	}
 
-	var respIDP IDP
+	var respIDP map[string]interface{}
 	err = DecodeResponseInto(resp, &respIDP)
+	
 	if err != nil {
-		return nil, err
+		return "",nil
 	}
 
-	return &respIDP, nil
+	return respIDP["id"].(string),nil
 }
 
 // Currently on update the API returns a different structure for accounts than on read making the client crash on decode

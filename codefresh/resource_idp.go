@@ -15,7 +15,7 @@ import (
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 )
 
-var supportedIdps = []string{"github","gitlab", "okta", "google","auth0","azure","onelogin","keycloak"}
+var supportedIdps = []string{"github","gitlab", "okta", "google","auth0","azure","onelogin","keycloak","saml"}
 
 func resourceIdp() *schema.Resource {
 	return &schema.Resource{
@@ -253,6 +253,17 @@ func resourceIdp() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
+						"access_token": {
+							Type:     schema.TypeString,
+							Description: "The Okta API token generated in Okta, used to sync groups and their users from Okta to Codefresh",
+							Optional: true,
+						},
+						"access_token_encrypted": {
+							Type:     schema.TypeString,
+							Description: "Computed access token in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+							Optional: true,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -286,6 +297,12 @@ func resourceIdp() *schema.Resource {
 							Description: "Email of a user with admin permissions on google, relevant only for synchronization",
 							Optional: true,
 						},
+						"admin_email_encrypted": {
+							Type:     schema.TypeString,
+							Description: "Admin email in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+							Optional: true,
+							Computed: true,
+						},
 						"json_keyfile": {
 							Type:     schema.TypeString,
 							Description: "JSON keyfile for google service account used for synchronization",
@@ -293,7 +310,7 @@ func resourceIdp() *schema.Resource {
 						},
 						"json_keyfile_encrypted": {
 							Type:     schema.TypeString,
-							Description: "Computed app id in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+							Description: "Computed JSON keyfile in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
 							Optional: true,
 							Computed: true,
 						},
@@ -302,7 +319,7 @@ func resourceIdp() *schema.Resource {
 							Description: "Comma separated list of groups to sync",
 							Optional: true,
 						},
-						"sync_filed": {
+						"sync_field": {
 							Type:     schema.TypeString,
 							Description: "Relevant for custom schema-based synchronization only. See Codefresh documentation",
 							Optional: true,
@@ -482,6 +499,95 @@ func resourceIdp() *schema.Resource {
 					},
 				},
 			},
+			"saml": {
+				Description: "Settings for SAML IDP",
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems: 1,
+				ExactlyOneOf: supportedIdps,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"endpoint": {
+							Type:     schema.TypeString,
+							Description: "The SSO endpoint of your Identity Provider",
+							Required: true,
+						},
+						"application_certificate": {
+							Type:     schema.TypeString,
+							Description: "The security certificate of your Identity Provider. Paste the value directly on the field. Do not convert to base64 or any other encoding by hand",
+							Required: true,
+							Sensitive: true,
+						},
+						"application_certificate_encrypted": {
+							Type:     schema.TypeString,
+							Description: "Computed certificate secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+							Optional: true,
+							Computed: true,
+						},
+						"provider": {
+							Type:     schema.TypeString,
+							Description: "SAML provider. Currently supported values - GSuite, okta or empty string for generic provider. Defaults to empty string",
+							Optional: true,
+							Default: "",
+							ValidateFunc: validation.StringInSlice([]string{"","okta","GSuite"},false),
+						},
+						"allowed_groups_for_sync": {
+							Type:     schema.TypeString,
+							Description: "Valid for GSuite only: Comma separated list of groups to sync",
+							Optional: true,
+						},
+						"autosync_teams_and_users": {
+							Type: schema.TypeBool,
+							Description: "Valid for Okta/GSuite: Set to true to sync user accounts and teams in okta/gsuite to your Codefresh account",
+							Optional: true,
+							Default: false,
+						},
+						"sync_interval": {
+							Type: schema.TypeInt,
+							Description: "Valid for Okta/GSuite: Sync interval in hours for syncing user accounts in okta/gsuite to your Codefresh account. If not set the sync inteval will be 12 hours",
+							Optional: true,
+						},
+						"activate_users_after_sync": {
+							Type: schema.TypeBool,
+							Description: "Valid for Okta only: If set to true, Codefresh will automatically invite and activate new users added during the automated sync, without waiting for the users to accept the invitations. Defaults to false",
+							Optional: true,
+							Default: false,
+						},
+						"app_id": {
+							Type:     schema.TypeString,
+							Description: "Valid for Okta only: The Codefresh application ID in Okta",
+							Optional: true,
+						},
+						"client_host": {
+							Type:     schema.TypeString,
+							Description: "Valid for Okta only: OKTA organization URL, for example, https://<company>.okta.com",
+							Optional: true,
+						},
+						"json_keyfile": {
+							Type:     schema.TypeString,
+							Description: "JSON keyfile for google service account used for synchronization",
+							Optional: true,
+						},
+						"json_keyfile_encrypted": {
+							Type:     schema.TypeString,
+							Description: "Computed JSON keyfile in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+							Optional: true,
+							Computed: true,
+						},
+						"admin_email": {
+							Type:     schema.TypeString,
+							Description: "Email of a user with admin permissions on google, relevant only for synchronization",
+							Optional: true,
+						},
+						"admin_email_encrypted": {
+							Type:     schema.TypeString,
+							Description: "Admin email in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -490,14 +596,14 @@ func resourceIDPCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfclient.Client)
 
-	resp, err := client.CreateIDP(mapResourceToIDP(d),d.Get("is_global").(bool))
+	id,err := client.CreateIDP(mapResourceToIDP(d),d.Get("is_global").(bool))
 
 	if err != nil {
 		log.Printf("[DEBUG] Error while creating idp. Error = %v", err)
 		return err
 	}
 
-	d.SetId(resp.ID)
+	d.SetId(id)
 	return resourceIDPRead(d, meta)
 }
 
@@ -640,6 +746,8 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 			"app_id": 						d.Get("okta.0.app_id"),
 			"app_id_encrypted":             cfClientIDP.AppId,
 			"sync_mirror_accounts": 		cfClientIDP.SyncMirrorAccounts,
+			"access_token":					d.Get("okta.0.access_token"),
+			"access_token_encrypted": 		cfClientIDP.Access_token,
 		}}
 
 		d.Set("okta", attributes)
@@ -650,12 +758,20 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 			"client_id":            		cfClientIDP.ClientId,
 			"client_secret": 				d.Get("google.0.client_secret"),
 			"client_secret_encrypted": 		cfClientIDP.ClientSecret,
-			"admin_email":   				cfClientIDP.Subject,
+			"admin_email":   				d.Get("google.0.admin_email"),
+			"admin_email_encrypted": 		cfClientIDP.Subject,
 			"json_keyfile": 				d.Get("google.0.json_keyfile"),
 			"json_keyfile_encrypted":       cfClientIDP.KeyFile,
 			"allowed_groups_for_sync": 		cfClientIDP.AllowedGroupsForSync,
-			"sync_filed":                   cfClientIDP.SyncField,
+			"sync_field":                   cfClientIDP.SyncField,
 		}}
+
+		// When account scoped, admin email is returned obfuscated after first apply, causing diff to appear everytime.
+		// This behavior would always set the admin email from the resource, allowing at least changing the secret when the value in terraform configuration changes.
+		// Though it would not detect drift if the secret is changed from UI.
+		if !isGlobal{
+			attributes[0]["admin_email"] = d.Get("google.0.admin_email")
+		}
 
 		d.Set("google", attributes)
 	}
@@ -725,6 +841,32 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 		d.Set("keycloak", attributes)
 	}
 
+	if cfClientIDP.ClientType == "saml" {
+		syncInterval, err := strconv.Atoi(cfClientIDP.SyncInterval)
+
+		if err != nil {
+			return err
+		}
+		attributes := []map[string]interface{}{{
+			"endpoint": 								cfClientIDP.EntryPoint,
+			"application_certificate":					d.Get("saml.0.application_certificate"),
+			"application_certificate_encrypted": 		cfClientIDP.ApplicationCert,
+			"provider":   								cfClientIDP.SamlProvider,
+			"allowed_groups_for_sync":					cfClientIDP.AllowedGroupsForSync,
+			"autosync_teams_and_users":					cfClientIDP.AutoGroupSync,
+			"activate_users_after_sync":				cfClientIDP.ActivateUserAfterSync,
+			"sync_interval":							syncInterval,
+			"app_id":									cfClientIDP.AppId,
+			"client_host":								cfClientIDP.ClientHost,
+			"json_keyfile": 							d.Get("saml.0.json_keyfile"),
+			"json_keyfile_encrypted":       			cfClientIDP.KeyFile,
+			"admin_email":   							d.Get("saml.0.admin_email"),
+			"admin_email_encrypted": 					cfClientIDP.Subject,
+		}}
+
+		d.Set("saml", attributes)
+	}
+
 	return nil
 }
 
@@ -766,6 +908,7 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 		cfClientIDP.ClientHost = d.Get("okta.0.client_host").(string)
 		cfClientIDP.AppId = d.Get("okta.0.app_id").(string)
 		cfClientIDP.SyncMirrorAccounts = datautil.ConvertStringArr(d.Get("okta.0.sync_mirror_accounts").([]interface{}))
+		cfClientIDP.Access_token = d.Get("okta.0.access_token").(string)
 	}
 
 	if _, ok := d.GetOk("google"); ok {
@@ -775,7 +918,7 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 		cfClientIDP.KeyFile = d.Get("google.0.json_keyfile").(string)
 		cfClientIDP.Subject = d.Get("google.0.admin_email").(string)
 		cfClientIDP.AllowedGroupsForSync = d.Get("google.0.allowed_groups_for_sync").(string)
-		cfClientIDP.SyncField = d.Get("google.0.sync_filed").(string)
+		cfClientIDP.SyncField = d.Get("google.0.sync_field").(string)
 	}
 
 	if _, ok := d.GetOk("auth0"); ok {
@@ -813,16 +956,20 @@ func mapResourceToIDP(d *schema.ResourceData) *cfclient.IDP {
 		cfClientIDP.Realm = d.Get("keycloak.0.realm").(string)
 	}
 
+	if _, ok := d.GetOk("saml"); ok {
+		cfClientIDP.ClientType = "saml"
+		cfClientIDP.SamlProvider = d.Get("saml.0.provider").(string)
+		cfClientIDP.EntryPoint = d.Get("saml.0.endpoint").(string)
+		cfClientIDP.ApplicationCert = d.Get("saml.0.application_certificate").(string)
+		cfClientIDP.AllowedGroupsForSync = d.Get("saml.0.allowed_groups_for_sync").(string)
+		cfClientIDP.AutoGroupSync = d.Get("saml.0.autosync_teams_and_users").(bool)
+		cfClientIDP.ActivateUserAfterSync = d.Get("saml.0.activate_users_after_sync").(bool)
+		cfClientIDP.SyncInterval = strconv.Itoa(d.Get("saml.0.sync_interval").(int))
+		cfClientIDP.AppId = d.Get("saml.0.app_id").(string)
+		cfClientIDP.ClientHost = d.Get("saml.0.client_host").(string)
+		cfClientIDP.KeyFile = d.Get("saml.0.json_keyfile").(string)
+		cfClientIDP.Subject = d.Get("saml.0.admin_email").(string)
+	}
+
 	return cfClientIDP
 }
-
-// func surpressObfuscatedFields() schema.SchemaDiffSuppressFunc {
-// 	return func(k, old, new string, d *schema.ResourceData) bool {
-// 		if old == "*****" {
-// 			return true
-// 		} else {
-// 			return false
-// 		}
-// 	}
-// }
-
