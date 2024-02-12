@@ -76,6 +76,14 @@ type IDP struct {
 	ApplicationCert string `json:"cert,omitempty"`
 	// SAML
 	SamlProvider string `json:"provider,omitempty"`
+	// ldap
+	Password          string `json:"password,omitempty"`
+	Url               string `json:"url,omitempty"`
+	DistinguishedName string `json:"distinguishedName,omitempty"`
+	SearchBase        string `json:"searchBase,omitempty"`
+	SearchFilter      string `json:"searchFilter,omitempty"`
+	SearchBaseForSync string `json:"searchBaseForSync,omitempty"`
+	Certificate       string `json:"certificate,omitempty"`
 }
 
 // Return the appropriate API endpoint for platform and account scoped IDPs
@@ -94,11 +102,8 @@ func (client *Client) CreateIDP(idp *IDP, isGlobal bool) (id string, err error) 
 
 	body, err := EncodeToJSON(idp)
 
-	strBody := string(body)
-	fmt.Println(strBody)
-
 	if err != nil {
-		return "",err
+		return "", err
 	}
 	opts := RequestOptions{
 		Path:   getAPIEndpoint(isGlobal),
@@ -110,17 +115,17 @@ func (client *Client) CreateIDP(idp *IDP, isGlobal bool) (id string, err error) 
 
 	if err != nil {
 		log.Printf("[DEBUG] Call to API for IDP creation failed with Error = %v for Body %v", err, body)
-		return "",err
+		return "", err
 	}
 
 	var respIDP map[string]interface{}
 	err = DecodeResponseInto(resp, &respIDP)
-	
+
 	if err != nil {
-		return "",nil
+		return "", nil
 	}
 
-	return respIDP["id"].(string),nil
+	return respIDP["id"].(string), nil
 }
 
 // Currently on update the API returns a different structure for accounts than on read making the client crash on decode
@@ -182,7 +187,7 @@ func (client *Client) DeleteIDPAccount(id string) error {
 	opts := RequestOptions{
 		Path:   getAPIEndpoint(false),
 		Method: "DELETE",
-		Body: body,
+		Body:   body,
 	}
 
 	_, err = client.RequestAPI(&opts)
@@ -193,8 +198,6 @@ func (client *Client) DeleteIDPAccount(id string) error {
 
 	return nil
 }
-
-
 
 // get all idps
 func (client *Client) GetIDPs() (*[]IDP, error) {
