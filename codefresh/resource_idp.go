@@ -674,7 +674,6 @@ func resourceIDPRead(d *schema.ResourceData, meta interface{}) error {
 	var cfClientIDP *cfclient.IDP
 	var err error
 
-	
 	cfClientIDP, err = client.GetIdpByID(idpID)
 
 	if err != nil {

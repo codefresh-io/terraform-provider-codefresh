@@ -69,7 +69,7 @@ func Provider() *schema.Provider {
 			"codefresh_team":                     resourceTeam(),
 			"codefresh_abac_rules":               resourceGitopsAbacRule(),
 			"codefresh_idp":                      resourceIdp(),
-			"codefresh_account_idp":			  resourceAccountIdp(),
+			"codefresh_account_idp":              resourceAccountIdp(),
 		},
 		ConfigureFunc: configureProvider,
 	}

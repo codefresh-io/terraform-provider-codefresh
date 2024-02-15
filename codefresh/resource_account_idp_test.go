@@ -10,9 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestIDPCodefreshProject_AccountSpecific(t *testing.T) {
+// Check create, update and delete of all supported IDP types
+func TestAccountIDPCodefreshProject_AllSupportedTypes(t *testing.T) {
 	uniqueId := acctest.RandString(10)
-	resourceName := "codefresh_idp.test"
+	resourceName := "codefresh_account_idp.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -22,7 +23,7 @@ func TestIDPCodefreshProject_AccountSpecific(t *testing.T) {
 			{
 				Config: testIDPCodefreshProjectAccountSpecificConfig("onelogin", uniqueId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCodefreshIDPAccountSpecficExists(resourceName),
+					testAccCheckCodefreshAccountIDPExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("tf-test-onelogin-%s", uniqueId)),
 				),
 			},
@@ -35,7 +36,7 @@ func TestIDPCodefreshProject_AccountSpecific(t *testing.T) {
 	})
 }
 
-func testAccCheckCodefreshIDPAccountSpecficExists(resource string) resource.TestCheckFunc {
+func testAccCheckCodefreshAccountIDPExists(resource string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		rs, ok := state.RootModule().Resources[resource]
 		if !ok {
@@ -63,7 +64,7 @@ func testIDPCodefreshProjectAccountSpecificConfig(idpType string, uniqueId strin
 
 	if idpType == "onelogin" {
 		idpResource = fmt.Sprintf(` 
-		resource "codefresh_idp" "test" { 
+		resource "codefresh_account_idp" "test" { 
 			display_name = "tf-test-onelogin-%s"
 
 			onelogin {

@@ -78,9 +78,7 @@ func resourceAccountIDPRead(d *schema.ResourceData, meta interface{}) error {
 	var cfClientIDP *cfclient.IDP
 	var err error
 
-	
 	cfClientIDP, err = client.GetAccountIdpByID(idpID)
-	
 
 	if err != nil {
 		if err.Error() == fmt.Sprintf("[ERROR] IDP with ID %s isn't found.", d.Id()) {
