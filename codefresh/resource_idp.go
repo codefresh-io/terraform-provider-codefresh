@@ -16,6 +16,609 @@ import (
 )
 
 var supportedIdps = []string{"github", "gitlab", "okta", "google", "auth0", "azure", "onelogin", "keycloak", "saml", "ldap"}
+var idpSchema = map[string]*schema.Schema{
+	"display_name": {
+		Description: "The display name for the IDP.",
+		Type:        schema.TypeString,
+		Required:    true,
+	},
+	"name": {
+		Description: "Name of the IDP, will be generated if not set",
+		Type:        schema.TypeString,
+		Computed:    true,
+		Optional:    true,
+	},
+	"client_type": {
+		Description: "Type of the IDP. If not set it is derived from idp specific config object (github, gitlab etc)",
+		Type:        schema.TypeString,
+		Computed:    true,
+		ForceNew:    true,
+	},
+	"redirect_url": {
+		Description: "API Callback url for the identity provider",
+		Type:        schema.TypeString,
+		Computed:    true,
+	},
+	"redirect_ui_url": {
+		Description: "UI Callback url for the identity provider",
+		Type:        schema.TypeString,
+		Computed:    true,
+	},
+	"login_url": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
+	"config_hash": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
+	"github": {
+		Description:  "Settings for GitHub IDP",
+		Type:         schema.TypeList,
+		Optional:     true,
+		MaxItems:     1,
+		ExactlyOneOf: supportedIdps,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"client_id": {
+					Type:        schema.TypeString,
+					Description: "Client ID from Github",
+					Required:    true,
+				},
+				"client_secret": {
+					Type:        schema.TypeString,
+					Description: "Client secret from GitHub",
+					Required:    true,
+					Sensitive:   true,
+				},
+				"client_secret_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"authentication_url": {
+					Type:        schema.TypeString,
+					Description: "Authentication url, Defaults to https://github.com/login/oauth/authorize",
+					Optional:    true,
+					Default:     "https://github.com/login/oauth/authorize",
+				},
+				"token_url": {
+					Type:        schema.TypeString,
+					Description: "GitHub token endpoint url, Defaults to https://github.com/login/oauth/access_token",
+					Optional:    true,
+					Default:     "https://github.com/login/oauth/access_token",
+				},
+				"user_profile_url": {
+					Type:        schema.TypeString,
+					Description: "GitHub user profile url, Defaults to https://api.github.com/user",
+					Optional:    true,
+					Default:     "https://api.github.com/user",
+				},
+				"api_host": {
+					Type:        schema.TypeString,
+					Description: "GitHub API host, Defaults to api.github.com",
+					Optional:    true,
+					Default:     "api.github.com",
+				},
+				"api_path_prefix": {
+					Type:        schema.TypeString,
+					Description: "GitHub API url path prefix, defaults to /",
+					Optional:    true,
+					Default:     "/",
+				},
+			},
+		},
+	},
+	"gitlab": {
+		Description:  "Settings for GitLab IDP",
+		Type:         schema.TypeList,
+		Optional:     true,
+		MaxItems:     1,
+		ExactlyOneOf: supportedIdps,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"client_id": {
+					Type:        schema.TypeString,
+					Description: "Client ID from Gitlab",
+					Required:    true,
+				},
+				"client_secret": {
+					Type:        schema.TypeString,
+					Description: "Client secret from Gitlab",
+					Required:    true,
+					Sensitive:   true,
+				},
+				"client_secret_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"authentication_url": {
+					Type:        schema.TypeString,
+					Description: "Authentication url, Defaults to https://gitlab.com",
+					Optional:    true,
+					Default:     "https://gitlab.com",
+				},
+				"user_profile_url": {
+					Type:        schema.TypeString,
+					Description: "User profile url, Defaults to https://gitlab.com/api/v4/user",
+					Optional:    true,
+					Default:     "https://gitlab.com/api/v4/user",
+				},
+				"api_url": {
+					Type:        schema.TypeString,
+					Description: "Base url for Gitlab API, Defaults to https://gitlab.com/api/v4/",
+					Optional:    true,
+					Default:     "https://gitlab.com/api/v4/",
+				},
+			},
+		},
+	},
+	"okta": {
+		Description:  "Settings for Okta IDP",
+		Type:         schema.TypeList,
+		Optional:     true,
+		MaxItems:     1,
+		ExactlyOneOf: supportedIdps,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"client_id": {
+					Type:        schema.TypeString,
+					Description: "Client ID in Okta, must be unique across all identity providers in Codefresh",
+					Required:    true,
+				},
+				"client_secret": {
+					Type:        schema.TypeString,
+					Description: "Client secret in Okta",
+					Required:    true,
+					Sensitive:   true,
+				},
+				"client_secret_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"client_host": {
+					Type:         schema.TypeString,
+					Description:  "The OKTA organization URL, for example, https://<company>.okta.com",
+					ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(https?:\/\/)(\S+)(\.okta(preview|-emea)?\.com$)`), "must be a valid okta url"),
+					Required:     true,
+				},
+				"app_id": {
+					Type:        schema.TypeString,
+					Description: "The Codefresh application ID in your OKTA organization",
+					Optional:    true,
+				},
+				"app_id_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed app id in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"sync_mirror_accounts": {
+					Type:        schema.TypeList,
+					Description: "The names of the additional Codefresh accounts to be synced from Okta",
+					Optional:    true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"access_token": {
+					Type:        schema.TypeString,
+					Description: "The Okta API token generated in Okta, used to sync groups and their users from Okta to Codefresh",
+					Optional:    true,
+				},
+				"access_token_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed access token in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+			},
+		},
+	},
+	"google": {
+		Description:  "Settings for Google IDP",
+		Type:         schema.TypeList,
+		Optional:     true,
+		MaxItems:     1,
+		ExactlyOneOf: supportedIdps,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"client_id": {
+					Type:        schema.TypeString,
+					Description: "Client ID in Google, must be unique across all identity providers in Codefresh",
+					Required:    true,
+				},
+				"client_secret": {
+					Type:        schema.TypeString,
+					Description: "Client secret in Google",
+					Required:    true,
+					Sensitive:   true,
+				},
+				"client_secret_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"admin_email": {
+					Type:        schema.TypeString,
+					Description: "Email of a user with admin permissions on google, relevant only for synchronization",
+					Optional:    true,
+				},
+				"admin_email_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Admin email in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"json_keyfile": {
+					Type:        schema.TypeString,
+					Description: "JSON keyfile for google service account used for synchronization",
+					Optional:    true,
+				},
+				"json_keyfile_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed JSON keyfile in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"allowed_groups_for_sync": {
+					Type:        schema.TypeString,
+					Description: "Comma separated list of groups to sync",
+					Optional:    true,
+				},
+				"sync_field": {
+					Type:        schema.TypeString,
+					Description: "Relevant for custom schema-based synchronization only. See Codefresh documentation",
+					Optional:    true,
+				},
+			},
+		},
+	},
+	"auth0": {
+		Description:  "Settings for Auth0 IDP",
+		Type:         schema.TypeList,
+		Optional:     true,
+		MaxItems:     1,
+		ExactlyOneOf: supportedIdps,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"client_id": {
+					Type:        schema.TypeString,
+					Description: "Client ID from Auth0",
+					Required:    true,
+				},
+				"client_secret": {
+					Type:        schema.TypeString,
+					Description: "Client secret from Auth0",
+					Required:    true,
+					Sensitive:   true,
+				},
+				"client_secret_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"domain": {
+					Type:        schema.TypeString,
+					Description: "The domain of the Auth0 application",
+					Required:    true,
+				},
+			},
+		},
+	},
+	"azure": {
+		Description:  "Settings for Azure IDP",
+		Type:         schema.TypeList,
+		Optional:     true,
+		MaxItems:     1,
+		ExactlyOneOf: supportedIdps,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"client_secret": {
+					Type:        schema.TypeString,
+					Description: "Client secret from Azure",
+					Required:    true,
+					Sensitive:   true,
+				},
+				"client_secret_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"app_id": {
+					Type:        schema.TypeString,
+					Description: "The Application ID from your Enterprise Application Properties in Azure AD",
+					Required:    true,
+				},
+				"tenant": {
+					Type:        schema.TypeString,
+					Description: "Azure tenant",
+					Optional:    true,
+				},
+				"object_id": {
+					Type:        schema.TypeString,
+					Description: "The Object ID from your Enterprise Application Properties in Azure AD",
+					Optional:    true,
+				},
+				"autosync_teams_and_users": {
+					Type:        schema.TypeBool,
+					Description: "Set to true to sync user accounts in Azure AD to your Codefresh account",
+					Optional:    true,
+					Default:     false,
+				},
+				"sync_interval": {
+					Type:        schema.TypeInt,
+					Description: "Sync interval in hours for syncing user accounts in Azure AD to your Codefresh account. If not set the sync inteval will be 12 hours",
+					Optional:    true,
+				},
+			},
+		},
+	},
+	"onelogin": {
+		Description:  "Settings for onelogin IDP",
+		Type:         schema.TypeList,
+		Optional:     true,
+		MaxItems:     1,
+		ExactlyOneOf: supportedIdps,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"client_id": {
+					Type:        schema.TypeString,
+					Description: "Client ID from Onelogin",
+					Required:    true,
+				},
+				"client_secret": {
+					Type:        schema.TypeString,
+					Description: "Client secret from Onelogin",
+					Required:    true,
+					Sensitive:   true,
+				},
+				"client_secret_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"domain": {
+					Type:        schema.TypeString,
+					Description: "The domain to be used for authentication",
+					Required:    true,
+				},
+				"app_id": {
+					Type:        schema.TypeString,
+					Description: "The Codefresh application ID in your Onelogin",
+					Optional:    true,
+				},
+				"api_client_id": {
+					Type:        schema.TypeString,
+					Description: "Client ID for onelogin API, only needed if syncing users and groups from Onelogin",
+					Optional:    true,
+				},
+				"api_client_secret": {
+					Type:        schema.TypeString,
+					Description: "Client secret for onelogin API, only needed if syncing users and groups from Onelogin",
+					Optional:    true,
+					// When onelogin IDP is created on account level, after the first apply the client secret is returned obfuscated
+					//DiffSuppressFunc: surpressObfuscatedFields(),
+				},
+			},
+		},
+	},
+	"keycloak": {
+		Description:  "Settings for Keycloak IDP",
+		Type:         schema.TypeList,
+		Optional:     true,
+		MaxItems:     1,
+		ExactlyOneOf: supportedIdps,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"client_id": {
+					Type:        schema.TypeString,
+					Description: "Client ID from Keycloak",
+					Required:    true,
+				},
+				"client_secret": {
+					Type:        schema.TypeString,
+					Description: "Client secret from Keycloak",
+					Required:    true,
+					Sensitive:   true,
+				},
+				"client_secret_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"host": {
+					Type:         schema.TypeString,
+					Description:  "The Keycloak URL",
+					Required:     true,
+					ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(https?:\/\/)(\S+)$`), "must be a valid url"),
+				},
+				"realm": {
+					Type:        schema.TypeString,
+					Description: "The Realm ID for Codefresh in Keycloak. Defaults to master",
+					Optional:    true,
+					Default:     "master",
+				},
+			},
+		},
+	},
+	"saml": {
+		Description:  "Settings for SAML IDP",
+		Type:         schema.TypeList,
+		Optional:     true,
+		MaxItems:     1,
+		ExactlyOneOf: supportedIdps,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"endpoint": {
+					Type:        schema.TypeString,
+					Description: "The SSO endpoint of your Identity Provider",
+					Required:    true,
+				},
+				"application_certificate": {
+					Type:        schema.TypeString,
+					Description: "The security certificate of your Identity Provider. Paste the value directly on the field. Do not convert to base64 or any other encoding by hand",
+					Required:    true,
+					Sensitive:   true,
+				},
+				"application_certificate_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed certificate secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"provider": {
+					Type:         schema.TypeString,
+					Description:  "SAML provider. Currently supported values - GSuite, okta or empty string for generic provider. Defaults to empty string",
+					Optional:     true,
+					Default:      "",
+					ValidateFunc: validation.StringInSlice([]string{"", "okta", "GSuite"}, false),
+				},
+				"allowed_groups_for_sync": {
+					Type:        schema.TypeString,
+					Description: "Valid for GSuite only: Comma separated list of groups to sync",
+					Optional:    true,
+				},
+				"autosync_teams_and_users": {
+					Type:        schema.TypeBool,
+					Description: "Valid for Okta/GSuite: Set to true to sync user accounts and teams in okta/gsuite to your Codefresh account",
+					Optional:    true,
+					Default:     false,
+				},
+				"sync_interval": {
+					Type:        schema.TypeInt,
+					Description: "Valid for Okta/GSuite: Sync interval in hours for syncing user accounts in okta/gsuite to your Codefresh account. If not set the sync inteval will be 12 hours",
+					Optional:    true,
+				},
+				"activate_users_after_sync": {
+					Type:        schema.TypeBool,
+					Description: "Valid for Okta only: If set to true, Codefresh will automatically invite and activate new users added during the automated sync, without waiting for the users to accept the invitations. Defaults to false",
+					Optional:    true,
+					Default:     false,
+				},
+				"app_id": {
+					Type:        schema.TypeString,
+					Description: "Valid for Okta only: The Codefresh application ID in Okta",
+					Optional:    true,
+				},
+				"client_host": {
+					Type:        schema.TypeString,
+					Description: "Valid for Okta only: OKTA organization URL, for example, https://<company>.okta.com",
+					Optional:    true,
+				},
+				"json_keyfile": {
+					Type:        schema.TypeString,
+					Description: "Valid for GSuite only: JSON keyfile for google service account used for synchronization",
+					Optional:    true,
+				},
+				"json_keyfile_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed JSON keyfile in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"admin_email": {
+					Type:        schema.TypeString,
+					Description: "Valid for GSuite only: Email of a user with admin permissions on google, relevant only for synchronization",
+					Optional:    true,
+				},
+				"admin_email_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Admin email in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"access_token": {
+					Type:        schema.TypeString,
+					Description: "Valid for Okta only: The Okta API token generated in Okta, used to sync groups and their users from Okta to Codefresh",
+					Optional:    true,
+				},
+				"access_token_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed access token in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+			},
+		},
+	},
+	"ldap": {
+		Description:  "Settings for Keycloak IDP",
+		Type:         schema.TypeList,
+		Optional:     true,
+		MaxItems:     1,
+		ExactlyOneOf: supportedIdps,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"url": {
+					Type:         schema.TypeString,
+					Description:  "ldap server url",
+					Required:     true,
+					ValidateFunc: validation.StringMatch(regexp.MustCompile(`^ldap(s?):\/\/`), "must be a valid ldap url (must start with ldap:// or ldaps://)"),
+				},
+				"password": {
+					Type:        schema.TypeString,
+					Description: "The password of the user defined in Distinguished name that will be used to search other users",
+					Required:    true,
+					Sensitive:   true,
+				},
+				"password_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed password in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"distinguished_name": {
+					Type:        schema.TypeString,
+					Description: "The username to be used to search other users in LDAP notation (combination of cn, ou,dc)",
+					Optional:    true,
+					Computed:    true,
+				},
+				"search_base": {
+					Type:        schema.TypeString,
+					Description: "The search-user scope in LDAP notation",
+					Required:    true,
+				},
+				"search_filter": {
+					Type:        schema.TypeString,
+					Description: "The attribute by which to search for the user on the LDAP server. By default, set to uid. For the Azure LDAP server, set this field to sAMAccountName",
+					Optional:    true,
+				},
+				"certificate": {
+					Type:        schema.TypeString,
+					Description: "For ldaps only: The security certificate of the LDAP server. Do not convert to base64 or any other encoding",
+					Optional:    true,
+				},
+				"certificate_encrypted": {
+					Type:        schema.TypeString,
+					Description: "Computed certificate in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
+					Optional:    true,
+					Computed:    true,
+				},
+				"allowed_groups_for_sync": {
+					Type:        schema.TypeString,
+					Description: "To sync only by specified groups - specify a comma separated list of groups, by default all groups will be synced",
+					Optional:    true,
+				},
+				"search_base_for_sync": {
+					Type:        schema.TypeString,
+					Description: "Synchronize using a custom search base, by deafult seach_base is used",
+					Optional:    true,
+				},
+			},
+		},
+	},
+}
 
 func resourceIdp() *schema.Resource {
 	return &schema.Resource{
@@ -43,629 +646,8 @@ func resourceIdp() *schema.Resource {
 					return false
 				}
 			}),
-			// If name has changed for an account scoped IDP the provider needs to ignore it as the API always generates the name
-			customdiff.If(func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				bIsGlobal := d.Get("is_global").(bool)
-				return !bIsGlobal
-			},
-				func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-					old, _ := d.GetChange("name")
-					if err := d.SetNew("name", old); err != nil {
-						return err
-					}
-					return nil
-				}),
 		),
-		Schema: map[string]*schema.Schema{
-			"is_global": {
-				Type:        schema.TypeBool,
-				Description: "If set to true IDP will be created globally for the entire platform - this requires a platform admin token and is meant for on-prem installations of Codefresh. If false the IDP will be created at the level of a single account which is derived from the API token used. Defaults to false",
-				Optional:    true,
-				Default:     false,
-				ForceNew:    true,
-			},
-			"display_name": {
-				Description: "The display name for the IDP.",
-				Type:        schema.TypeString,
-				Required:    true,
-			},
-			"name": {
-				Description: "Name of the IDP, will be generated if not set",
-				Type:        schema.TypeString,
-				Computed:    true,
-				Optional:    true,
-			},
-			"client_type": {
-				Description: "Type of the IDP. If not set it is derived from idp specific config object (github, gitlab etc)",
-				Type:        schema.TypeString,
-				Computed:    true,
-				ForceNew:    true,
-			},
-			"redirect_url": {
-				Description: "API Callback url for the identity provider",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"redirect_ui_url": {
-				Description: "UI Callback url for the identity provider",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			"login_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"config_hash": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"github": {
-				Description:  "Settings for GitHub IDP",
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				ExactlyOneOf: supportedIdps,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"client_id": {
-							Type:        schema.TypeString,
-							Description: "Client ID from Github",
-							Required:    true,
-						},
-						"client_secret": {
-							Type:        schema.TypeString,
-							Description: "Client secret from GitHub",
-							Required:    true,
-							Sensitive:   true,
-						},
-						"client_secret_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"authentication_url": {
-							Type:        schema.TypeString,
-							Description: "Authentication url, Defaults to https://github.com/login/oauth/authorize",
-							Optional:    true,
-							Default:     "https://github.com/login/oauth/authorize",
-						},
-						"token_url": {
-							Type:        schema.TypeString,
-							Description: "GitHub token endpoint url, Defaults to https://github.com/login/oauth/access_token",
-							Optional:    true,
-							Default:     "https://github.com/login/oauth/access_token",
-						},
-						"user_profile_url": {
-							Type:        schema.TypeString,
-							Description: "GitHub user profile url, Defaults to https://api.github.com/user",
-							Optional:    true,
-							Default:     "https://api.github.com/user",
-						},
-						"api_host": {
-							Type:        schema.TypeString,
-							Description: "GitHub API host, Defaults to api.github.com",
-							Optional:    true,
-							Default:     "api.github.com",
-						},
-						"api_path_prefix": {
-							Type:        schema.TypeString,
-							Description: "GitHub API url path prefix, defaults to /",
-							Optional:    true,
-							Default:     "/",
-						},
-					},
-				},
-			},
-			"gitlab": {
-				Description:  "Settings for GitLab IDP",
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				ExactlyOneOf: supportedIdps,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"client_id": {
-							Type:        schema.TypeString,
-							Description: "Client ID from Gitlab",
-							Required:    true,
-						},
-						"client_secret": {
-							Type:        schema.TypeString,
-							Description: "Client secret from Gitlab",
-							Required:    true,
-							Sensitive:   true,
-						},
-						"client_secret_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"authentication_url": {
-							Type:        schema.TypeString,
-							Description: "Authentication url, Defaults to https://gitlab.com",
-							Optional:    true,
-							Default:     "https://gitlab.com",
-						},
-						"user_profile_url": {
-							Type:        schema.TypeString,
-							Description: "User profile url, Defaults to https://gitlab.com/api/v4/user",
-							Optional:    true,
-							Default:     "https://gitlab.com/api/v4/user",
-						},
-						"api_url": {
-							Type:        schema.TypeString,
-							Description: "Base url for Gitlab API, Defaults to https://gitlab.com/api/v4/",
-							Optional:    true,
-							Default:     "https://gitlab.com/api/v4/",
-						},
-					},
-				},
-			},
-			"okta": {
-				Description:  "Settings for Okta IDP",
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				ExactlyOneOf: supportedIdps,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"client_id": {
-							Type:        schema.TypeString,
-							Description: "Client ID in Okta, must be unique across all identity providers in Codefresh",
-							Required:    true,
-						},
-						"client_secret": {
-							Type:        schema.TypeString,
-							Description: "Client secret in Okta",
-							Required:    true,
-							Sensitive:   true,
-						},
-						"client_secret_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"client_host": {
-							Type:         schema.TypeString,
-							Description:  "The OKTA organization URL, for example, https://<company>.okta.com",
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(https?:\/\/)(\S+)(\.okta(preview|-emea)?\.com$)`), "must be a valid okta url"),
-							Required:     true,
-						},
-						"app_id": {
-							Type:        schema.TypeString,
-							Description: "The Codefresh application ID in your OKTA organization",
-							Optional:    true,
-						},
-						"app_id_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed app id in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"sync_mirror_accounts": {
-							Type:        schema.TypeList,
-							Description: "The names of the additional Codefresh accounts to be synced from Okta",
-							Optional:    true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"access_token": {
-							Type:        schema.TypeString,
-							Description: "The Okta API token generated in Okta, used to sync groups and their users from Okta to Codefresh",
-							Optional:    true,
-						},
-						"access_token_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed access token in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-					},
-				},
-			},
-			"google": {
-				Description:  "Settings for Google IDP",
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				ExactlyOneOf: supportedIdps,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"client_id": {
-							Type:        schema.TypeString,
-							Description: "Client ID in Google, must be unique across all identity providers in Codefresh",
-							Required:    true,
-						},
-						"client_secret": {
-							Type:        schema.TypeString,
-							Description: "Client secret in Google",
-							Required:    true,
-							Sensitive:   true,
-						},
-						"client_secret_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"admin_email": {
-							Type:        schema.TypeString,
-							Description: "Email of a user with admin permissions on google, relevant only for synchronization",
-							Optional:    true,
-						},
-						"admin_email_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Admin email in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"json_keyfile": {
-							Type:        schema.TypeString,
-							Description: "JSON keyfile for google service account used for synchronization",
-							Optional:    true,
-						},
-						"json_keyfile_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed JSON keyfile in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"allowed_groups_for_sync": {
-							Type:        schema.TypeString,
-							Description: "Comma separated list of groups to sync",
-							Optional:    true,
-						},
-						"sync_field": {
-							Type:        schema.TypeString,
-							Description: "Relevant for custom schema-based synchronization only. See Codefresh documentation",
-							Optional:    true,
-						},
-					},
-				},
-			},
-			"auth0": {
-				Description:  "Settings for Auth0 IDP",
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				ExactlyOneOf: supportedIdps,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"client_id": {
-							Type:        schema.TypeString,
-							Description: "Client ID from Auth0",
-							Required:    true,
-						},
-						"client_secret": {
-							Type:        schema.TypeString,
-							Description: "Client secret from Auth0",
-							Required:    true,
-							Sensitive:   true,
-						},
-						"client_secret_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"domain": {
-							Type:        schema.TypeString,
-							Description: "The domain of the Auth0 application",
-							Required:    true,
-						},
-					},
-				},
-			},
-			"azure": {
-				Description:  "Settings for Azure IDP",
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				ExactlyOneOf: supportedIdps,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"client_secret": {
-							Type:        schema.TypeString,
-							Description: "Client secret from Azure",
-							Required:    true,
-							Sensitive:   true,
-						},
-						"client_secret_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"app_id": {
-							Type:        schema.TypeString,
-							Description: "The Application ID from your Enterprise Application Properties in Azure AD",
-							Required:    true,
-						},
-						"tenant": {
-							Type:        schema.TypeString,
-							Description: "Azure tenant",
-							Optional:    true,
-						},
-						"object_id": {
-							Type:        schema.TypeString,
-							Description: "The Object ID from your Enterprise Application Properties in Azure AD",
-							Optional:    true,
-						},
-						"autosync_teams_and_users": {
-							Type:        schema.TypeBool,
-							Description: "Set to true to sync user accounts in Azure AD to your Codefresh account",
-							Optional:    true,
-							Default:     false,
-						},
-						"sync_interval": {
-							Type:        schema.TypeInt,
-							Description: "Sync interval in hours for syncing user accounts in Azure AD to your Codefresh account. If not set the sync inteval will be 12 hours",
-							Optional:    true,
-						},
-					},
-				},
-			},
-			"onelogin": {
-				Description:  "Settings for onelogin IDP",
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				ExactlyOneOf: supportedIdps,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"client_id": {
-							Type:        schema.TypeString,
-							Description: "Client ID from Onelogin",
-							Required:    true,
-						},
-						"client_secret": {
-							Type:        schema.TypeString,
-							Description: "Client secret from Onelogin",
-							Required:    true,
-							Sensitive:   true,
-						},
-						"client_secret_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"domain": {
-							Type:        schema.TypeString,
-							Description: "The domain to be used for authentication",
-							Required:    true,
-						},
-						"app_id": {
-							Type:        schema.TypeString,
-							Description: "The Codefresh application ID in your Onelogin",
-							Optional:    true,
-						},
-						"api_client_id": {
-							Type:        schema.TypeString,
-							Description: "Client ID for onelogin API, only needed if syncing users and groups from Onelogin",
-							Optional:    true,
-						},
-						"api_client_secret": {
-							Type:        schema.TypeString,
-							Description: "Client secret for onelogin API, only needed if syncing users and groups from Onelogin",
-							Optional:    true,
-							// When onelogin IDP is created on account level, after the first apply the client secret is returned obfuscated
-							//DiffSuppressFunc: surpressObfuscatedFields(),
-						},
-					},
-				},
-			},
-			"keycloak": {
-				Description:  "Settings for Keycloak IDP",
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				ExactlyOneOf: supportedIdps,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"client_id": {
-							Type:        schema.TypeString,
-							Description: "Client ID from Keycloak",
-							Required:    true,
-						},
-						"client_secret": {
-							Type:        schema.TypeString,
-							Description: "Client secret from Keycloak",
-							Required:    true,
-							Sensitive:   true,
-						},
-						"client_secret_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"host": {
-							Type:         schema.TypeString,
-							Description:  "The Keycloak URL",
-							Required:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(https?:\/\/)(\S+)$`), "must be a valid url"),
-						},
-						"realm": {
-							Type:        schema.TypeString,
-							Description: "The Realm ID for Codefresh in Keycloak. Defaults to master",
-							Optional:    true,
-							Default:     "master",
-						},
-					},
-				},
-			},
-			"saml": {
-				Description:  "Settings for SAML IDP",
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				ExactlyOneOf: supportedIdps,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"endpoint": {
-							Type:        schema.TypeString,
-							Description: "The SSO endpoint of your Identity Provider",
-							Required:    true,
-						},
-						"application_certificate": {
-							Type:        schema.TypeString,
-							Description: "The security certificate of your Identity Provider. Paste the value directly on the field. Do not convert to base64 or any other encoding by hand",
-							Required:    true,
-							Sensitive:   true,
-						},
-						"application_certificate_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed certificate secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"provider": {
-							Type:         schema.TypeString,
-							Description:  "SAML provider. Currently supported values - GSuite, okta or empty string for generic provider. Defaults to empty string",
-							Optional:     true,
-							Default:      "",
-							ValidateFunc: validation.StringInSlice([]string{"", "okta", "GSuite"}, false),
-						},
-						"allowed_groups_for_sync": {
-							Type:        schema.TypeString,
-							Description: "Valid for GSuite only: Comma separated list of groups to sync",
-							Optional:    true,
-						},
-						"autosync_teams_and_users": {
-							Type:        schema.TypeBool,
-							Description: "Valid for Okta/GSuite: Set to true to sync user accounts and teams in okta/gsuite to your Codefresh account",
-							Optional:    true,
-							Default:     false,
-						},
-						"sync_interval": {
-							Type:        schema.TypeInt,
-							Description: "Valid for Okta/GSuite: Sync interval in hours for syncing user accounts in okta/gsuite to your Codefresh account. If not set the sync inteval will be 12 hours",
-							Optional:    true,
-						},
-						"activate_users_after_sync": {
-							Type:        schema.TypeBool,
-							Description: "Valid for Okta only: If set to true, Codefresh will automatically invite and activate new users added during the automated sync, without waiting for the users to accept the invitations. Defaults to false",
-							Optional:    true,
-							Default:     false,
-						},
-						"app_id": {
-							Type:        schema.TypeString,
-							Description: "Valid for Okta only: The Codefresh application ID in Okta",
-							Optional:    true,
-						},
-						"client_host": {
-							Type:        schema.TypeString,
-							Description: "Valid for Okta only: OKTA organization URL, for example, https://<company>.okta.com",
-							Optional:    true,
-						},
-						"json_keyfile": {
-							Type:        schema.TypeString,
-							Description: "Valid for GSuite only: JSON keyfile for google service account used for synchronization",
-							Optional:    true,
-						},
-						"json_keyfile_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed JSON keyfile in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"admin_email": {
-							Type:        schema.TypeString,
-							Description: "Valid for GSuite only: Email of a user with admin permissions on google, relevant only for synchronization",
-							Optional:    true,
-						},
-						"admin_email_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Admin email in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"access_token": {
-							Type:        schema.TypeString,
-							Description: "Valid for Okta only: The Okta API token generated in Okta, used to sync groups and their users from Okta to Codefresh",
-							Optional:    true,
-						},
-						"access_token_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed access token in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-					},
-				},
-			},
-			"ldap": {
-				Description:  "Settings for Keycloak IDP",
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				ExactlyOneOf: supportedIdps,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"url": {
-							Type:         schema.TypeString,
-							Description:  "ldap server url",
-							Required:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^ldap(s?):\/\/`), "must be a valid ldap url (must start with ldap:// or ldaps://)"),
-						},
-						"password": {
-							Type:        schema.TypeString,
-							Description: "The password of the user defined in Distinguished name that will be used to search other users",
-							Required:    true,
-							Sensitive:   true,
-						},
-						"password_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed password in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"distinguished_name": {
-							Type:        schema.TypeString,
-							Description: "The username to be used to search other users in LDAP notation (combination of cn, ou,dc)",
-							Optional:    true,
-							Computed:    true,
-						},
-						"search_base": {
-							Type:        schema.TypeString,
-							Description: "The search-user scope in LDAP notation",
-							Required:    true,
-						},
-						"search_filter": {
-							Type:        schema.TypeString,
-							Description: "The attribute by which to search for the user on the LDAP server. By default, set to uid. For the Azure LDAP server, set this field to sAMAccountName",
-							Optional:    true,
-						},
-						"certificate": {
-							Type:        schema.TypeString,
-							Description: "For ldaps only: The security certificate of the LDAP server. Do not convert to base64 or any other encoding",
-							Optional:    true,
-						},
-						"certificate_encrypted": {
-							Type:        schema.TypeString,
-							Description: "Computed certificate in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-							Optional:    true,
-							Computed:    true,
-						},
-						"allowed_groups_for_sync": {
-							Type:        schema.TypeString,
-							Description: "To sync only by specified groups - specify a comma separated list of groups, by default all groups will be synced",
-							Optional:    true,
-						},
-						"search_base_for_sync": {
-							Type:        schema.TypeString,
-							Description: "Synchronize using a custom search base, by deafult seach_base is used",
-							Optional:    true,
-						},
-					},
-				},
-			},
-		},
+		Schema: idpSchema,
 	}
 }
 
@@ -673,7 +655,7 @@ func resourceIDPCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfclient.Client)
 
-	id, err := client.CreateIDP(mapResourceToIDP(d), d.Get("is_global").(bool))
+	id, err := client.CreateIDP(mapResourceToIDP(d), true)
 
 	if err != nil {
 		log.Printf("[DEBUG] Error while creating idp. Error = %v", err)
@@ -688,16 +670,12 @@ func resourceIDPRead(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfclient.Client)
 	idpID := d.Id()
-	isGlobal := d.Get("is_global").(bool)
 
 	var cfClientIDP *cfclient.IDP
 	var err error
 
-	if isGlobal {
-		cfClientIDP, err = client.GetIdpByID(idpID)
-	} else {
-		cfClientIDP, err = client.GetAccountIdpByID(idpID)
-	}
+	
+	cfClientIDP, err = client.GetIdpByID(idpID)
 
 	if err != nil {
 		if err.Error() == fmt.Sprintf("[ERROR] IDP with ID %s isn't found.", d.Id()) {
@@ -722,36 +700,26 @@ func resourceIDPRead(d *schema.ResourceData, meta interface{}) error {
 func resourceIDPDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfclient.Client)
 	idpID := d.Id()
-	isGlobal := d.Get("is_global").(bool)
 
 	var cfClientIDP *cfclient.IDP
 	var err error
 
-	if isGlobal {
-		cfClientIDP, err = client.GetIdpByID(idpID)
+	cfClientIDP, err = client.GetIdpByID(idpID)
 
-		if err != nil {
-			log.Printf("[DEBUG] Error while getting IDP. Error = %v", err)
-			return err
-		}
+	if err != nil {
+		log.Printf("[DEBUG] Error while getting IDP. Error = %v", err)
+		return err
+	}
 
-		if len(cfClientIDP.Accounts) < 1 {
-			return errors.New("It is not allowed to delete IDPs without any assigned accounts as they are considered global. Assign at least one account before deleting")
-		}
+	if len(cfClientIDP.Accounts) < 1 {
+		return errors.New("It is not allowed to delete IDPs without any assigned accounts as they are considered global. Assign at least one account before deleting")
+	}
 
-		err = client.DeleteIDP(d.Id())
+	err = client.DeleteIDP(d.Id())
 
-		if err != nil {
-			log.Printf("[DEBUG] Error while deleting IDP. Error = %v", err)
-			return err
-		}
-	} else {
-		err = client.DeleteIDPAccount(d.Id())
-
-		if err != nil {
-			log.Printf("[DEBUG] Error while deleting account level IDP. Error = %v", err)
-			return err
-		}
+	if err != nil {
+		log.Printf("[DEBUG] Error while deleting IDP. Error = %v", err)
+		return err
 	}
 
 	return nil
@@ -761,7 +729,7 @@ func resourceIDPUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfclient.Client)
 
-	err := client.UpdateIDP(mapResourceToIDP(d), d.Get("is_global").(bool))
+	err := client.UpdateIDP(mapResourceToIDP(d), true)
 
 	if err != nil {
 		log.Printf("[DEBUG] Error while updating idp. Error = %v", err)
@@ -772,7 +740,6 @@ func resourceIDPUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
-	isGlobal := d.Get("is_global").(bool)
 	d.SetId(cfClientIDP.ID)
 	d.Set("display_name", cfClientIDP.DisplayName)
 	d.Set("name", cfClientIDP.ClientName)
@@ -833,20 +800,13 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 			"client_id":               cfClientIDP.ClientId,
 			"client_secret":           d.Get("google.0.client_secret"),
 			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"admin_email":             d.Get("google.0.admin_email"),
+			"admin_email":             cfClientIDP.Subject,
 			"admin_email_encrypted":   cfClientIDP.Subject,
 			"json_keyfile":            d.Get("google.0.json_keyfile"),
 			"json_keyfile_encrypted":  cfClientIDP.KeyFile,
 			"allowed_groups_for_sync": cfClientIDP.AllowedGroupsForSync,
 			"sync_field":              cfClientIDP.SyncField,
 		}}
-
-		// When account scoped, admin email is returned obfuscated after first apply, causing diff to appear everytime.
-		// This behavior would always set the admin email from the resource, allowing at least changing the secret when the value in terraform configuration changes.
-		// Though it would not detect drift if the secret is changed from UI.
-		if !isGlobal {
-			attributes[0]["admin_email"] = d.Get("google.0.admin_email")
-		}
 
 		d.Set("google", attributes)
 	}
@@ -894,12 +854,6 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 			"api_client_secret": cfClientIDP.ApiClientSecret,
 			"app_id":            cfClientIDP.AppId,
 		}}
-		// When account scoped, Client secret is returned obfuscated after first apply, causing diff to appear everytime.
-		// This behavior would always set the API clint secret from the resource, allowing at least changing the secret when the value in terraform configuration changes.
-		// Though it would not detect drift if the secret is changed from UI.
-		if !isGlobal {
-			attributes[0]["api_client_secret"] = d.Get("onelogin.0.api_client_secret")
-		}
 
 		d.Set("onelogin", attributes)
 	}

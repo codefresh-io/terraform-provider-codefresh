@@ -12,10 +12,10 @@ func resourceIDPAccounts() *schema.Resource {
 This resource adds the list of provided account IDs to the IDP.  
 Because of the current Codefresh API limitation it's impossible to remove account from IDP, thus deletion is not supported.
 		`,
-		Create: resourceAccountIDPCreate,
-		Read:   resourceAccountIDPRead,
-		Update: resourceAccountIDPUpdate,
-		Delete: resourceAccountIDPDelete,
+		Create: resourceIDPAccountsCreate,
+		Read:   resourceIDPAccountsRead,
+		Update: resourceIDPAccountsUpdate,
+		Delete: resourceIDPAccountsDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -37,7 +37,7 @@ Because of the current Codefresh API limitation it's impossible to remove accoun
 	}
 }
 
-func resourceAccountIDPCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIDPAccountsCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfclient.Client)
 
@@ -59,7 +59,7 @@ func resourceAccountIDPCreate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAccountIDPRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIDPAccountsRead(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfclient.Client)
 
@@ -87,13 +87,13 @@ func resourceAccountIDPRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAccountIDPDelete(_ *schema.ResourceData, _ interface{}) error {
+func resourceIDPAccountsDelete(_ *schema.ResourceData, _ interface{}) error {
 	// todo
 	// warning message
 	return nil
 }
 
-func resourceAccountIDPUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIDPAccountsUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*cfclient.Client)
 
