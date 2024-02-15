@@ -17,7 +17,7 @@ func main() {
 		providerAddr = codefresh.DEFAULT_CODEFRESH_PLUGIN_ADDR
 	}
 	plugin.Serve(&plugin.ServeOpts{
-		ProviderAddr: "codefresh-io/codefresh", // Required for debug attaching
+		ProviderAddr: providerAddr, // Required for debug attaching
 		ProviderFunc: codefresh.Provider,
 		Debug:        debugMode,
 	})
