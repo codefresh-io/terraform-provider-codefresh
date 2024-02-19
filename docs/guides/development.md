@@ -21,7 +21,7 @@ Set the [developer overrides](https://developer.hashicorp.com/terraform/cli/conf
 # `~/.terraformrc (Windows: %APPDATA%/.terraformrc)
 provider_installation {
     dev_overrides {
-        "codefresh.io/codefresh" = "[REPLACE WITH GOPATH]/bin"
+        "codefresh-io/codefresh" = "[REPLACE WITH GOPATH]/bin"
     }
     direct {}
 }
