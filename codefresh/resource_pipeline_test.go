@@ -532,8 +532,8 @@ func TestAccCodefreshPipeline_CronTriggersInvalid(t *testing.T) {
 	var pipeline cfclient.Pipeline
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCodefreshPipelineBasicConfigCronTriggers(
