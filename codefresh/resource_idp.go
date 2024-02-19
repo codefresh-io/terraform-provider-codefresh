@@ -799,7 +799,7 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 			"client_id":               cfClientIDP.ClientId,
 			"client_secret":           d.Get("google.0.client_secret"),
 			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"admin_email":             cfClientIDP.Subject,
+			"admin_email":             d.Get("google.0.admin_email"),
 			"admin_email_encrypted":   cfClientIDP.Subject,
 			"json_keyfile":            d.Get("google.0.json_keyfile"),
 			"json_keyfile_encrypted":  cfClientIDP.KeyFile,
