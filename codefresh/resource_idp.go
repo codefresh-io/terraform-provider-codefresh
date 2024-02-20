@@ -29,7 +29,7 @@ var idpSchema = map[string]*schema.Schema{
 		Optional:    true,
 	},
 	"client_type": {
-		Description: "Type of the IDP. If not set it is derived from idp specific config object (github, gitlab etc)",
+		Description: "Type of the IDP. Derived from idp specific config object (github, gitlab etc)",
 		Type:        schema.TypeString,
 		Computed:    true,
 		ForceNew:    true,
