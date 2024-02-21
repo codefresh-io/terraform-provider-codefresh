@@ -3,6 +3,7 @@ package codefresh
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
@@ -95,23 +96,8 @@ func resourceApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client.Token = resp
 
-	apiKeys, err := client.GetApiKeysList()
-	if err != nil {
-		return nil
-	}
-
-	var keyID string
-	for _, key := range apiKeys {
-		if key.Name == apiKey.Name {
-			keyID = key.ID
-		}
-	}
-
-	if keyID == "" {
-		return errors.New("[ERROR] Key ID is not found.")
-	}
-
-	d.SetId(keyID)
+	// Codefresh tokens are in the form xxxxxxxxxxxx.xxxxxxxxx the first half serves as the id
+	d.SetId(strings.Split(client.Token,".")[0])
 
 	return nil
 }
@@ -132,7 +118,6 @@ func resourceApiKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return errors.New("[ERROR] Can't read API Key. Token is empty.")
 	}
 
-	client.Token = token
 
 	apiKey, err := client.GetAPIKey(keyID)
 	if err != nil {
@@ -156,8 +141,6 @@ func resourceApiKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	if token == "" {
 		return errors.New("[ERROR] Can't read API Key. Token is empty.")
 	}
-
-	client.Token = token
 
 	err := client.UpdateAPIKey(&apiKey)
 	if err != nil {
