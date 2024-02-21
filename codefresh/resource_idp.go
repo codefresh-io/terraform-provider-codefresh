@@ -45,12 +45,9 @@ var idpSchema = map[string]*schema.Schema{
 		Computed:    true,
 	},
 	"login_url": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
-	"config_hash": {
-		Type:     schema.TypeString,
-		Computed: true,
+		Description: "Login url using the IDP to Codefresh",
+		Type:        schema.TypeString,
+		Computed:    true,
 	},
 	"github": {
 		Description:  "Settings for GitHub IDP",
@@ -70,12 +67,6 @@ var idpSchema = map[string]*schema.Schema{
 					Description: "Client secret from GitHub",
 					Required:    true,
 					Sensitive:   true,
-				},
-				"client_secret_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
 				},
 				"authentication_url": {
 					Type:        schema.TypeString,
@@ -129,12 +120,6 @@ var idpSchema = map[string]*schema.Schema{
 					Required:    true,
 					Sensitive:   true,
 				},
-				"client_secret_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
-				},
 				"authentication_url": {
 					Type:        schema.TypeString,
 					Description: "Authentication url, Defaults to https://gitlab.com",
@@ -175,12 +160,6 @@ var idpSchema = map[string]*schema.Schema{
 					Required:    true,
 					Sensitive:   true,
 				},
-				"client_secret_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
-				},
 				"client_host": {
 					Type:         schema.TypeString,
 					Description:  "The OKTA organization URL, for example, https://<company>.okta.com",
@@ -191,12 +170,6 @@ var idpSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Description: "The Codefresh application ID in your OKTA organization",
 					Optional:    true,
-				},
-				"app_id_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed app id in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
 				},
 				"sync_mirror_accounts": {
 					Type:        schema.TypeList,
@@ -210,12 +183,6 @@ var idpSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Description: "The Okta API token generated in Okta, used to sync groups and their users from Okta to Codefresh",
 					Optional:    true,
-				},
-				"access_token_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed access token in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
 				},
 			},
 		},
@@ -239,33 +206,15 @@ var idpSchema = map[string]*schema.Schema{
 					Required:    true,
 					Sensitive:   true,
 				},
-				"client_secret_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
-				},
 				"admin_email": {
 					Type:        schema.TypeString,
 					Description: "Email of a user with admin permissions on google, relevant only for synchronization",
 					Optional:    true,
 				},
-				"admin_email_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Admin email in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
-				},
 				"json_keyfile": {
 					Type:        schema.TypeString,
 					Description: "JSON keyfile for google service account used for synchronization",
 					Optional:    true,
-				},
-				"json_keyfile_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed JSON keyfile in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
 				},
 				"allowed_groups_for_sync": {
 					Type:        schema.TypeString,
@@ -299,12 +248,6 @@ var idpSchema = map[string]*schema.Schema{
 					Required:    true,
 					Sensitive:   true,
 				},
-				"client_secret_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
-				},
 				"domain": {
 					Type:        schema.TypeString,
 					Description: "The domain of the Auth0 application",
@@ -326,12 +269,6 @@ var idpSchema = map[string]*schema.Schema{
 					Description: "Client secret from Azure",
 					Required:    true,
 					Sensitive:   true,
-				},
-				"client_secret_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
 				},
 				"app_id": {
 					Type:        schema.TypeString,
@@ -381,12 +318,6 @@ var idpSchema = map[string]*schema.Schema{
 					Required:    true,
 					Sensitive:   true,
 				},
-				"client_secret_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
-				},
 				"domain": {
 					Type:        schema.TypeString,
 					Description: "The domain to be used for authentication",
@@ -431,12 +362,6 @@ var idpSchema = map[string]*schema.Schema{
 					Required:    true,
 					Sensitive:   true,
 				},
-				"client_secret_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed client secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
-				},
 				"host": {
 					Type:         schema.TypeString,
 					Description:  "The Keycloak URL",
@@ -470,12 +395,6 @@ var idpSchema = map[string]*schema.Schema{
 					Description: "The security certificate of your Identity Provider. Paste the value directly on the field. Do not convert to base64 or any other encoding by hand",
 					Required:    true,
 					Sensitive:   true,
-				},
-				"application_certificate_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed certificate secret in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
 				},
 				"provider": {
 					Type:         schema.TypeString,
@@ -521,33 +440,15 @@ var idpSchema = map[string]*schema.Schema{
 					Description: "Valid for GSuite only: JSON keyfile for google service account used for synchronization",
 					Optional:    true,
 				},
-				"json_keyfile_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed JSON keyfile in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
-				},
 				"admin_email": {
 					Type:        schema.TypeString,
 					Description: "Valid for GSuite only: Email of a user with admin permissions on google, relevant only for synchronization",
 					Optional:    true,
 				},
-				"admin_email_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Admin email in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
-				},
 				"access_token": {
 					Type:        schema.TypeString,
 					Description: "Valid for Okta only: The Okta API token generated in Okta, used to sync groups and their users from Okta to Codefresh",
 					Optional:    true,
-				},
-				"access_token_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed access token in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
 				},
 			},
 		},
@@ -572,12 +473,6 @@ var idpSchema = map[string]*schema.Schema{
 					Required:    true,
 					Sensitive:   true,
 				},
-				"password_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed password in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
-				},
 				"distinguished_name": {
 					Type:        schema.TypeString,
 					Description: "The username to be used to search other users in LDAP notation (combination of cn, ou,dc)",
@@ -599,12 +494,6 @@ var idpSchema = map[string]*schema.Schema{
 					Description: "For ldaps only: The security certificate of the LDAP server. Do not convert to base64 or any other encoding",
 					Optional:    true,
 				},
-				"certificate_encrypted": {
-					Type:        schema.TypeString,
-					Description: "Computed certificate in encrypted form as returned from Codefresh API. Only Codefresh can decrypt this value",
-					Optional:    true,
-					Computed:    true,
-				},
 				"allowed_groups_for_sync": {
 					Type:        schema.TypeString,
 					Description: "To sync only by specified groups - specify a comma separated list of groups, by default all groups will be synced",
@@ -622,7 +511,7 @@ var idpSchema = map[string]*schema.Schema{
 
 func resourceIdp() *schema.Resource {
 	return &schema.Resource{
-		Description: "Identity providers used in Codefresh for user authentication.",
+		Description: "Codefresh global level identity provider. Requires Codefresh admin token, hence is relevant only for on-prem deployments of Codefresh",
 		Create:      resourceIDPCreate,
 		Read:        resourceIDPRead,
 		Update:      resourceIDPUpdate,
@@ -753,13 +642,12 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 			// Codefresh API Returns the client secret as an encrypted string on the server side
 			// hence we need to keep in the state the original secret the user provides along with the encrypted computed secret
 			// for Terraform to properly calculate the diff
-			"client_secret":           d.Get("github.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"authentication_url":      cfClientIDP.AuthURL,
-			"token_url":               cfClientIDP.TokenURL,
-			"user_profile_url":        cfClientIDP.UserProfileURL,
-			"api_host":                cfClientIDP.ApiHost,
-			"api_path_prefix":         cfClientIDP.ApiPathPrefix,
+			"client_secret":      d.Get("github.0.client_secret"),
+			"authentication_url": cfClientIDP.AuthURL,
+			"token_url":          cfClientIDP.TokenURL,
+			"user_profile_url":   cfClientIDP.UserProfileURL,
+			"api_host":           cfClientIDP.ApiHost,
+			"api_path_prefix":    cfClientIDP.ApiPathPrefix,
 		}}
 
 		d.Set("github", attributes)
@@ -767,12 +655,11 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 
 	if cfClientIDP.ClientType == "gitlab" {
 		attributes := []map[string]interface{}{{
-			"client_id":               cfClientIDP.ClientId,
-			"client_secret":           d.Get("gitlab.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"authentication_url":      cfClientIDP.AuthURL,
-			"user_profile_url":        cfClientIDP.UserProfileURL,
-			"api_url":                 cfClientIDP.ApiURL,
+			"client_id":          cfClientIDP.ClientId,
+			"client_secret":      d.Get("gitlab.0.client_secret"),
+			"authentication_url": cfClientIDP.AuthURL,
+			"user_profile_url":   cfClientIDP.UserProfileURL,
+			"api_url":            cfClientIDP.ApiURL,
 		}}
 
 		d.Set("gitlab", attributes)
@@ -780,15 +667,12 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 
 	if cfClientIDP.ClientType == "okta" {
 		attributes := []map[string]interface{}{{
-			"client_id":               cfClientIDP.ClientId,
-			"client_secret":           d.Get("okta.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"client_host":             cfClientIDP.ClientHost,
-			"app_id":                  d.Get("okta.0.app_id"),
-			"app_id_encrypted":        cfClientIDP.AppId,
-			"sync_mirror_accounts":    cfClientIDP.SyncMirrorAccounts,
-			"access_token":            d.Get("okta.0.access_token"),
-			"access_token_encrypted":  cfClientIDP.Access_token,
+			"client_id":            cfClientIDP.ClientId,
+			"client_secret":        d.Get("okta.0.client_secret"),
+			"client_host":          cfClientIDP.ClientHost,
+			"app_id":               d.Get("okta.0.app_id"),
+			"sync_mirror_accounts": cfClientIDP.SyncMirrorAccounts,
+			"access_token":         d.Get("okta.0.access_token"),
 		}}
 
 		d.Set("okta", attributes)
@@ -798,11 +682,8 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 		attributes := []map[string]interface{}{{
 			"client_id":               cfClientIDP.ClientId,
 			"client_secret":           d.Get("google.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
 			"admin_email":             d.Get("google.0.admin_email"),
-			"admin_email_encrypted":   cfClientIDP.Subject,
 			"json_keyfile":            d.Get("google.0.json_keyfile"),
-			"json_keyfile_encrypted":  cfClientIDP.KeyFile,
 			"allowed_groups_for_sync": cfClientIDP.AllowedGroupsForSync,
 			"sync_field":              cfClientIDP.SyncField,
 		}}
@@ -812,10 +693,9 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 
 	if cfClientIDP.ClientType == "auth0" {
 		attributes := []map[string]interface{}{{
-			"client_id":               cfClientIDP.ClientId,
-			"client_secret":           d.Get("auth0.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"domain":                  cfClientIDP.ClientHost,
+			"client_id":     cfClientIDP.ClientId,
+			"client_secret": d.Get("auth0.0.client_secret"),
+			"domain":        cfClientIDP.ClientHost,
 		}}
 
 		d.Set("auth0", attributes)
@@ -832,7 +712,6 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 		attributes := []map[string]interface{}{{
 			"app_id":                   cfClientIDP.ClientId,
 			"client_secret":            d.Get("azure.0.client_secret"),
-			"client_secret_encrypted":  cfClientIDP.ClientSecret,
 			"object_id":                cfClientIDP.AppId,
 			"autosync_teams_and_users": cfClientIDP.AutoGroupSync,
 			"sync_interval":            syncInterval,
@@ -844,11 +723,10 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 
 	if cfClientIDP.ClientType == "onelogin" {
 		attributes := []map[string]interface{}{{
-			"client_id":               cfClientIDP.ClientId,
-			"client_secret":           d.Get("onelogin.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"domain":                  cfClientIDP.ClientHost,
-			"api_client_id":           cfClientIDP.ApiClientId,
+			"client_id":     cfClientIDP.ClientId,
+			"client_secret": d.Get("onelogin.0.client_secret"),
+			"domain":        cfClientIDP.ClientHost,
+			"api_client_id": cfClientIDP.ApiClientId,
 
 			"api_client_secret": cfClientIDP.ApiClientSecret,
 			"app_id":            cfClientIDP.AppId,
@@ -859,11 +737,10 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 
 	if cfClientIDP.ClientType == "keycloak" {
 		attributes := []map[string]interface{}{{
-			"client_id":               cfClientIDP.ClientId,
-			"client_secret":           d.Get("keycloak.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"host":                    cfClientIDP.Host,
-			"realm":                   cfClientIDP.Realm,
+			"client_id":     cfClientIDP.ClientId,
+			"client_secret": d.Get("keycloak.0.client_secret"),
+			"host":          cfClientIDP.Host,
+			"realm":         cfClientIDP.Realm,
 		}}
 
 		d.Set("keycloak", attributes)
@@ -876,22 +753,18 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 			return err
 		}
 		attributes := []map[string]interface{}{{
-			"endpoint":                          cfClientIDP.EntryPoint,
-			"application_certificate":           d.Get("saml.0.application_certificate"),
-			"application_certificate_encrypted": cfClientIDP.ApplicationCert,
-			"provider":                          cfClientIDP.SamlProvider,
-			"allowed_groups_for_sync":           cfClientIDP.AllowedGroupsForSync,
-			"autosync_teams_and_users":          cfClientIDP.AutoGroupSync,
-			"activate_users_after_sync":         cfClientIDP.ActivateUserAfterSync,
-			"sync_interval":                     syncInterval,
-			"app_id":                            cfClientIDP.AppId,
-			"client_host":                       cfClientIDP.ClientHost,
-			"json_keyfile":                      d.Get("saml.0.json_keyfile"),
-			"json_keyfile_encrypted":            cfClientIDP.KeyFile,
-			"admin_email":                       d.Get("saml.0.admin_email"),
-			"admin_email_encrypted":             cfClientIDP.Subject,
-			"access_token":                      d.Get("saml.0.access_token"),
-			"access_token_encrypted":            cfClientIDP.Access_token,
+			"endpoint":                  cfClientIDP.EntryPoint,
+			"application_certificate":   d.Get("saml.0.application_certificate"),
+			"provider":                  cfClientIDP.SamlProvider,
+			"allowed_groups_for_sync":   cfClientIDP.AllowedGroupsForSync,
+			"autosync_teams_and_users":  cfClientIDP.AutoGroupSync,
+			"activate_users_after_sync": cfClientIDP.ActivateUserAfterSync,
+			"sync_interval":             syncInterval,
+			"app_id":                    cfClientIDP.AppId,
+			"client_host":               cfClientIDP.ClientHost,
+			"json_keyfile":              d.Get("saml.0.json_keyfile"),
+			"admin_email":               d.Get("saml.0.admin_email"),
+			"access_token":              d.Get("saml.0.access_token"),
 		}}
 
 		d.Set("saml", attributes)
@@ -901,12 +774,10 @@ func mapIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 		attributes := []map[string]interface{}{{
 			"url":                     cfClientIDP.Url,
 			"password":                d.Get("ldap.0.password"),
-			"password_encrypted":      cfClientIDP.Password,
 			"distinguished_name":      cfClientIDP.DistinguishedName,
 			"search_base":             cfClientIDP.SearchBase,
 			"search_filter":           cfClientIDP.SearchFilter,
 			"certificate":             d.Get("ldap.0.certificate"),
-			"certificate_encrypted":   cfClientIDP.Certificate,
 			"allowed_groups_for_sync": cfClientIDP.AllowedGroupsForSync,
 			"search_base_for_sync":    cfClientIDP.SearchBaseForSync,
 		}}

@@ -14,7 +14,7 @@ import (
 
 func resourceAccountIdp() *schema.Resource {
 	return &schema.Resource{
-		Description: "Identity providers used in Codefresh for user authentication.",
+		Description: "Account level identity providers",
 		Create:      resourceAccountIDPCreate,
 		Read:        resourceAccountIDPRead,
 		Update:      resourceAccountIDPUpdate,
@@ -142,13 +142,12 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 			// Codefresh API Returns the client secret as an encrypted string on the server side
 			// hence we need to keep in the state the original secret the user provides along with the encrypted computed secret
 			// for Terraform to properly calculate the diff
-			"client_secret":           d.Get("github.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"authentication_url":      cfClientIDP.AuthURL,
-			"token_url":               cfClientIDP.TokenURL,
-			"user_profile_url":        cfClientIDP.UserProfileURL,
-			"api_host":                cfClientIDP.ApiHost,
-			"api_path_prefix":         cfClientIDP.ApiPathPrefix,
+			"client_secret":      d.Get("github.0.client_secret"),
+			"authentication_url": cfClientIDP.AuthURL,
+			"token_url":          cfClientIDP.TokenURL,
+			"user_profile_url":   cfClientIDP.UserProfileURL,
+			"api_host":           cfClientIDP.ApiHost,
+			"api_path_prefix":    cfClientIDP.ApiPathPrefix,
 		}}
 
 		d.Set("github", attributes)
@@ -156,12 +155,11 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 
 	if cfClientIDP.ClientType == "gitlab" {
 		attributes := []map[string]interface{}{{
-			"client_id":               cfClientIDP.ClientId,
-			"client_secret":           d.Get("gitlab.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"authentication_url":      cfClientIDP.AuthURL,
-			"user_profile_url":        cfClientIDP.UserProfileURL,
-			"api_url":                 cfClientIDP.ApiURL,
+			"client_id":          cfClientIDP.ClientId,
+			"client_secret":      d.Get("gitlab.0.client_secret"),
+			"authentication_url": cfClientIDP.AuthURL,
+			"user_profile_url":   cfClientIDP.UserProfileURL,
+			"api_url":            cfClientIDP.ApiURL,
 		}}
 
 		d.Set("gitlab", attributes)
@@ -169,15 +167,12 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 
 	if cfClientIDP.ClientType == "okta" {
 		attributes := []map[string]interface{}{{
-			"client_id":               cfClientIDP.ClientId,
-			"client_secret":           d.Get("okta.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"client_host":             cfClientIDP.ClientHost,
-			"app_id":                  d.Get("okta.0.app_id"),
-			"app_id_encrypted":        cfClientIDP.AppId,
-			"sync_mirror_accounts":    cfClientIDP.SyncMirrorAccounts,
-			"access_token":            d.Get("okta.0.access_token"),
-			"access_token_encrypted":  cfClientIDP.Access_token,
+			"client_id":            cfClientIDP.ClientId,
+			"client_secret":        d.Get("okta.0.client_secret"),
+			"client_host":          cfClientIDP.ClientHost,
+			"app_id":               d.Get("okta.0.app_id"),
+			"sync_mirror_accounts": cfClientIDP.SyncMirrorAccounts,
+			"access_token":         d.Get("okta.0.access_token"),
 		}}
 
 		d.Set("okta", attributes)
@@ -187,11 +182,8 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 		attributes := []map[string]interface{}{{
 			"client_id":               cfClientIDP.ClientId,
 			"client_secret":           d.Get("google.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
 			"admin_email":             d.Get("google.0.admin_email"),
-			"admin_email_encrypted":   cfClientIDP.Subject,
 			"json_keyfile":            d.Get("google.0.json_keyfile"),
-			"json_keyfile_encrypted":  cfClientIDP.KeyFile,
 			"allowed_groups_for_sync": cfClientIDP.AllowedGroupsForSync,
 			"sync_field":              cfClientIDP.SyncField,
 		}}
@@ -201,10 +193,9 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 
 	if cfClientIDP.ClientType == "auth0" {
 		attributes := []map[string]interface{}{{
-			"client_id":               cfClientIDP.ClientId,
-			"client_secret":           d.Get("auth0.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"domain":                  cfClientIDP.ClientHost,
+			"client_id":     cfClientIDP.ClientId,
+			"client_secret": d.Get("auth0.0.client_secret"),
+			"domain":        cfClientIDP.ClientHost,
 		}}
 
 		d.Set("auth0", attributes)
@@ -221,7 +212,6 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 		attributes := []map[string]interface{}{{
 			"app_id":                   cfClientIDP.ClientId,
 			"client_secret":            d.Get("azure.0.client_secret"),
-			"client_secret_encrypted":  cfClientIDP.ClientSecret,
 			"object_id":                cfClientIDP.AppId,
 			"autosync_teams_and_users": cfClientIDP.AutoGroupSync,
 			"sync_interval":            syncInterval,
@@ -233,11 +223,10 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 
 	if cfClientIDP.ClientType == "onelogin" {
 		attributes := []map[string]interface{}{{
-			"client_id":               cfClientIDP.ClientId,
-			"client_secret":           d.Get("onelogin.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"domain":                  cfClientIDP.ClientHost,
-			"api_client_id":           cfClientIDP.ApiClientId,
+			"client_id":     cfClientIDP.ClientId,
+			"client_secret": d.Get("onelogin.0.client_secret"),
+			"domain":        cfClientIDP.ClientHost,
+			"api_client_id": cfClientIDP.ApiClientId,
 			// When account scoped, Client secret is returned obfuscated after first apply, causing diff to appear everytime.
 			// This behavior would always set the API clint secret from the resource, allowing at least changing the secret when the value in terraform configuration changes.
 			// Though it would not detect drift if the secret is changed from UI.
@@ -250,11 +239,10 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 
 	if cfClientIDP.ClientType == "keycloak" {
 		attributes := []map[string]interface{}{{
-			"client_id":               cfClientIDP.ClientId,
-			"client_secret":           d.Get("keycloak.0.client_secret"),
-			"client_secret_encrypted": cfClientIDP.ClientSecret,
-			"host":                    cfClientIDP.Host,
-			"realm":                   cfClientIDP.Realm,
+			"client_id":     cfClientIDP.ClientId,
+			"client_secret": d.Get("keycloak.0.client_secret"),
+			"host":          cfClientIDP.Host,
+			"realm":         cfClientIDP.Realm,
 		}}
 
 		d.Set("keycloak", attributes)
@@ -267,22 +255,18 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 			return err
 		}
 		attributes := []map[string]interface{}{{
-			"endpoint":                          cfClientIDP.EntryPoint,
-			"application_certificate":           d.Get("saml.0.application_certificate"),
-			"application_certificate_encrypted": cfClientIDP.ApplicationCert,
-			"provider":                          cfClientIDP.SamlProvider,
-			"allowed_groups_for_sync":           cfClientIDP.AllowedGroupsForSync,
-			"autosync_teams_and_users":          cfClientIDP.AutoGroupSync,
-			"activate_users_after_sync":         cfClientIDP.ActivateUserAfterSync,
-			"sync_interval":                     syncInterval,
-			"app_id":                            cfClientIDP.AppId,
-			"client_host":                       cfClientIDP.ClientHost,
-			"json_keyfile":                      d.Get("saml.0.json_keyfile"),
-			"json_keyfile_encrypted":            cfClientIDP.KeyFile,
-			"admin_email":                       d.Get("saml.0.admin_email"),
-			"admin_email_encrypted":             cfClientIDP.Subject,
-			"access_token":                      d.Get("saml.0.access_token"),
-			"access_token_encrypted":            cfClientIDP.Access_token,
+			"endpoint":                  cfClientIDP.EntryPoint,
+			"application_certificate":   d.Get("saml.0.application_certificate"),
+			"provider":                  cfClientIDP.SamlProvider,
+			"allowed_groups_for_sync":   cfClientIDP.AllowedGroupsForSync,
+			"autosync_teams_and_users":  cfClientIDP.AutoGroupSync,
+			"activate_users_after_sync": cfClientIDP.ActivateUserAfterSync,
+			"sync_interval":             syncInterval,
+			"app_id":                    cfClientIDP.AppId,
+			"client_host":               cfClientIDP.ClientHost,
+			"json_keyfile":              d.Get("saml.0.json_keyfile"),
+			"admin_email":               d.Get("saml.0.admin_email"),
+			"access_token":              d.Get("saml.0.access_token"),
 		}}
 
 		d.Set("saml", attributes)
@@ -292,12 +276,10 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 		attributes := []map[string]interface{}{{
 			"url":                     cfClientIDP.Url,
 			"password":                d.Get("ldap.0.password"),
-			"password_encrypted":      cfClientIDP.Password,
 			"distinguished_name":      cfClientIDP.DistinguishedName,
 			"search_base":             cfClientIDP.SearchBase,
 			"search_filter":           cfClientIDP.SearchFilter,
 			"certificate":             d.Get("ldap.0.certificate"),
-			"certificate_encrypted":   cfClientIDP.Certificate,
 			"allowed_groups_for_sync": cfClientIDP.AllowedGroupsForSync,
 			"search_base_for_sync":    cfClientIDP.SearchBaseForSync,
 		}}

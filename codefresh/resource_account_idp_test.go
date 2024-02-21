@@ -242,7 +242,7 @@ func testAccountIDPCodefreshConfig(idpType string, uniqueId string) string {
 			  app_id = "test1"
 			  access_token = "myaccesstoken1"
 			}
-		  }`, uniqueId,uniqueId)
+		  }`, uniqueId, uniqueId)
 	}
 
 	if idpType == "saml" {
@@ -271,7 +271,7 @@ func testAccountIDPCodefreshConfig(idpType string, uniqueId string) string {
 		  -----END CERTIFICATE-----
 			  EOT
 			}
-		  }`, uniqueId,uniqueId)
+		  }`, uniqueId, uniqueId)
 	}
 
 	return idpResource
