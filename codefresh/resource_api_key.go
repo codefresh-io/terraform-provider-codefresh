@@ -94,10 +94,8 @@ func resourceApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	client.Token = resp
-
 	// Codefresh tokens are in the form xxxxxxxxxxxx.xxxxxxxxx the first half serves as the id
-	d.SetId(strings.Split(client.Token,".")[0])
+	d.SetId(strings.Split(resp, ".")[0])
 
 	return nil
 }
@@ -117,7 +115,6 @@ func resourceApiKeyRead(d *schema.ResourceData, meta interface{}) error {
 	if token == "" {
 		return errors.New("[ERROR] Can't read API Key. Token is empty.")
 	}
-
 
 	apiKey, err := client.GetAPIKey(keyID)
 	if err != nil {
