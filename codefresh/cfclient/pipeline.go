@@ -103,25 +103,26 @@ func (t *CronTrigger) SetVariables(variables map[string]interface{}) {
 }
 
 type Spec struct {
-	Variables                []Variable               `json:"variables,omitempty"`
-	SpecTemplate             *SpecTemplate            `json:"specTemplate,omitempty"`
-	Triggers                 []Trigger                `json:"triggers,omitempty"`
-	CronTriggers             []CronTrigger            `json:"cronTriggers,omitempty"`
-	Priority                 int                      `json:"priority,omitempty"`
-	Concurrency              int                      `json:"concurrency,omitempty"`
-	BranchConcurrency        int                      `json:"branchConcurrency,omitempty"`
-	TriggerConcurrency       int                      `json:"triggerConcurrency,omitempty"`
-	Contexts                 []interface{}            `json:"contexts,omitempty"`
-	Steps                    *Steps                   `json:"steps,omitempty"`
-	Stages                   *Stages                  `json:"stages,omitempty"`
-	Mode                     string                   `json:"mode,omitempty"`
-	FailFast                 *bool                    `json:"fail_fast,omitempty"`
-	RuntimeEnvironment       RuntimeEnvironment       `json:"runtimeEnvironment,omitempty"`
-	TerminationPolicy        []map[string]interface{} `json:"terminationPolicy,omitempty"`
-	PackId                   string                   `json:"packId,omitempty"`
-	RequiredAvailableStorage string                   `json:"requiredAvailableStorage,omitempty"`
-	Hooks                    *Hooks                   `json:"hooks,omitempty"`
-	Options                  map[string]bool          `json:"options,omitempty"`
+	Variables                    []Variable               `json:"variables,omitempty"`
+	SpecTemplate                 *SpecTemplate            `json:"specTemplate,omitempty"`
+	Triggers                     []Trigger                `json:"triggers,omitempty"`
+	CronTriggers                 []CronTrigger            `json:"cronTriggers,omitempty"`
+	Priority                     int                      `json:"priority,omitempty"`
+	Concurrency                  int                      `json:"concurrency,omitempty"`
+	BranchConcurrency            int                      `json:"branchConcurrency,omitempty"`
+	TriggerConcurrency           int                      `json:"triggerConcurrency,omitempty"`
+	Contexts                     []interface{}            `json:"contexts,omitempty"`
+	Steps                        *Steps                   `json:"steps,omitempty"`
+	Stages                       *Stages                  `json:"stages,omitempty"`
+	Mode                         string                   `json:"mode,omitempty"`
+	FailFast                     *bool                    `json:"fail_fast,omitempty"`
+	RuntimeEnvironment           RuntimeEnvironment       `json:"runtimeEnvironment,omitempty"`
+	TerminationPolicy            []map[string]interface{} `json:"terminationPolicy,omitempty"`
+	PackId                       string                   `json:"packId,omitempty"`
+	RequiredAvailableStorage     string                   `json:"requiredAvailableStorage,omitempty"`
+	Hooks                        *Hooks                   `json:"hooks,omitempty"`
+	Options                      map[string]bool          `json:"options,omitempty"`
+	PermitRestartFromFailedSteps bool                     `json:"permitRestartFromFailedSteps,omitempty"`
 }
 
 type Steps struct {
