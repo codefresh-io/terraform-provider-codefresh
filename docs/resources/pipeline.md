@@ -187,6 +187,7 @@ Optional:
 
 Optional:
 
+- `enable_notifications` (Boolean)
 - `keep_pvcs_for_pending_approval` (Boolean) When build enters 'Pending Approval' state, volume should:
 	* Default (attribute not specified): "Use Setting accounts"
 	* true: "Remain (build remains active)"

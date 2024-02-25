@@ -600,6 +600,10 @@ Pipeline concurrency policy: Builds on 'Pending Approval' state should be:
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
+									"enable_notifications": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
 								},
 							},
 						},
@@ -762,6 +766,8 @@ func flattenSpec(spec cfclient.Spec) []interface{} {
 				options["keep_pvcs_for_pending_approval"] = valueOption
 			case keyOption == "pendingApprovalConcurrencyApplied":
 				options["pending_approval_concurrency_applied"] = valueOption
+			case keyOption == "enableNotifications":
+				options["enable_notifications"] = valueOption
 			}
 		}
 		resOptions = append(resOptions, options)
@@ -1073,6 +1079,9 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 		}
 		if pendingApprovalConcurrencyApplied, ok := d.GetOkExists("spec.0.options.0.pending_approval_concurrency_applied"); ok {
 			pipelineSpecOption["pendingApprovalConcurrencyApplied"] = pendingApprovalConcurrencyApplied.(bool)
+		}
+		if enableNotifications, ok := d.GetOkExists("spec.0.options.0.enable_notifications"); ok {
+			pipelineSpecOption["enableNotifications"] = enableNotifications.(bool)
 		}
 		pipeline.Spec.Options = pipelineSpecOption
 	} else {
