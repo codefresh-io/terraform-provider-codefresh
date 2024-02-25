@@ -602,7 +602,8 @@ Pipeline concurrency policy: Builds on 'Pending Approval' state should be:
 									},
 									"enable_notifications": {
 										Type:     schema.TypeBool,
-										Optional: true,
+										Optional:    true,
+										Default:     false,
 									},
 								},
 							},
