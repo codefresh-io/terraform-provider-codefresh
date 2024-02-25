@@ -61,7 +61,7 @@ resource "codefresh_account_admins" "test" {
 
 ### Required
 
-- `account_id` (String) The account id where to set up a list of admins.
+- `account_id` (String) The account ID for which to set up the list of admins.
 - `users` (Set of String) A list of users to set up as account admins.
 
 ### Read-Only

@@ -1,7 +1,8 @@
 package codefresh
 
 import (
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -19,7 +20,7 @@ func resourceAccountAdmins() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"account_id": {
-				Description: "The account id where to set up a list of admins.",
+				Description: "The account ID for which to set up the list of admins.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
@@ -37,13 +38,13 @@ func resourceAccountAdmins() *schema.Resource {
 
 func resourceAccountAdminsCreate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	admins := d.Get("users").(*schema.Set).List()
 
 	accountId := d.Get("account_id").(string)
 
-	for _, admin := range convertStringArr(admins) {
+	for _, admin := range datautil.ConvertStringArr(admins) {
 		err := client.SetUserAsAccountAdmin(accountId, admin)
 		if err != nil {
 			return err
@@ -58,13 +59,13 @@ func resourceAccountAdminsCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAccountAdminsDelete(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	admins := d.Get("users").(*schema.Set).List()
 
 	accountId := d.Get("account_id").(string)
 
-	for _, admin := range convertStringArr(admins) {
+	for _, admin := range datautil.ConvertStringArr(admins) {
 		err := client.DeleteUserAsAccountAdmin(accountId, admin)
 		if err != nil {
 			return err
@@ -76,7 +77,7 @@ func resourceAccountAdminsDelete(d *schema.ResourceData, meta interface{}) error
 
 func resourceAccountAdminsRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	accountId := d.Id()
 
@@ -96,7 +97,7 @@ func resourceAccountAdminsRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAccountAdminsUpdate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	accountId := d.Get("account_id").(string)
 	desiredAdmins := d.Get("users").(*schema.Set).List()
@@ -106,7 +107,7 @@ func resourceAccountAdminsUpdate(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	adminsToAdd, AdminsToDelete := cfClient.GetAccountAdminsDiff(convertStringArr(desiredAdmins), account.Admins)
+	adminsToAdd, AdminsToDelete := cfclient.GetAccountAdminsDiff(datautil.ConvertStringArr(desiredAdmins), account.Admins)
 
 	for _, userId := range AdminsToDelete {
 		err := client.DeleteUserAsAccountAdmin(accountId, userId)

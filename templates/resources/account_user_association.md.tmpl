@@ -1,0 +1,49 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+See the [documentation](https://codefresh.io/docs/docs/administration/account-user-management/add-users/#users-in-codefresh).
+
+## Example usage
+
+```hcl
+locals {
+	users = {
+		ed = {
+			email = "ed@rethink.io",
+			admin = true,	
+		}
+		edd = {
+			email = "edd@rethink.io",
+			admin = true,	
+		}
+		eddy = {
+			email = "eddy@rethink.io",
+			admin = false,	
+		}
+	}
+}
+
+resource "codefresh_account_user_association" "users" {
+	for_each = local.users,
+	email 	 = each.value.email,
+	admin 	 = each.value.admin,
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+An existing account user association can be imported via the user ID:
+
+```sh
+terraform import codefresh_account_user_association.test_user xxxxxxxxxxxxxxxxxxx
+```

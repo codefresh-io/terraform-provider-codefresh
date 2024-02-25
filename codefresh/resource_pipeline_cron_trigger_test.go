@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"testing"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,7 +15,7 @@ import (
 func TestAccCodefreshPipelineCronTriggerValidExpressions(t *testing.T) {
 	pipelineName := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline_cron_trigger.test"
-	var pipelineCronTrigger cfClient.HermesTrigger
+	var pipelineCronTrigger cfclient.HermesTrigger
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -63,7 +63,7 @@ func TestAccCodefreshPipelineCronTriggerValidExpressions(t *testing.T) {
 func TestAccCodefreshPipelineCronTriggerInvalidExpressions(t *testing.T) {
 	pipelineName := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline_cron_trigger.test"
-	var pipelineCronTrigger cfClient.HermesTrigger
+	var pipelineCronTrigger cfclient.HermesTrigger
 	expectedError := regexp.MustCompile("The cron expression .* is invalid: .*")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -128,7 +128,7 @@ func TestAccCodefreshPipelineCronTriggerInvalidExpressions(t *testing.T) {
 func TestAccCodefreshPipelineCronTriggerValidMessages(t *testing.T) {
 	pipelineName := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline_cron_trigger.test"
-	var pipelineCronTrigger cfClient.HermesTrigger
+	var pipelineCronTrigger cfclient.HermesTrigger
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -151,7 +151,7 @@ func TestAccCodefreshPipelineCronTriggerValidMessages(t *testing.T) {
 func TestAccCodefreshPipelineCronTriggerInvalidMessages(t *testing.T) {
 	pipelineName := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline_cron_trigger.test"
-	var pipelineCronTrigger cfClient.HermesTrigger
+	var pipelineCronTrigger cfclient.HermesTrigger
 	expectedError := regexp.MustCompile("The message .* is invalid.*")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -210,7 +210,7 @@ func TestAccCodefreshPipelineCronTriggerInvalidMessages(t *testing.T) {
 func TestAccCodefreshPipelineCronTriggerUpdateNoDuplicates(t *testing.T) {
 	pipelineName := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline_cron_trigger.test"
-	var pipelineCronTrigger cfClient.HermesTrigger
+	var pipelineCronTrigger cfclient.HermesTrigger
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -248,7 +248,7 @@ resource "codefresh_pipeline_cron_trigger" "test" {
 }
 
 func testAccCheckCodefreshPipelineCronTriggerDestroy(s *terraform.State) error {
-	apiClient := testAccProvider.Meta().(*cfClient.Client)
+	apiClient := testAccProvider.Meta().(*cfclient.Client)
 
 	for _, rs := range s.RootModule().Resources {
 
@@ -273,7 +273,7 @@ func testAccCheckCodefreshPipelineCronTriggerDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCodefreshPipelineCronTriggerExists(resource string, pipelineCronTrigger *cfClient.HermesTrigger) resource.TestCheckFunc {
+func testAccCheckCodefreshPipelineCronTriggerExists(resource string, pipelineCronTrigger *cfclient.HermesTrigger) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 
 		rs, ok := state.RootModule().Resources[resource]
@@ -284,7 +284,7 @@ func testAccCheckCodefreshPipelineCronTriggerExists(resource string, pipelineCro
 			return fmt.Errorf("no Record ID is set")
 		}
 
-		apiClient := testAccProvider.Meta().(*cfClient.Client)
+		apiClient := testAccProvider.Meta().(*cfclient.Client)
 		retrievedHermesTrigger, err := apiClient.GetHermesTriggerByEventAndPipeline(rs.Primary.ID, rs.Primary.Attributes["pipeline_id"])
 
 		if err != nil {

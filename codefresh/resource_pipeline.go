@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
-	"github.com/hashicorp/go-cty/cty"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/schemautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -165,20 +166,11 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Type:        schema.TypeString,
 										Optional:    true,
 										Default:     "git",
-										ValidateDiagFunc: func(v any, p cty.Path) diag.Diagnostics {
-											value := v.(string)
-											expected := "git"
-											var diags diag.Diagnostics
-											if value != expected {
-												diag := diag.Diagnostic{
-													Severity: diag.Error,
-													Summary:  "Only triggers of type git are supported for nested triggers. For other trigger types, use the codefresh_pipeline_*_trigger resources.",
-													Detail:   fmt.Sprintf("%q is not %q", value, expected),
-												}
-												diags = append(diags, diag)
-											}
-											return diags
-										},
+										ValidateDiagFunc: schemautil.StringMatchesRegExp(
+											"git",
+											schemautil.WithSummary("Invalid trigger type"),
+											schemautil.WithDetailFormat("The trigger type %s is invalid. The only supported type is %s."),
+										),
 									},
 									"repo": {
 										Description: "The repository name, (owner/repo)",
@@ -186,11 +178,11 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Optional:    true,
 									},
 									"branch_regex": {
-										Description:  " A regular expression and will only trigger for branches that match this naming pattern (default: `/.*/gi`).",
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "/.*/gi",
-										ValidateFunc: stringIsValidRe2RegExp,
+										Description:      " A regular expression and will only trigger for branches that match this naming pattern (default: `/.*/gi`).",
+										Type:             schema.TypeString,
+										Optional:         true,
+										Default:          "/.*/gi",
+										ValidateDiagFunc: schemautil.StringIsValidRegExp(),
 									},
 									"branch_regex_input": {
 										Description:  "Flag to manage how the `branch_regex` field is interpreted. Possible values: `multiselect-exclude`, `multiselect`, `regex` (default: `regex`).",
@@ -200,17 +192,17 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										ValidateFunc: validation.StringInSlice([]string{"multiselect-exclude", "multiselect", "regex"}, false),
 									},
 									"pull_request_target_branch_regex": {
-										Description:  "A regular expression and will only trigger for pull requests to branches that match this naming pattern.",
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: stringIsValidRe2RegExp,
+										Description:      "A regular expression and will only trigger for pull requests to branches that match this naming pattern.",
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: schemautil.StringIsValidRegExp(),
 									},
 									"comment_regex": {
-										Description:  " A regular expression and will only trigger for pull requests where a comment matches this naming pattern (default: `/.*/gi`).",
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      "/.*/gi",
-										ValidateFunc: stringIsValidRe2RegExp,
+										Description:      " A regular expression and will only trigger for pull requests where a comment matches this naming pattern (default: `/.*/gi`).",
+										Type:             schema.TypeString,
+										Optional:         true,
+										Default:          "/.*/gi",
+										ValidateDiagFunc: schemautil.StringIsValidRegExp(),
 									},
 									"modified_files_glob": {
 										Description: "Allows to constrain the build and trigger it only if the modified files from the commit match this glob expression (default: `\"\"`).",
@@ -341,6 +333,137 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 								},
 							},
 						},
+						"cron_trigger": {
+							Description: "The pipeline's cron triggers. Conflicts with the deprecated [codefresh_pipeline_cron_trigger](https://registry.terraform.io/providers/codefresh-io/codefresh/latest/docs/resources/pipeline_cron_trigger) resource.",
+							Type:        schema.TypeList,
+							Optional:    true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Description: "The name of the cron trigger.",
+										Type:        schema.TypeString,
+										Required:    true,
+									},
+									"type": {
+										Description: "The type of the trigger (default: `cron`; see notes above).",
+										Type:        schema.TypeString,
+										Optional:    true,
+										Default:     "cron",
+										ValidateDiagFunc: schemautil.StringMatchesRegExp(
+											"cron",
+											schemautil.WithSummary("Invalid cron trigger type"),
+											schemautil.WithDetailFormat("The cron trigger type %s is invalid. The only supported type is %s."),
+										),
+									},
+									"disabled": {
+										Description: "Flag to disable the trigger.",
+										Type:        schema.TypeBool,
+										Optional:    true,
+										Default:     false,
+									},
+									"expression": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: schemautil.CronExpression(),
+									},
+									"message": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateDiagFunc: schemautil.StringMatchesRegExp(
+											schemautil.ValidCronMessageRegex,
+											schemautil.WithSeverity(diag.Error),
+											schemautil.WithSummary("Invalid cron trigger message"),
+											schemautil.WithDetailFormat("The message %q is invalid (must match %q)."),
+										),
+									},
+									"git_trigger_id": {
+										Description: "Related git-trigger id. Will by used to take all possible git information by branch.",
+										Type:        schema.TypeString,
+										Optional:    true,
+									},
+									"branch": {
+										Description: "Branch that should be passed for build triggered by this cron trigger.",
+										Type:        schema.TypeString,
+										Optional:    true,
+									},
+									"options": {
+										Description: "The trigger's options.",
+										Type:        schema.TypeList,
+										Optional:    true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"no_cache": {
+													Description: "If true, docker layer cache is disabled.",
+													Type:        schema.TypeBool,
+													Optional:    true,
+													Default:     false,
+												},
+												"no_cf_cache": {
+													Description: "If true, extra Codefresh caching is disabled.",
+													Type:        schema.TypeBool,
+													Optional:    true,
+													Default:     false,
+												},
+												"reset_volume": {
+													Description: "If true, all files on volume will be deleted before each execution.",
+													Type:        schema.TypeBool,
+													Optional:    true,
+													Default:     false,
+												},
+												"enable_notifications": {
+													Description: "If false the pipeline will not send notifications to Slack and status updates back to the Git provider.",
+													Type:        schema.TypeBool,
+													Optional:    true,
+													Default:     false,
+												},
+											},
+										},
+									},
+									"runtime_environment": {
+										Description: "The runtime environment for the trigger.",
+										Type:        schema.TypeList,
+										Optional:    true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Description: "The name of the runtime environment.",
+													Type:        schema.TypeString,
+													Optional:    true,
+												},
+												"memory": {
+													Description: "The memory allocated to the runtime environment.",
+													Type:        schema.TypeString,
+													Optional:    true,
+												},
+												"cpu": {
+													Description: "The CPU allocated to the runtime environment.",
+													Type:        schema.TypeString,
+													Optional:    true,
+												},
+												"dind_storage": {
+													Description: "The storage allocated to the runtime environment.",
+													Type:        schema.TypeString,
+													Optional:    true,
+												},
+												"required_available_storage": {
+													Description: "Minimum disk space required for build filesystem ( unit Gi is required).",
+													Type:        schema.TypeString,
+													Optional:    true,
+												},
+											},
+										},
+									},
+									"variables": {
+										Description: "Trigger variables.",
+										Type:        schema.TypeMap,
+										Optional:    true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
 						"contexts": {
 							Description: "A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be configured for the pipeline.",
 							Type:        schema.TypeList,
@@ -378,11 +501,11 @@ The following table presents how to configure this block based on the options av
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"branch_name": {
-													Description:   "A regular expression to filter the branches on with the termination policy applies.",
-													Type:          schema.TypeString,
-													Optional:      true,
-													ValidateFunc:  stringIsValidRe2RegExp,
-													ConflictsWith: []string{"spec.0.termination_policy.0.on_create_branch.0.ignore_branch"},
+													Description:      "A regular expression to filter the branches on with the termination policy applies.",
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: schemautil.StringIsValidRegExp(),
+													ConflictsWith:    []string{"spec.0.termination_policy.0.on_create_branch.0.ignore_branch"},
 												},
 												"ignore_trigger": {
 													Description: "Whether to ignore the trigger.",
@@ -407,7 +530,7 @@ The following table presents how to configure this block based on the options av
 							},
 						},
 						"pack_id": {
-							Description: "SAAS pack (`5cd1746617313f468d669013` for Small; `5cd1746717313f468d669014` for Medium; `5cd1746817313f468d669015` for Large; `5cd1746817313f468d669017` for XL; `5cd1746817313f468d669018` for XXL).",
+							Description: "SAAS pack (`5cd1746617313f468d669013` for Small; `5cd1746717313f468d669014` for Medium; `5cd1746817313f468d669015` for Large; `5cd1746817313f468d669017` for XL; `5cd1746817313f468d669018` for XXL); `5cd1746817313f468d669020` for 4XL).",
 							Type:        schema.TypeString,
 							Optional:    true,
 						},
@@ -489,7 +612,7 @@ Pipeline concurrency policy: Builds on 'Pending Approval' state should be:
 
 func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	pipeline, err := mapResourceToPipeline(d)
 	if err != nil {
@@ -508,7 +631,7 @@ func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	pipelineID := d.Id()
 
@@ -532,7 +655,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	pipeline, err := mapResourceToPipeline(d)
 	if err != nil {
@@ -551,7 +674,7 @@ func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	err := client.DeletePipeline(d.Id())
 	if err != nil {
@@ -561,7 +684,7 @@ func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mapPipelineToResource(pipeline cfClient.Pipeline, d *schema.ResourceData) error {
+func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) error {
 
 	err := d.Set("name", pipeline.Metadata.Name)
 	if err != nil {
@@ -601,7 +724,7 @@ func mapPipelineToResource(pipeline cfClient.Pipeline, d *schema.ResourceData) e
 	return nil
 }
 
-func flattenSpec(spec cfClient.Spec) []interface{} {
+func flattenSpec(spec cfclient.Spec) []interface{} {
 
 	var res = make([]interface{}, 0)
 	m := make(map[string]interface{})
@@ -610,15 +733,19 @@ func flattenSpec(spec cfClient.Spec) []interface{} {
 		m["trigger"] = flattenTriggers(spec.Triggers)
 	}
 
+	if len(spec.CronTriggers) > 0 {
+		m["cron_trigger"] = flattenCronTriggers(spec.CronTriggers)
+	}
+
 	if spec.SpecTemplate != nil {
 		m["spec_template"] = flattenSpecTemplate(*spec.SpecTemplate)
 	}
 
 	if len(spec.Variables) != 0 {
-		m["variables"] = convertVariables(spec.Variables)
+		m["variables"] = datautil.ConvertVariables(spec.Variables)
 	}
 
-	if spec.RuntimeEnvironment != (cfClient.RuntimeEnvironment{}) {
+	if spec.RuntimeEnvironment != (cfclient.RuntimeEnvironment{}) {
 		m["runtime_environment"] = flattenSpecRuntimeEnvironment(spec.RuntimeEnvironment)
 	}
 
@@ -685,7 +812,7 @@ func flattenSpecTerminationPolicy(terminationPolicy []map[string]interface{}) []
 	return res
 }
 
-func flattenSpecTemplate(spec cfClient.SpecTemplate) []map[string]interface{} {
+func flattenSpecTemplate(spec cfclient.SpecTemplate) []map[string]interface{} {
 	return []map[string]interface{}{
 		{
 			"location": spec.Location,
@@ -697,7 +824,7 @@ func flattenSpecTemplate(spec cfClient.SpecTemplate) []map[string]interface{} {
 	}
 }
 
-func flattenSpecRuntimeEnvironment(spec cfClient.RuntimeEnvironment) []map[string]interface{} {
+func flattenSpecRuntimeEnvironment(spec cfclient.RuntimeEnvironment) []map[string]interface{} {
 	return []map[string]interface{}{
 		{
 			"name":                       spec.Name,
@@ -709,7 +836,7 @@ func flattenSpecRuntimeEnvironment(spec cfClient.RuntimeEnvironment) []map[strin
 	}
 }
 
-func flattenTriggerOptions(options cfClient.TriggerOptions) []map[string]interface{} {
+func flattenTriggerOptions(options cfclient.TriggerOptions) []map[string]interface{} {
 	return []map[string]interface{}{
 		{
 			"no_cache":             options.NoCache,
@@ -720,7 +847,7 @@ func flattenTriggerOptions(options cfClient.TriggerOptions) []map[string]interfa
 	}
 }
 
-func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
+func flattenTriggers(triggers []cfclient.Trigger) []map[string]interface{} {
 	var res = make([]map[string]interface{}, len(triggers))
 	for i, trigger := range triggers {
 		m := make(map[string]interface{})
@@ -743,7 +870,7 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 		m["provider"] = trigger.Provider
 		m["type"] = trigger.Type
 		m["events"] = trigger.Events
-		m["variables"] = convertVariables(trigger.Variables)
+		m["variables"] = datautil.ConvertVariables(trigger.Variables)
 		if trigger.RuntimeEnvironment != nil {
 			m["runtime_environment"] = flattenSpecRuntimeEnvironment(*trigger.RuntimeEnvironment)
 		}
@@ -752,7 +879,30 @@ func flattenTriggers(triggers []cfClient.Trigger) []map[string]interface{} {
 	return res
 }
 
-func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
+func flattenCronTriggers(cronTriggers []cfclient.CronTrigger) []map[string]interface{} {
+	var res = make([]map[string]interface{}, len(cronTriggers))
+	for i, trigger := range cronTriggers {
+		m := make(map[string]interface{})
+		m["name"] = trigger.Name
+		m["type"] = trigger.Type
+		m["expression"] = trigger.Expression
+		m["message"] = trigger.Message
+		m["disabled"] = trigger.Disabled
+		m["git_trigger_id"] = trigger.GitTriggerId
+		m["branch"] = trigger.Branch
+		m["variables"] = datautil.ConvertVariables(trigger.Variables)
+		if trigger.Options != nil {
+			m["options"] = flattenTriggerOptions(*trigger.Options)
+		}
+		if trigger.RuntimeEnvironment != nil {
+			m["runtime_environment"] = flattenSpecRuntimeEnvironment(*trigger.RuntimeEnvironment)
+		}
+		res[i] = m
+	}
+	return res
+}
+
+func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 
 	tags := d.Get("tags").(*schema.Set).List()
 
@@ -761,18 +911,18 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 		"\n",
 		"\n",
 		-1)
-	pipeline := &cfClient.Pipeline{
-		Metadata: cfClient.Metadata{
+	pipeline := &cfclient.Pipeline{
+		Metadata: cfclient.Metadata{
 			Name:      d.Get("name").(string),
 			Revision:  d.Get("revision").(int),
 			ProjectId: d.Get("project_id").(string),
 			IsPublic:  d.Get("is_public").(bool),
-			Labels: cfClient.Labels{
-				Tags: convertStringArr(tags),
+			Labels: cfclient.Labels{
+				Tags: datautil.ConvertStringArr(tags),
 			},
 			OriginalYamlString: originalYamlString,
 		},
-		Spec: cfClient.Spec{
+		Spec: cfclient.Spec{
 			PackId:                   d.Get("spec.0.pack_id").(string),
 			RequiredAvailableStorage: d.Get("spec.0.required_available_storage").(string),
 			Priority:                 d.Get("spec.0.priority").(int),
@@ -783,7 +933,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 	}
 
 	if _, ok := d.GetOk("spec.0.spec_template"); ok {
-		pipeline.Spec.SpecTemplate = &cfClient.SpecTemplate{
+		pipeline.Spec.SpecTemplate = &cfclient.SpecTemplate{
 			Location: d.Get("spec.0.spec_template.0.location").(string),
 			Repo:     d.Get("spec.0.spec_template.0.repo").(string),
 			Path:     d.Get("spec.0.spec_template.0.path").(string),
@@ -798,7 +948,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 	}
 
 	if _, ok := d.GetOk("spec.0.runtime_environment"); ok {
-		pipeline.Spec.RuntimeEnvironment = cfClient.RuntimeEnvironment{
+		pipeline.Spec.RuntimeEnvironment = cfclient.RuntimeEnvironment{
 			Name:                     d.Get("spec.0.runtime_environment.0.name").(string),
 			Memory:                   d.Get("spec.0.runtime_environment.0.memory").(string),
 			CPU:                      d.Get("spec.0.runtime_environment.0.cpu").(string),
@@ -807,56 +957,95 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 		}
 	}
 
-	contexts := d.Get("spec.0.contexts").([]interface{})
-	pipeline.Spec.Contexts = contexts
+	if contexts, ok := d.GetOk("spec.0.contexts"); ok {
+		pipeline.Spec.Contexts = contexts.([]interface{})
+	}
 
-	variables := d.Get("spec.0.variables").(map[string]interface{})
-	pipeline.SetVariables(variables)
+	if variables, ok := d.GetOk("spec.0.variables"); ok {
+		pipeline.SetVariables(variables.(map[string]interface{}))
+	}
 
-	triggers := d.Get("spec.0.trigger").([]interface{})
-	for idx := range triggers {
-		events := d.Get(fmt.Sprintf("spec.0.trigger.%v.events", idx)).([]interface{})
-		contexts := d.Get(fmt.Sprintf("spec.0.trigger.%v.contexts", idx)).([]interface{})
-		codefreshTrigger := cfClient.Trigger{
-			Name:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.name", idx)).(string),
-			Description:                  d.Get(fmt.Sprintf("spec.0.trigger.%v.description", idx)).(string),
-			Type:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.type", idx)).(string),
-			Repo:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.repo", idx)).(string),
-			BranchRegex:                  d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex", idx)).(string),
-			BranchRegexInput:             d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex_input", idx)).(string),
-			PullRequestTargetBranchRegex: d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_target_branch_regex", idx)).(string),
-			CommentRegex:                 d.Get(fmt.Sprintf("spec.0.trigger.%v.comment_regex", idx)).(string),
-			ModifiedFilesGlob:            d.Get(fmt.Sprintf("spec.0.trigger.%v.modified_files_glob", idx)).(string),
-			Provider:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.provider", idx)).(string),
-			Disabled:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.disabled", idx)).(bool),
-			PullRequestAllowForkEvents:   d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_allow_fork_events", idx)).(bool),
-			CommitStatusTitle:            d.Get(fmt.Sprintf("spec.0.trigger.%v.commit_status_title", idx)).(string),
-			Context:                      d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
-			Contexts:                     convertStringArr(contexts),
-			Events:                       convertStringArr(events),
-		}
-		variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
-		codefreshTrigger.SetVariables(variables)
-		if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.options", idx)); ok {
-			options := cfClient.TriggerOptions{
-				NoCache:             d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cache", idx)).(bool),
-				NoCfCache:           d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cf_cache", idx)).(bool),
-				ResetVolume:         d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.reset_volume", idx)).(bool),
-				EnableNotifications: d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.enable_notifications", idx)).(bool),
+	if triggers, ok := d.GetOk("spec.0.trigger"); ok {
+		for idx := range triggers.([]interface{}) {
+			events := d.Get(fmt.Sprintf("spec.0.trigger.%v.events", idx)).([]interface{})
+			contexts := d.Get(fmt.Sprintf("spec.0.trigger.%v.contexts", idx)).([]interface{})
+			codefreshTrigger := cfclient.Trigger{
+				Name:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.name", idx)).(string),
+				Description:                  d.Get(fmt.Sprintf("spec.0.trigger.%v.description", idx)).(string),
+				Type:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.type", idx)).(string),
+				Repo:                         d.Get(fmt.Sprintf("spec.0.trigger.%v.repo", idx)).(string),
+				BranchRegex:                  d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex", idx)).(string),
+				BranchRegexInput:             d.Get(fmt.Sprintf("spec.0.trigger.%v.branch_regex_input", idx)).(string),
+				PullRequestTargetBranchRegex: d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_target_branch_regex", idx)).(string),
+				CommentRegex:                 d.Get(fmt.Sprintf("spec.0.trigger.%v.comment_regex", idx)).(string),
+				ModifiedFilesGlob:            d.Get(fmt.Sprintf("spec.0.trigger.%v.modified_files_glob", idx)).(string),
+				Provider:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.provider", idx)).(string),
+				Disabled:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.disabled", idx)).(bool),
+				PullRequestAllowForkEvents:   d.Get(fmt.Sprintf("spec.0.trigger.%v.pull_request_allow_fork_events", idx)).(bool),
+				CommitStatusTitle:            d.Get(fmt.Sprintf("spec.0.trigger.%v.commit_status_title", idx)).(string),
+				Context:                      d.Get(fmt.Sprintf("spec.0.trigger.%v.context", idx)).(string),
+				Contexts:                     datautil.ConvertStringArr(contexts),
+				Events:                       datautil.ConvertStringArr(events),
 			}
-			codefreshTrigger.Options = &options
-		}
-		if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.runtime_environment", idx)); ok {
-			triggerRuntime := cfClient.RuntimeEnvironment{
-				Name:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.name", idx)).(string),
-				Memory:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.memory", idx)).(string),
-				CPU:                      d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.cpu", idx)).(string),
-				DindStorage:              d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.dind_storage", idx)).(string),
-				RequiredAvailableStorage: d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.required_available_storage", idx)).(string),
+			variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
+			codefreshTrigger.SetVariables(variables)
+			if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.options", idx)); ok {
+				options := cfclient.TriggerOptions{
+					NoCache:             d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cache", idx)).(bool),
+					NoCfCache:           d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cf_cache", idx)).(bool),
+					ResetVolume:         d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.reset_volume", idx)).(bool),
+					EnableNotifications: d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.enable_notifications", idx)).(bool),
+				}
+				codefreshTrigger.Options = &options
 			}
-			codefreshTrigger.RuntimeEnvironment = &triggerRuntime
+			if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.runtime_environment", idx)); ok {
+				triggerRuntime := cfclient.RuntimeEnvironment{
+					Name:                     d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.name", idx)).(string),
+					Memory:                   d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.memory", idx)).(string),
+					CPU:                      d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.cpu", idx)).(string),
+					DindStorage:              d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.dind_storage", idx)).(string),
+					RequiredAvailableStorage: d.Get(fmt.Sprintf("spec.0.trigger.%v.runtime_environment.0.required_available_storage", idx)).(string),
+				}
+				codefreshTrigger.RuntimeEnvironment = &triggerRuntime
+			}
+			pipeline.Spec.Triggers = append(pipeline.Spec.Triggers, codefreshTrigger)
 		}
-		pipeline.Spec.Triggers = append(pipeline.Spec.Triggers, codefreshTrigger)
+	}
+
+	if cronTriggers, ok := d.GetOk("spec.0.cron_trigger"); ok {
+		for idx := range cronTriggers.([]interface{}) {
+			codefreshCronTrigger := cfclient.CronTrigger{
+				Name:         d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.name", idx)).(string),
+				Type:         d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.type", idx)).(string),
+				Expression:   d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.expression", idx)).(string),
+				Message:      d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.message", idx)).(string),
+				Disabled:     d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.disabled", idx)).(bool),
+				GitTriggerId: d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.git_trigger_id", idx)).(string),
+				Branch:       d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.branch", idx)).(string),
+			}
+			variables := d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.variables", idx)).(map[string]interface{})
+			codefreshCronTrigger.SetVariables(variables)
+			if _, ok := d.GetOk(fmt.Sprintf("spec.0.cron_trigger.%v.options", idx)); ok {
+				options := cfclient.TriggerOptions{
+					NoCache:             d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.options.0.no_cache", idx)).(bool),
+					NoCfCache:           d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.options.0.no_cf_cache", idx)).(bool),
+					ResetVolume:         d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.options.0.reset_volume", idx)).(bool),
+					EnableNotifications: d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.options.0.enable_notifications", idx)).(bool),
+				}
+				codefreshCronTrigger.Options = &options
+			}
+			if _, ok := d.GetOk(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment", idx)); ok {
+				triggerRuntime := cfclient.RuntimeEnvironment{
+					Name:                     d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment.0.name", idx)).(string),
+					Memory:                   d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment.0.memory", idx)).(string),
+					CPU:                      d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment.0.cpu", idx)).(string),
+					DindStorage:              d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment.0.dind_storage", idx)).(string),
+					RequiredAvailableStorage: d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.runtime_environment.0.required_available_storage", idx)).(string),
+				}
+				codefreshCronTrigger.RuntimeEnvironment = &triggerRuntime
+			}
+			pipeline.Spec.CronTriggers = append(pipeline.Spec.CronTriggers, codefreshCronTrigger)
+		}
 	}
 
 	var codefreshTerminationPolicy []map[string]interface{}
@@ -899,44 +1088,44 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfClient.Pipeline, error) {
 // Typically, unmarshalling the YAML string is problematic because the order of the attributes is not preserved.
 // Namely, we care a lot about the order of the steps and stages attributes.
 // Luckily, the yj package introduces a MapSlice type that preserves the order Map items (see utils.go).
-func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfClient.Pipeline) error {
+func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfclient.Pipeline) error {
 	for _, attribute := range []string{"stages", "steps", "hooks"} {
-		yamlString, err := yq(fmt.Sprintf(".%s", attribute), originalYamlString)
+		yamlString, err := datautil.Yq(fmt.Sprintf(".%s", attribute), originalYamlString)
 		if err != nil {
 			return fmt.Errorf("error while extracting '%s' from original YAML string: %v", attribute, err)
 		} else if yamlString == "" {
 			continue
 		}
 
-		attributeJson, err := yamlToJson(yamlString)
+		attributeJson, err := datautil.YamlToJson(yamlString)
 		if err != nil {
 			return fmt.Errorf("error while converting '%s' YAML to JSON: %v", attribute, err)
 		}
 
 		switch attribute {
 		case "stages":
-			pipeline.Spec.Stages = &cfClient.Stages{
+			pipeline.Spec.Stages = &cfclient.Stages{
 				Stages: attributeJson,
 			}
 		case "steps":
-			pipeline.Spec.Steps = &cfClient.Steps{
+			pipeline.Spec.Steps = &cfclient.Steps{
 				Steps: attributeJson,
 			}
 		case "hooks":
-			pipeline.Spec.Hooks = &cfClient.Hooks{
+			pipeline.Spec.Hooks = &cfclient.Hooks{
 				Hooks: attributeJson,
 			}
 		}
 	}
 
-	mode, err := yq(".mode", originalYamlString)
+	mode, err := datautil.Yq(".mode", originalYamlString)
 	if err != nil {
 		return fmt.Errorf("error while extracting 'mode' from original YAML string: %v", err)
 	} else if mode != "" {
 		pipeline.Spec.Mode = mode
 	}
 
-	ff, err := yq(".fail_fast", originalYamlString)
+	ff, err := datautil.Yq(".fail_fast", originalYamlString)
 	if err != nil {
 		return fmt.Errorf("error while extracting 'mode' from original YAML string: %v", err)
 	} else if ff != "" {

@@ -49,11 +49,11 @@ resource "codefresh_account" "test" {
 - `build` (Block List) Build limits for this account. (see [below for nested schema](#nestedblock--build))
 - `features` (Map of Boolean) Features toggles for this account. Default:
 
-OfflineLogging: true
-ssoManagement: true
-teamsManagement: true
-abac: true
-customKubernetesCluster: true
+* OfflineLogging: true
+* ssoManagement: true
+* teamsManagement: true
+* abac: true
+* customKubernetesCluster: true
 - `limits` (Block List) Limits for this account. (see [below for nested schema](#nestedblock--limits))
 
 ### Read-Only
@@ -81,7 +81,7 @@ Required:
 
 Optional:
 
-- `data_retention_weeks` (Number) Specifies how long, in weeks, the builds be stored (default: `5`).
+- `data_retention_weeks` (Number) Specifies the number of weeks for which to store the builds (default: `5`).
 
 ## Import
 ```sh

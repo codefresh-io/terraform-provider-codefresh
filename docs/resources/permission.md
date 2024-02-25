@@ -2,12 +2,12 @@
 page_title: "codefresh_permission Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  Permission are used to setup access control and allow to define which teams have access to which clusters and pipelines based on tags.
+  Permissions are used to set up access control and define which teams have access to which clusters and pipelines based on tags.
 ---
 
 # codefresh_permission (Resource)
 
-Permission are used to setup access control and allow to define which teams have access to which clusters and pipelines based on tags.
+Permissions are used to set up access control and define which teams have access to which clusters and pipelines based on tags.
 
 See the [Access Control documentation](https://codefresh.io/docs/docs/administration/account-user-management/access-control/).
 
@@ -59,9 +59,9 @@ resource "codefresh_permission" "developers" {
 - `_id` (String) The permission ID.
 - `related_resource` (String) Specifies the resource to use when evaluating the tags. Possible values:
 	* project
-- `tags` (Set of String) The effective tags to apply the permission. It supports 2 custom tags:
-	* untagged is a “tag” which refers to all clusters that don't have any tag.
-	* (the star character) means all tags.
+- `tags` (Set of String) The tags for which to apply the permission. Supports two custom tags:
+	* untagged:  Apply to all resources without tags
+  * (asterisk): Apply to all resources with any tag
 
 ### Read-Only
 

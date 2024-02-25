@@ -11,6 +11,8 @@ The central component of the Codefresh Platform. Pipelines are workflows that co
 
 See the [documentation](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/introduction-to-codefresh-pipelines/) for the details.
 
+~> **NOTE:** `cron_trigger` conflicts with the deprecated [codefresh_pipeline_cron_trigger](https://registry.terraform.io/providers/codefresh-io/codefresh/latest/docs/resources/pipeline_cron_trigger) resource.
+
 ## Example Usage
 
 ```hcl
@@ -125,8 +127,9 @@ Optional:
 - `branch_concurrency` (Number) The maximum amount of concurrent builds that may run for each branch. Zero is unlimited (default: `0`).
 - `concurrency` (Number) The maximum amount of concurrent builds. Zero is unlimited (default: `0`).
 - `contexts` (List of String) A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be configured for the pipeline.
+- `cron_trigger` (Block List) The pipeline's cron triggers. Conflicts with the deprecated [codefresh_pipeline_cron_trigger](https://registry.terraform.io/providers/codefresh-io/codefresh/latest/docs/resources/pipeline_cron_trigger) resource. (see [below for nested schema](#nestedblock--spec--cron_trigger))
 - `options` (Block List, Max: 1) The options for the pipeline. (see [below for nested schema](#nestedblock--spec--options))
-- `pack_id` (String) SAAS pack (`5cd1746617313f468d669013` for Small; `5cd1746717313f468d669014` for Medium; `5cd1746817313f468d669015` for Large; `5cd1746817313f468d669017` for XL; `5cd1746817313f468d669018` for XXL).
+- `pack_id` (String) SAAS pack (`5cd1746617313f468d669013` for Small; `5cd1746717313f468d669014` for Medium; `5cd1746817313f468d669015` for Large; `5cd1746817313f468d669017` for XL; `5cd1746817313f468d669018` for XXL); `5cd1746817313f468d669020` for 4XL).
 - `priority` (Number) Helps to organize the order of builds execution in case of reaching the concurrency limit (default: `0`).
 - `required_available_storage` (String) Minimum disk space required for build filesystem ( unit Gi is required).
 - `runtime_environment` (Block List) The runtime environment for the pipeline. (see [below for nested schema](#nestedblock--spec--runtime_environment))
@@ -135,6 +138,49 @@ Optional:
 - `trigger` (Block List) The pipeline's triggers (currently the only nested trigger supported is git; for other trigger types, use the `codefresh_pipeline_*_trigger` resources). (see [below for nested schema](#nestedblock--spec--trigger))
 - `trigger_concurrency` (Number) The maximum amount of concurrent builds that may run for each trigger (default: `0`).
 - `variables` (Map of String) The pipeline's variables.
+
+<a id="nestedblock--spec--cron_trigger"></a>
+### Nested Schema for `spec.cron_trigger`
+
+Required:
+
+- `expression` (String)
+- `message` (String)
+- `name` (String) The name of the cron trigger.
+
+Optional:
+
+- `branch` (String) Branch that should be passed for build triggered by this cron trigger.
+- `disabled` (Boolean) Flag to disable the trigger.
+- `git_trigger_id` (String) Related git-trigger id. Will by used to take all possible git information by branch.
+- `options` (Block List) The trigger's options. (see [below for nested schema](#nestedblock--spec--cron_trigger--options))
+- `runtime_environment` (Block List) The runtime environment for the trigger. (see [below for nested schema](#nestedblock--spec--cron_trigger--runtime_environment))
+- `type` (String) The type of the trigger (default: `cron`; see notes above).
+- `variables` (Map of String) Trigger variables.
+
+<a id="nestedblock--spec--cron_trigger--options"></a>
+### Nested Schema for `spec.cron_trigger.options`
+
+Optional:
+
+- `enable_notifications` (Boolean) If false the pipeline will not send notifications to Slack and status updates back to the Git provider.
+- `no_cache` (Boolean) If true, docker layer cache is disabled.
+- `no_cf_cache` (Boolean) If true, extra Codefresh caching is disabled.
+- `reset_volume` (Boolean) If true, all files on volume will be deleted before each execution.
+
+
+<a id="nestedblock--spec--cron_trigger--runtime_environment"></a>
+### Nested Schema for `spec.cron_trigger.runtime_environment`
+
+Optional:
+
+- `cpu` (String) The CPU allocated to the runtime environment.
+- `dind_storage` (String) The storage allocated to the runtime environment.
+- `memory` (String) The memory allocated to the runtime environment.
+- `name` (String) The name of the runtime environment.
+- `required_available_storage` (String) Minimum disk space required for build filesystem ( unit Gi is required).
+
+
 
 <a id="nestedblock--spec--options"></a>
 ### Nested Schema for `spec.options`

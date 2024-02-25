@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	funk "github.com/thoas/go-funk"
@@ -13,7 +14,7 @@ import (
 
 func resourcePermission() *schema.Resource {
 	return &schema.Resource{
-		Description: "Permission are used to setup access control and allow to define which teams have access to which clusters and pipelines based on tags.",
+		Description: "Permissions are used to set up access control and define which teams have access to which clusters and pipelines based on tags.",
 		Create:      resourcePermissionCreate,
 		Read:        resourcePermissionRead,
 		Update:      resourcePermissionUpdate,
@@ -84,9 +85,9 @@ Action to be allowed. Possible values:
 			},
 			"tags": {
 				Description: `
-The effective tags to apply the permission. It supports 2 custom tags:
-	* untagged is a “tag” which refers to all clusters that don't have any tag.
-	* (the star character) means all tags.
+The tags for which to apply the permission. Supports two custom tags:
+	* untagged:  Apply to all resources without tags
+  * (asterisk): Apply to all resources with any tag
 				`,
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -114,7 +115,7 @@ func resourcePermissionCustomDiff(ctx context.Context, diff *schema.ResourceDiff
 }
 
 func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	permission := *mapResourceToPermission(d)
 
@@ -123,7 +124,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if newPermission == nil {
-		return fmt.Errorf("resourcePermissionCreate - failed to create permission, empty responce")
+		return fmt.Errorf("resourcePermissionCreate - failed to create permission, empty response")
 	}
 
 	d.SetId(newPermission.ID)
@@ -133,7 +134,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	permissionID := d.Id()
 	if permissionID == "" {
@@ -155,7 +156,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	permission := *mapResourceToPermission(d)
 	resp, err := client.CreatePermission(&permission)
@@ -173,7 +174,7 @@ func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	err := client.DeletePermission(d.Id())
 	if err != nil {
@@ -183,7 +184,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mapPermissionToResource(permission *cfClient.Permission, d *schema.ResourceData) error {
+func mapPermissionToResource(permission *cfclient.Permission, d *schema.ResourceData) error {
 
 	err := d.Set("_id", permission.ID)
 	if err != nil {
@@ -213,16 +214,16 @@ func mapPermissionToResource(permission *cfClient.Permission, d *schema.Resource
 	return nil
 }
 
-func mapResourceToPermission(d *schema.ResourceData) *cfClient.Permission {
+func mapResourceToPermission(d *schema.ResourceData) *cfclient.Permission {
 
 	tagsI := d.Get("tags").(*schema.Set).List()
 	var tags []string
 	if len(tagsI) > 0 {
-		tags = convertStringArr(tagsI)
+		tags = datautil.ConvertStringArr(tagsI)
 	} else {
 		tags = []string{"*", "untagged"}
 	}
-	permission := &cfClient.Permission{
+	permission := &cfclient.Permission{
 		ID:       d.Id(),
 		Team:     d.Get("team").(string),
 		Action:   d.Get("action").(string),

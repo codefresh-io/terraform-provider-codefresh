@@ -1,4 +1,4 @@
-package client
+package cfclient
 
 import (
 	"bytes"
@@ -14,6 +14,7 @@ type Client struct {
 	Token       string
 	TokenHeader string
 	Host        string
+	HostV2      string
 	Client      *http.Client
 }
 
@@ -29,12 +30,13 @@ type RequestOptions struct {
 // NewClient returns a new client configured to communicate on a server with the
 // given hostname and to send an Authorization Header with the value of
 // token
-func NewClient(hostname string, token string, tokenHeader string) *Client {
+func NewClient(hostname string, hostnameV2 string, token string, tokenHeader string) *Client {
 	if tokenHeader == "" {
 		tokenHeader = "Authorization"
 	}
 	return &Client{
 		Host:        hostname,
+		HostV2:      hostnameV2,
 		Token:       token,
 		TokenHeader: tokenHeader,
 		Client:      &http.Client{},

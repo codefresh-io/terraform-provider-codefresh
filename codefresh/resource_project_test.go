@@ -2,12 +2,13 @@ package codefresh
 
 import (
 	"fmt"
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"regexp"
+	"testing"
+
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"regexp"
-	"testing"
 )
 
 var projectNamePrefix = "TerraformAccTest_"
@@ -110,7 +111,7 @@ func testAccCheckCodefreshProjectExists(resource string) resource.TestCheckFunc 
 
 		projectID := rs.Primary.ID
 
-		apiClient := testAccProvider.Meta().(*cfClient.Client)
+		apiClient := testAccProvider.Meta().(*cfclient.Client)
 		_, err := apiClient.GetProjectByID(projectID)
 
 		if err != nil {
@@ -121,7 +122,7 @@ func testAccCheckCodefreshProjectExists(resource string) resource.TestCheckFunc 
 }
 
 func testAccCheckCodefreshProjectDestroy(s *terraform.State) error {
-	apiClient := testAccProvider.Meta().(*cfClient.Client)
+	apiClient := testAccProvider.Meta().(*cfclient.Client)
 
 	for _, rs := range s.RootModule().Resources {
 

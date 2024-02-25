@@ -3,7 +3,7 @@ package codefresh
 import (
 	"time"
 
-	cfClient "github.com/codefresh-io/terraform-provider-codefresh/client"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -25,7 +25,7 @@ func dataSourceUsers() *schema.Resource {
 
 func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*cfClient.Client)
+	client := meta.(*cfclient.Client)
 
 	users, err := client.GetAllUsers()
 	if err != nil {
@@ -42,7 +42,7 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func mapDataUsersToResource(users []cfClient.User, d *schema.ResourceData) error {
+func mapDataUsersToResource(users []cfclient.User, d *schema.ResourceData) error {
 
 	var res = make([]map[string]interface{}, len(users))
 	for i, user := range users {

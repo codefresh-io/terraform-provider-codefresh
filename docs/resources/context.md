@@ -2,21 +2,22 @@
 page_title: "codefresh_context Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  A Context is an authentication/configuration that is used by the Codefresh system and engine.
+  A Context is an authentication/configuration resource used by the Codefresh system and engine.
 ---
 
 # codefresh_context (Resource)
 
-A Context is an authentication/configuration that is used by the Codefresh system and engine.
+A Context is an authentication/configuration resource used by the Codefresh system and engine.
 
 ## Supported types
 
-There are multiple types of context available in Codefresh but they all have the following main components to define them:
+Codefresh supports multiple types of Contexts, all of which share the following components:
 
 * `Name`: A unique identifier for the context
 * `Type`: A string representing the type of context
-* `Data`: A data structure that provide the information related to the Context. This differs based on the type of context selected
-For more details of the Context spec see in the [CLI official documentation](https://codefresh-io.github.io/cli/contexts/spec/)
+* `Data`: A data structure that provides the information related to the Context. This differs based on the type of Context selected.
+
+For more details of the Context spec, please refer to the [official Codefresh CLI documentation](https://codefresh-io.github.io/cli/contexts/spec/)
 
 Currently the provider supports the following types of Context:
 
@@ -26,7 +27,7 @@ Currently the provider supports the following types of Context:
 * `secret-yaml` (Secret YAML Configuration Context)
 
 ### Shared Configuration
-A Shared Configuration is the entity in Codefresh that allow to create values in a central place that can then be consumed in pipelines to keep them DRY.
+A Shared Configuration is the entity in Codefresh where you can create values in a centralized location, and then consume in pipelines to keep them [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself).
 More details in the official [Shared Configuration documentation](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)
 
 ### Example Usage
