@@ -79,6 +79,39 @@ func TestAccCodefreshPipeline_Concurrency(t *testing.T) {
 	})
 }
 
+func TestAccCodefreshPipeline_PremitRestartFromFailedSteps(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+	var pipeline cfclient.Pipeline
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineBasicConfigPermitRestartFromFailedSteps(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.permit_restart_from_failed_steps", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodefreshPipelineBasicConfigPermitRestartFromFailedSteps(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.permit_restart_from_failed_steps", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCodefreshPipeline_Tags(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
@@ -954,6 +987,33 @@ resource "codefresh_pipeline" "test" {
   }
 }
 `, rName, repo, path, revision, context, concurrency, concurrencyBranch, concurrencyTrigger)
+}
+
+func testAccCodefreshPipelineBasicConfigPermitRestartFromFailedSteps(rName string, repo string, path string, revision string, context string, permitRestartFromFailedSteps bool) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
+  name = "%s"
+
+  spec {
+	spec_template {
+    	repo        = %q
+    	path        = %q
+    	revision    = %q
+    	context     = %q
+	}
+
+	permit_restart_from_failed_steps = %t
+
+  }
+}
+`, rName, repo, path, revision, context, permitRestartFromFailedSteps)
 }
 
 func testAccCodefreshPipelineBasicConfigTriggers(

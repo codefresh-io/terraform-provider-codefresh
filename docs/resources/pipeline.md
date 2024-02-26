@@ -130,6 +130,7 @@ Optional:
 - `cron_trigger` (Block List) The pipeline's cron triggers. Conflicts with the deprecated [codefresh_pipeline_cron_trigger](https://registry.terraform.io/providers/codefresh-io/codefresh/latest/docs/resources/pipeline_cron_trigger) resource. (see [below for nested schema](#nestedblock--spec--cron_trigger))
 - `options` (Block List, Max: 1) The options for the pipeline. (see [below for nested schema](#nestedblock--spec--options))
 - `pack_id` (String) SAAS pack (`5cd1746617313f468d669013` for Small; `5cd1746717313f468d669014` for Medium; `5cd1746817313f468d669015` for Large; `5cd1746817313f468d669017` for XL; `5cd1746817313f468d669018` for XXL); `5cd1746817313f468d669020` for 4XL).
+- `permit_restart_from_failed_steps` (Boolean) Defines whether it is permitted to restart builds in this pipeline from failed step. Defaults to true
 - `priority` (Number) Helps to organize the order of builds execution in case of reaching the concurrency limit (default: `0`).
 - `required_available_storage` (String) Minimum disk space required for build filesystem ( unit Gi is required).
 - `runtime_environment` (Block List) The runtime environment for the pipeline. (see [below for nested schema](#nestedblock--spec--runtime_environment))

@@ -101,6 +101,12 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 							Optional:    true,
 							Default:     0,
 						},
+						"permit_restart_from_failed_steps": {
+							Description: "Defines whether it is permitted to restart builds in this pipeline from failed step. Defaults to true",
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     true,
+						},
 						"spec_template": {
 							Description: "The pipeline's spec template.",
 							Type:        schema.TypeList,
@@ -781,6 +787,7 @@ func flattenSpec(spec cfclient.Spec) []interface{} {
 	m["concurrency"] = spec.Concurrency
 	m["branch_concurrency"] = spec.BranchConcurrency
 	m["trigger_concurrency"] = spec.TriggerConcurrency
+	m["permit_restart_from_failed_steps"] = spec.PermitRestartFromFailedSteps
 
 	m["priority"] = spec.Priority
 
@@ -930,12 +937,13 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 			OriginalYamlString: originalYamlString,
 		},
 		Spec: cfclient.Spec{
-			PackId:                   d.Get("spec.0.pack_id").(string),
-			RequiredAvailableStorage: d.Get("spec.0.required_available_storage").(string),
-			Priority:                 d.Get("spec.0.priority").(int),
-			Concurrency:              d.Get("spec.0.concurrency").(int),
-			BranchConcurrency:        d.Get("spec.0.branch_concurrency").(int),
-			TriggerConcurrency:       d.Get("spec.0.trigger_concurrency").(int),
+			PackId:                       d.Get("spec.0.pack_id").(string),
+			RequiredAvailableStorage:     d.Get("spec.0.required_available_storage").(string),
+			Priority:                     d.Get("spec.0.priority").(int),
+			Concurrency:                  d.Get("spec.0.concurrency").(int),
+			BranchConcurrency:            d.Get("spec.0.branch_concurrency").(int),
+			TriggerConcurrency:           d.Get("spec.0.trigger_concurrency").(int),
+			PermitRestartFromFailedSteps: d.Get("spec.0.permit_restart_from_failed_steps").(bool),
 		},
 	}
 
