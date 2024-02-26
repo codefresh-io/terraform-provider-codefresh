@@ -1,0 +1,29 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+```hcl
+data "codefresh_project" "myapp" {
+  name = "myapp"
+}
+
+
+resource "codefresh_pipeline" "myapp-deploy" {
+
+  name    = "${data.codefresh_project.myapp.projectName}/myapp-deploy"
+
+  ...
+}
+
+```
+
+{{ .SchemaMarkdown | trimspace }}
