@@ -38,7 +38,6 @@ Because of the current Codefresh API limitation it's impossible to remove accoun
 }
 
 func resourceIDPAccountsCreate(d *schema.ResourceData, meta interface{}) error {
-
 	client := meta.(*cfclient.Client)
 
 	accountIds := datautil.ConvertStringArr(d.Get("account_ids").(*schema.Set).List())
@@ -60,7 +59,6 @@ func resourceIDPAccountsCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIDPAccountsRead(d *schema.ResourceData, meta interface{}) error {
-
 	client := meta.(*cfclient.Client)
 
 	idpID := d.Id()
@@ -94,7 +92,6 @@ func resourceIDPAccountsDelete(_ *schema.ResourceData, _ interface{}) error {
 }
 
 func resourceIDPAccountsUpdate(d *schema.ResourceData, meta interface{}) error {
-
 	client := meta.(*cfclient.Client)
 
 	idpID := d.Id()
