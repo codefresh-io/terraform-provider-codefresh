@@ -30,7 +30,7 @@ steps:
       - wget -O /tmp/tfswitch-install.sh https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh
       - chmod +x /tmp/tfswitch-install.sh
       - /tmp/tfswitch-install.sh
-      - tfswitch --latest-stable ${TF_VERSION}
+      - /usr/local/bin/tfswitch --latest-stable ${TF_VERSION}
       - sleep $((RANDOM % 45))
       - go test -v ./...
     retry:
