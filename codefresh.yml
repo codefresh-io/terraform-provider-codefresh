@@ -45,6 +45,7 @@ steps:
     title: "Preparing environment variables..."
     stage: release
     image: quay.io/codefresh/codefresh-shell:0.0.13
+    shell: bash
     environment:
       - GPG_FINGERPRINT=${{GPG_FINGERPRINT}}
       - SIGNINGKEY=${{SIGNINGKEY}}
