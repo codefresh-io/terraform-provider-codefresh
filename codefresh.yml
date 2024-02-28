@@ -27,7 +27,8 @@ steps:
       - TF_ACC="test"
       - CGO_ENABLED=0
     commands:
-      - wget -O /tmp/tfswitch-install.sh https://raw.githubusercontent.com/warrensbox/terraform-switcher/release/install.sh && chmod +x /tmp/tfswitch-install.sh && /tmp/tfswitch-install.sh -b /tmp && /tmp/tfswitch --latest-stable ${TF_VERSION}
+      - go install github.com/warrensbox/terraform-switcher@0.13.1308
+      - terraform-switcher --latest-stable ${TF_VERSION}
       - sleep $((RANDOM % 45))
       - go test -v ./...
     retry:
