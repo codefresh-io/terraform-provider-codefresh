@@ -1,0 +1,57 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example usage
+```hcl
+resource "codefresh_account_idp" "auth0-test" {
+  display_name = "tf-auth0-example"
+  
+  auth0 {
+    client_id = "auht0-codefresh-example"
+    client_secret = "mysecret"
+    domain = "codefresh.auth0.com"
+  }
+}
+```
+```hcl
+resource "codefresh_account_idp" "google-example" {
+  display_name = "tf-google-example"
+
+  google {
+    client_id = "google-codefresh-example"
+    client_secret = "mysecret99"
+    admin_email = "admin@codefresh.io"
+    sync_field = "myfield"
+    json_keyfile = <<EOT
+    {  
+      "installed":{  
+          "client_id":"clientid",
+          "project_id":"projectname",
+          "auth_uri":"https://accounts.google.com/o/oauth2/auth",
+          "token_uri":"https://accounts.google.com/o/oauth2/token",
+          "auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs",
+      }
+    }
+    EOT
+  }
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Please note that secret fields are not imported. 
+<br>All secrets should be provided in the configuration and applied after the import for the state to be consistent.
+
+```sh
+terraform import codefresh_account_idp.test <id>
+```

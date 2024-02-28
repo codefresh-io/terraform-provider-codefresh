@@ -51,6 +51,7 @@ func Provider() *schema.Provider {
 			"codefresh_users":           dataSourceUsers(),
 			"codefresh_registry":        dataSourceRegistry(),
 			"codefresh_pipelines":       dataSourcePipelines(),
+			"codefresh_account_idp":     dataSourceAccountIdp(),
 			"codefresh_project":         dataSourceProject(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
@@ -69,6 +70,8 @@ func Provider() *schema.Provider {
 			"codefresh_user":                     resourceUser(),
 			"codefresh_team":                     resourceTeam(),
 			"codefresh_abac_rules":               resourceGitopsAbacRule(),
+			"codefresh_idp":                      resourceIdp(),
+			"codefresh_account_idp":              resourceAccountIdp(),
 		},
 		ConfigureFunc: configureProvider,
 	}
