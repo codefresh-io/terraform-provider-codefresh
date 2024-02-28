@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	SupportedIdps = []string{GitHub, GitLab, Okta, Google, Auth0, Auth0, OneLogin, Keycloak, SAML, LDAP}
+	SupportedIdps = []string{GitHub, GitLab, Okta, Google, Auth0, Azure, OneLogin, Keycloak, SAML, LDAP}
 	IdpSchema     = map[string]*schema.Schema{
 		"display_name": {
 			Description: "The display name for the IDP.",
