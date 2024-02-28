@@ -44,13 +44,13 @@ steps:
   prepare_env_vars:
     title: "Preparing environment variables..."
     stage: release
-    image: codefreshio/ci-helpers
+    image: quay.io/codefresh/codefresh-shell:0.0.13
     environment:
       - GPG_FINGERPRINT=${{GPG_FINGERPRINT}}
       - SIGNINGKEY=${{SIGNINGKEY}}
     commands:
       - source /get-token/get-gh-token.sh
-      - cf_export GITHUB_TOKEN
+      - cf_export GITHUB_TOKEN=$GITHUB_TOKEN --mask
       - cf_export GPG_FINGERPRINT
       - cf_export SIGNINGKEY
       - cf_export GPG_PRIVATE
