@@ -49,7 +49,7 @@ steps:
       - GPG_FINGERPRINT=${{GPG_FINGERPRINT}}
       - SIGNINGKEY=${{SIGNINGKEY}}
     commands:
-      - source /get-token/get-gh-token.sh
+      - source /scripts/get-gh-token.sh
       - cf_export GITHUB_TOKEN=$GITHUB_TOKEN --mask
       - cf_export GPG_FINGERPRINT
       - cf_export SIGNINGKEY
