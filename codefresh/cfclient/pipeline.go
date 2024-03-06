@@ -169,9 +169,9 @@ type Pipeline struct {
 	Version  string   `json:"version,omitempty"`
 }
 
-func (p *Pipeline) SetVariables(variables map[string]interface{}) {
+func (p *Pipeline) SetVariables(variables map[string]interface{}, encrypted bool) {
 	for key, value := range variables {
-		p.Spec.Variables = append(p.Spec.Variables, Variable{Key: key, Value: value.(string)})
+		p.Spec.Variables = append(p.Spec.Variables, Variable{Key: key, Value: value.(string), Encrypted: encrypted})
 	}
 }
 

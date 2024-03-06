@@ -133,7 +133,9 @@ func mapProjectToResource(project *cfclient.Project, d *schema.ResourceData) err
 		return err
 	}
 
-	err = d.Set("variables", datautil.ConvertVariables(project.Variables))
+	vars, _ := datautil.ConvertVariables(project.Variables)
+
+	err = d.Set("variables", vars)
 	if err != nil {
 		return err
 	}

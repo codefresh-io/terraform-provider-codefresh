@@ -151,6 +151,14 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 								Type: schema.TypeString,
 							},
 						},
+						"encrypted_variables": {
+							Description: "Pipeline level encrypted variables. Please note that drift will not be detected for encrypted variables",
+							Type:        schema.TypeMap,
+							Optional:    true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 						"trigger": {
 							Description: "The pipeline's triggers (currently the only nested trigger supported is git; for other trigger types, use the `codefresh_pipeline_*_trigger` resources).",
 							Type:        schema.TypeList,
@@ -753,7 +761,7 @@ func flattenSpec(spec cfclient.Spec) []interface{} {
 	}
 
 	if len(spec.Variables) != 0 {
-		m["variables"] = datautil.ConvertVariables(spec.Variables)
+		m["variables"], m["encrypted_variables"] = datautil.ConvertVariables(spec.Variables)
 	}
 
 	if spec.RuntimeEnvironment != (cfclient.RuntimeEnvironment{}) {
@@ -884,7 +892,7 @@ func flattenTriggers(triggers []cfclient.Trigger) []map[string]interface{} {
 		m["provider"] = trigger.Provider
 		m["type"] = trigger.Type
 		m["events"] = trigger.Events
-		m["variables"] = datautil.ConvertVariables(trigger.Variables)
+		m["variables"], _ = datautil.ConvertVariables(trigger.Variables)
 		if trigger.RuntimeEnvironment != nil {
 			m["runtime_environment"] = flattenSpecRuntimeEnvironment(*trigger.RuntimeEnvironment)
 		}
@@ -904,7 +912,7 @@ func flattenCronTriggers(cronTriggers []cfclient.CronTrigger) []map[string]inter
 		m["disabled"] = trigger.Disabled
 		m["git_trigger_id"] = trigger.GitTriggerId
 		m["branch"] = trigger.Branch
-		m["variables"] = datautil.ConvertVariables(trigger.Variables)
+		m["variables"], _ = datautil.ConvertVariables(trigger.Variables)
 		if trigger.Options != nil {
 			m["options"] = flattenTriggerOptions(*trigger.Options)
 		}
@@ -977,7 +985,11 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 	}
 
 	if variables, ok := d.GetOk("spec.0.variables"); ok {
-		pipeline.SetVariables(variables.(map[string]interface{}))
+		pipeline.SetVariables(variables.(map[string]interface{}), false)
+	}
+
+	if encryptedVariables, ok := d.GetOk("spec.0.encrypted_variables"); ok {
+		pipeline.SetVariables(encryptedVariables.(map[string]interface{}), true)
 	}
 
 	if triggers, ok := d.GetOk("spec.0.trigger"); ok {
