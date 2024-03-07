@@ -157,6 +157,7 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 							Optional:    true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
+								Sensitive: true,
 							},
 						},
 						"trigger": {
@@ -725,7 +726,16 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 		return err
 	}
 
-	err = d.Set("spec", flattenSpec(pipeline.Spec))
+	flattenedSpec := flattenSpec(pipeline.Spec)
+
+	encrypredVariables, getEncryptedVariablesOk := d.GetOk("spec.0.encrypted_variables")
+	
+	if getEncryptedVariablesOk {
+		flattenedSpec[0]["encrypted_variables"] = encrypredVariables.(map[string]interface{})
+	}
+
+	err = d.Set("spec", flattenedSpec)
+
 	if err != nil {
 		return err
 	}
@@ -743,9 +753,9 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 	return nil
 }
 
-func flattenSpec(spec cfclient.Spec) []interface{} {
+func flattenSpec(spec cfclient.Spec) []map[string]interface{} {
 
-	var res = make([]interface{}, 0)
+	var res = make([]map[string]interface{}, 0)
 	m := make(map[string]interface{})
 
 	if len(spec.Triggers) > 0 {
@@ -761,7 +771,8 @@ func flattenSpec(spec cfclient.Spec) []interface{} {
 	}
 
 	if len(spec.Variables) != 0 {
-		m["variables"], m["encrypted_variables"] = datautil.ConvertVariables(spec.Variables)
+		// Do not set encrypted variables because they cause constant diff
+		m["variables"], _ = datautil.ConvertVariables(spec.Variables)
 	}
 
 	if spec.RuntimeEnvironment != (cfclient.RuntimeEnvironment{}) {
