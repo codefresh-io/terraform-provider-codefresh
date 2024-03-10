@@ -745,18 +745,19 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 	}
 
 	// Set trigger encrypted variables from resource data
-	triggers, getTriggersOK := d.GetOk("spec.0.trigger")
+	triggers, getTriggersOK := flattenedSpec[0]["trigger"]
 
 	if (getTriggersOK) {
-		for triggerIndex, triggerSpec := range triggers.([]interface{}) {
+		for triggerIndex, triggerSpec := range triggers.([]map[string]interface{}) {
 			
-			encryptedVariables, ok := triggerSpec.(map[string]interface{})["encrypted_variables"]
+			encryptedVariables, ok := triggerSpec["encrypted_variables"].(map[string]string)
 			
 			if ok {
-				if len(encryptedVariables.(map[string]interface{})) > 0 {
+				if len(encryptedVariables) > 0 {
 					// Iterate over variables and set the value from resource data
-					for k,v := range encryptedVariables.(map[string]interface{}) {
-						flattenedSpec[0]["trigger"].([]map[string]interface{})[triggerIndex]["encrypted_variables"].(map[string]string)[k] = v.(string)
+					for k := range encryptedVariables {
+						encryptedVariables[k] = 
+							d.Get(fmt.Sprintf("spec.0.trigger.%d.encrypted_variables.%s", triggerIndex, k)).(string)
 					}
 				}
 			}
