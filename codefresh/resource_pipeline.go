@@ -345,6 +345,15 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 											Type: schema.TypeString,
 										},
 									},
+									"encrypted_variables": {
+										Description: "Trigger level encrypted variables. Please note that drift will not be detected for encrypted variables",
+										Type:        schema.TypeMap,
+										Optional:    true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+											Sensitive: true,
+										},
+									},
 								},
 							},
 						},
@@ -728,10 +737,30 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 
 	flattenedSpec := flattenSpec(pipeline.Spec)
 
-	encrypredVariables, getEncryptedVariablesOk := d.GetOk("spec.0.encrypted_variables")
+	// Set trigger encrypted variables from resource data as they cannot be read from API since they cause constant diff (returned as *****)
+	encryptedVariables, getEncryptedVariablesOk := d.GetOk("spec.0.encrypted_variables")
 	
 	if getEncryptedVariablesOk {
-		flattenedSpec[0]["encrypted_variables"] = encrypredVariables.(map[string]interface{})
+		flattenedSpec[0]["encrypted_variables"] = encryptedVariables.(map[string]interface{})
+	}
+
+	// Set trigger encrypted variables from resource data
+	triggers, getTriggersOK := d.GetOk("spec.0.trigger")
+
+	if (getTriggersOK) {
+		for triggerIndex, triggerSpec := range triggers.([]interface{}) {
+			
+			encryptedVariables, ok := triggerSpec.(map[string]interface{})["encrypted_variables"]
+			
+			if ok {
+				if len(encryptedVariables.(map[string]interface{})) > 0 {
+					// Iterate over variables and set the value from resource data
+					for k,v := range encryptedVariables.(map[string]interface{}) {
+						flattenedSpec[0]["trigger"].([]map[string]interface{})[triggerIndex]["encrypted_variables"].(map[string]string)[k] = v.(string)
+					}
+				}
+			}
+		}
 	}
 
 	err = d.Set("spec", flattenedSpec)
@@ -903,7 +932,7 @@ func flattenTriggers(triggers []cfclient.Trigger) []map[string]interface{} {
 		m["provider"] = trigger.Provider
 		m["type"] = trigger.Type
 		m["events"] = trigger.Events
-		m["variables"], _ = datautil.ConvertVariables(trigger.Variables)
+		m["variables"], m["encrypted_variables"] = datautil.ConvertVariables(trigger.Variables)
 		if trigger.RuntimeEnvironment != nil {
 			m["runtime_environment"] = flattenSpecRuntimeEnvironment(*trigger.RuntimeEnvironment)
 		}
@@ -1026,7 +1055,11 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 				Events:                       datautil.ConvertStringArr(events),
 			}
 			variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
-			codefreshTrigger.SetVariables(variables)
+			codefreshTrigger.SetVariables(variables, false)
+			
+			encryptedVariables := d.Get(fmt.Sprintf("spec.0.trigger.%v.encrypted_variables", idx)).(map[string]interface{})
+			codefreshTrigger.SetVariables(encryptedVariables, true)
+
 			if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.options", idx)); ok {
 				options := cfclient.TriggerOptions{
 					NoCache:             d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cache", idx)).(bool),

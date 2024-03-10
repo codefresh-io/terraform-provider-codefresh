@@ -90,9 +90,9 @@ type RuntimeEnvironment struct {
 	RequiredAvailableStorage string `json:"requiredAvailableStorage,omitempty"`
 }
 
-func (t *Trigger) SetVariables(variables map[string]interface{}) {
+func (t *Trigger) SetVariables(variables map[string]interface{}, encrypted bool) {
 	for key, value := range variables {
-		t.Variables = append(t.Variables, Variable{Key: key, Value: value.(string)})
+		t.Variables = append(t.Variables, Variable{Key: key, Value: value.(string), Encrypted: encrypted})
 	}
 }
 
