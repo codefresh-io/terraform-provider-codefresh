@@ -754,11 +754,7 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 			
 			if ok {
 				if len(encryptedVariables) > 0 {
-					// Iterate over variables and set the value from resource data
-					for k := range encryptedVariables {
-						encryptedVariables[k] = 
-							d.Get(fmt.Sprintf("spec.0.trigger.%d.encrypted_variables.%s", triggerIndex, k)).(string)
-					}
+					setEncryptedVariablesValuesFromResource(d, encryptedVariables, fmt.Sprintf("spec.0.trigger.%d.encrypted_variables",triggerIndex))
 				}
 			}
 		}
@@ -1237,4 +1233,16 @@ func convertOnCreateBranchAttributeToPipelineFormat(src string) string {
 	return re.ReplaceAllStringFunc(src, func(w string) string {
 		return "_" + strings.ToLower(w)
 	})
+}
+
+func setEncryptedVariablesValuesFromResource(d *schema.ResourceData, flattenedVariables map[string]string, schemaPath string) error {
+
+	if len(flattenedVariables) > 0 {
+		// Iterate over variables and set the value from resource data
+		for k := range flattenedVariables {
+			flattenedVariables[k] = d.Get(fmt.Sprintf("%s.%s", schemaPath, k)).(string)
+		}
+	}
+
+	return nil
 }
