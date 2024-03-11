@@ -485,6 +485,15 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 											Type: schema.TypeString,
 										},
 									},
+									"encrypted_variables": {
+										Description: "Trigger level encrypted variables. Please note that drift will not be detected for encrypted variables",
+										Type:        schema.TypeMap,
+										Optional:    true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+											Sensitive: true,
+										},
+									},
 								},
 							},
 						},
@@ -737,11 +746,13 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 
 	flattenedSpec := flattenSpec(pipeline.Spec)
 
-	// Set trigger encrypted variables from resource data as they cannot be read from API since they cause constant diff (returned as *****)
-	encryptedVariables, getEncryptedVariablesOk := d.GetOk("spec.0.encrypted_variables")
-	
-	if getEncryptedVariablesOk {
-		flattenedSpec[0]["encrypted_variables"] = encryptedVariables.(map[string]interface{})
+	// Set encrypted variables from resource data, as otherwise they cause constant diff as the value is always returned as *****
+	encryptedVariables, ok := flattenedSpec[0]["encrypted_variables"].(map[string]string)
+			
+	if ok {
+		if len(encryptedVariables) > 0 {
+			setEncryptedVariablesValuesFromResource(d, encryptedVariables, "spec.0.encrypted_variables")
+		}
 	}
 
 	// Set trigger encrypted variables from resource data
@@ -750,11 +761,27 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 	if (getTriggersOK) {
 		for triggerIndex, triggerSpec := range triggers.([]map[string]interface{}) {
 			
-			encryptedVariables, ok := triggerSpec["encrypted_variables"].(map[string]string)
+			triggerEncryptedVariables, ok := triggerSpec["encrypted_variables"].(map[string]string)
 			
 			if ok {
-				if len(encryptedVariables) > 0 {
-					setEncryptedVariablesValuesFromResource(d, encryptedVariables, fmt.Sprintf("spec.0.trigger.%d.encrypted_variables",triggerIndex))
+				if len(triggerEncryptedVariables) > 0 {
+					setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.trigger.%d.encrypted_variables",triggerIndex))
+				}
+			}
+		}
+	}
+
+	// Set cron trigger encrypted variables from resource data
+	cronTriggers, getCronTriggersOK := flattenedSpec[0]["cron_trigger"]
+
+	if (getCronTriggersOK) {
+		for triggerIndex, triggerSpec := range cronTriggers.([]map[string]interface{}) {
+			
+			triggerEncryptedVariables, ok := triggerSpec["encrypted_variables"].(map[string]string)
+			
+			if ok {
+				if len(triggerEncryptedVariables) > 0 {
+					setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.cron_trigger.%d.encrypted_variables",triggerIndex))
 				}
 			}
 		}
@@ -798,7 +825,7 @@ func flattenSpec(spec cfclient.Spec) []map[string]interface{} {
 
 	if len(spec.Variables) != 0 {
 		// Do not set encrypted variables because they cause constant diff
-		m["variables"], _ = datautil.ConvertVariables(spec.Variables)
+		m["variables"], m["encrypted_variables"] = datautil.ConvertVariables(spec.Variables)
 	}
 
 	if spec.RuntimeEnvironment != (cfclient.RuntimeEnvironment{}) {
@@ -949,7 +976,7 @@ func flattenCronTriggers(cronTriggers []cfclient.CronTrigger) []map[string]inter
 		m["disabled"] = trigger.Disabled
 		m["git_trigger_id"] = trigger.GitTriggerId
 		m["branch"] = trigger.Branch
-		m["variables"], _ = datautil.ConvertVariables(trigger.Variables)
+		m["variables"], m["encrypted_variables"] = datautil.ConvertVariables(trigger.Variables)
 		if trigger.Options != nil {
 			m["options"] = flattenTriggerOptions(*trigger.Options)
 		}
@@ -1092,7 +1119,10 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 				Branch:       d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.branch", idx)).(string),
 			}
 			variables := d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.variables", idx)).(map[string]interface{})
-			codefreshCronTrigger.SetVariables(variables)
+			codefreshCronTrigger.SetVariables(variables, false)
+			encryptedVariables := d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.encrypted_variables", idx)).(map[string]interface{})
+			codefreshCronTrigger.SetVariables(encryptedVariables, true)
+
 			if _, ok := d.GetOk(fmt.Sprintf("spec.0.cron_trigger.%v.options", idx)); ok {
 				options := cfclient.TriggerOptions{
 					NoCache:             d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.options.0.no_cache", idx)).(bool),

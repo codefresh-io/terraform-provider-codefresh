@@ -374,6 +374,8 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					"codefresh-contrib/react-sample-app",
 					"triggerTestVar",
 					"triggerTestValue",
+					"triggerTestEncryptedVar",
+					"triggerTestEncryptedValue",
 					"commitstatustitle",
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -396,6 +398,7 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{"spec.0.trigger.1.encrypted_variables"},
 			},
 			{
 				Config: testAccCodefreshPipelineBasicConfigTriggers(
@@ -424,6 +427,8 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					"codefresh-contrib/react-sample-app",
 					"triggerTestVar",
 					"triggerTestValue",
+					"triggerTestEncryptedVar",
+					"triggerTestEncryptedValue",
 					"commitstatustitle",
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -433,6 +438,7 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.pull_request_target_branch_regex", "/release/gi"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.comment_regex", "/PR comment2/gi"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.variables.triggerTestVar", "triggerTestValue"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.encrypted_variables.triggerTestEncryptedVar", "triggerTestEncryptedValue"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.contexts.0", "shared_context2_update"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.options.0.no_cache", "true"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.options.0.no_cf_cache", "true"),
@@ -1052,6 +1058,8 @@ func testAccCodefreshPipelineBasicConfigTriggers(
 	trigger2Repo,
 	trigger2VarName,
 	trigger2VarValue,
+	trigger2EncryptedVarName,
+	trigger2EncryptedVarValue,
 	trigger2CommitStatusTitle string,
 ) string {
 	return fmt.Sprintf(`
@@ -1123,6 +1131,10 @@ resource "codefresh_pipeline" "test" {
             %q = %q
 		}
 
+		encrypted_variables = {
+            %q = %q
+		}
+
 		commit_status_title = "%s"
     }
   }
@@ -1153,6 +1165,8 @@ resource "codefresh_pipeline" "test" {
 		trigger2Repo,
 		trigger2VarName,
 		trigger2VarValue,
+		trigger2EncryptedVarName,
+		trigger2EncryptedVarValue,
 		trigger2CommitStatusTitle)
 }
 

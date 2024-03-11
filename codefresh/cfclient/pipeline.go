@@ -96,9 +96,9 @@ func (t *Trigger) SetVariables(variables map[string]interface{}, encrypted bool)
 	}
 }
 
-func (t *CronTrigger) SetVariables(variables map[string]interface{}) {
+func (t *CronTrigger) SetVariables(variables map[string]interface{}, encrypted bool) {
 	for key, value := range variables {
-		t.Variables = append(t.Variables, Variable{Key: key, Value: value.(string)})
+		t.Variables = append(t.Variables, Variable{Key: key, Value: value.(string), Encrypted: encrypted})
 	}
 }
 
