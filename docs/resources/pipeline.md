@@ -128,6 +128,7 @@ Optional:
 - `concurrency` (Number) The maximum amount of concurrent builds. Zero is unlimited (default: `0`).
 - `contexts` (List of String) A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be configured for the pipeline.
 - `cron_trigger` (Block List) The pipeline's cron triggers. Conflicts with the deprecated [codefresh_pipeline_cron_trigger](https://registry.terraform.io/providers/codefresh-io/codefresh/latest/docs/resources/pipeline_cron_trigger) resource. (see [below for nested schema](#nestedblock--spec--cron_trigger))
+- `encrypted_variables` (Map of String) Pipeline level encrypted variables. Please note that drift will not be detected for encrypted variables
 - `options` (Block List, Max: 1) The options for the pipeline. (see [below for nested schema](#nestedblock--spec--options))
 - `pack_id` (String) SAAS pack (`5cd1746617313f468d669013` for Small; `5cd1746717313f468d669014` for Medium; `5cd1746817313f468d669015` for Large; `5cd1746817313f468d669017` for XL; `5cd1746817313f468d669018` for XXL); `5cd1746817313f468d669020` for 4XL).
 - `permit_restart_from_failed_steps` (Boolean) Defines whether it is permitted to restart builds in this pipeline from failed step. Defaults to true
@@ -153,6 +154,7 @@ Optional:
 
 - `branch` (String) Branch that should be passed for build triggered by this cron trigger.
 - `disabled` (Boolean) Flag to disable the trigger.
+- `encrypted_variables` (Map of String) Trigger level encrypted variables. Please note that drift will not be detected for encrypted variables
 - `git_trigger_id` (String) Related git-trigger id. Will by used to take all possible git information by branch.
 - `options` (Block List) The trigger's options. (see [below for nested schema](#nestedblock--spec--cron_trigger--options))
 - `runtime_environment` (Block List) The runtime environment for the trigger. (see [below for nested schema](#nestedblock--spec--cron_trigger--runtime_environment))
@@ -270,6 +272,7 @@ Optional:
 - `contexts` (List of String) A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be loaded when the trigger is executed.
 - `description` (String) The description of the trigger.
 - `disabled` (Boolean) Flag to disable the trigger.
+- `encrypted_variables` (Map of String) Trigger level encrypted variables. Please note that drift will not be detected for encrypted variables
 - `events` (List of String) A list of GitHub events for which a Pipeline is triggered.
 - `modified_files_glob` (String) Allows to constrain the build and trigger it only if the modified files from the commit match this glob expression (default: `""`).
 - `name` (String) The name of the trigger.
