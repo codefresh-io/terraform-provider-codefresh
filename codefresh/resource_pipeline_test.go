@@ -160,13 +160,13 @@ func TestAccCodefreshPipeline_Variables(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"spec.0.encrypted_variables"},
 			},
 			{
-				Config: testAccCodefreshPipelineBasicConfigVariables(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "var1", "val1_updated", "var2", "val2_updated","var1", "val1_updated", "var2", "val2_updated"),
+				Config: testAccCodefreshPipelineBasicConfigVariables(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "var1", "val1_updated", "var2", "val2_updated", "var1", "val1_updated", "var2", "val2_updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.variables.var1", "val1_updated"),
@@ -395,9 +395,9 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"spec.0.trigger.1.encrypted_variables"},
 			},
 			{

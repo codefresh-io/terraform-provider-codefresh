@@ -23,17 +23,17 @@ func ConvertAndMapStringArr(ifaceArr []interface{}, f func(string) string) []str
 }
 
 // ConvertVariables converts an array of cfclient. Variables to 2 maps of key/value pairs - first one for un-encrypted variables second one for encrypted variables.
-func ConvertVariables(vars []cfclient.Variable) (map[string]string,map[string]string) {
-	
+func ConvertVariables(vars []cfclient.Variable) (map[string]string, map[string]string) {
+
 	numberOfEncryptedVars := 0
-	
+
 	for _, v := range vars {
 		if v.Encrypted {
 			numberOfEncryptedVars++
 		}
 	}
 
-	resUnencrptedVars := make(map[string]string, len(vars) - numberOfEncryptedVars)
+	resUnencrptedVars := make(map[string]string, len(vars)-numberOfEncryptedVars)
 	resEncryptedVars := make(map[string]string, numberOfEncryptedVars)
 
 	for _, v := range vars {
@@ -44,7 +44,7 @@ func ConvertVariables(vars []cfclient.Variable) (map[string]string,map[string]st
 		}
 	}
 
-	return resUnencrptedVars,resEncryptedVars
+	return resUnencrptedVars, resEncryptedVars
 }
 
 // FlattenStringArr flattens an array of strings.

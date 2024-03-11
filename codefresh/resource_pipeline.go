@@ -156,7 +156,7 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 							Type:        schema.TypeMap,
 							Optional:    true,
 							Elem: &schema.Schema{
-								Type: schema.TypeString,
+								Type:      schema.TypeString,
 								Sensitive: true,
 							},
 						},
@@ -350,7 +350,7 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Type:        schema.TypeMap,
 										Optional:    true,
 										Elem: &schema.Schema{
-											Type: schema.TypeString,
+											Type:      schema.TypeString,
 											Sensitive: true,
 										},
 									},
@@ -490,7 +490,7 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Type:        schema.TypeMap,
 										Optional:    true,
 										Elem: &schema.Schema{
-											Type: schema.TypeString,
+											Type:      schema.TypeString,
 											Sensitive: true,
 										},
 									},
@@ -635,8 +635,8 @@ Pipeline concurrency policy: Builds on 'Pending Approval' state should be:
 									},
 									"enable_notifications": {
 										Type:     schema.TypeBool,
-										Optional:    true,
-										Default:     false,
+										Optional: true,
+										Default:  false,
 									},
 								},
 							},
@@ -748,7 +748,7 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 
 	// Set encrypted variables from resource data, as otherwise they cause constant diff as the value is always returned as *****
 	encryptedVariables, ok := flattenedSpec[0]["encrypted_variables"].(map[string]string)
-			
+
 	if ok {
 		if len(encryptedVariables) > 0 {
 			setEncryptedVariablesValuesFromResource(d, encryptedVariables, "spec.0.encrypted_variables")
@@ -758,14 +758,14 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 	// Set trigger encrypted variables from resource data
 	triggers, getTriggersOK := flattenedSpec[0]["trigger"]
 
-	if (getTriggersOK) {
+	if getTriggersOK {
 		for triggerIndex, triggerSpec := range triggers.([]map[string]interface{}) {
-			
+
 			triggerEncryptedVariables, ok := triggerSpec["encrypted_variables"].(map[string]string)
-			
+
 			if ok {
 				if len(triggerEncryptedVariables) > 0 {
-					setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.trigger.%d.encrypted_variables",triggerIndex))
+					setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.trigger.%d.encrypted_variables", triggerIndex))
 				}
 			}
 		}
@@ -774,14 +774,14 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 	// Set cron trigger encrypted variables from resource data
 	cronTriggers, getCronTriggersOK := flattenedSpec[0]["cron_trigger"]
 
-	if (getCronTriggersOK) {
+	if getCronTriggersOK {
 		for triggerIndex, triggerSpec := range cronTriggers.([]map[string]interface{}) {
-			
+
 			triggerEncryptedVariables, ok := triggerSpec["encrypted_variables"].(map[string]string)
-			
+
 			if ok {
 				if len(triggerEncryptedVariables) > 0 {
-					setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.cron_trigger.%d.encrypted_variables",triggerIndex))
+					setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.cron_trigger.%d.encrypted_variables", triggerIndex))
 				}
 			}
 		}
@@ -1080,7 +1080,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 			}
 			variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
 			codefreshTrigger.SetVariables(variables, false)
-			
+
 			encryptedVariables := d.Get(fmt.Sprintf("spec.0.trigger.%v.encrypted_variables", idx)).(map[string]interface{})
 			codefreshTrigger.SetVariables(encryptedVariables, true)
 
