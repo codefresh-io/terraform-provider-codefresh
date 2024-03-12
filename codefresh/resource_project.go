@@ -1,6 +1,7 @@
 package codefresh
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -44,6 +45,15 @@ You are free to use projects as you see fit. For example, you could create a pro
 				Optional:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+				},
+			},
+			"encrypted_variables": {
+				Description: "Project level encrypted variables. Please note that drift will not be detected for encrypted variables",
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Elem: &schema.Schema{
+					Type:      schema.TypeString,
+					Sensitive: true,
 				},
 			},
 		},
@@ -133,10 +143,27 @@ func mapProjectToResource(project *cfclient.Project, d *schema.ResourceData) err
 		return err
 	}
 
-	err = d.Set("variables", datautil.ConvertVariables(project.Variables))
+	vars, encryptedVars := datautil.ConvertVariables(project.Variables)
+
+	err = d.Set("variables", vars)
 	if err != nil {
 		return err
 	}
+
+	// Set encrypted vars from resource data to avoid constant diff
+	if len(encryptedVars) > 0 {
+		// Iterate over variables and set the value from resource data
+		for k := range encryptedVars {
+			encryptedVars[k] = d.Get(fmt.Sprintf("encrypted_variables.%s", k)).(string)
+		}
+	}
+
+	err = d.Set("encrypted_variables", encryptedVars)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -148,6 +175,8 @@ func mapResourceToProject(d *schema.ResourceData) *cfclient.Project {
 		Tags:        datautil.ConvertStringArr(tags),
 	}
 	variables := d.Get("variables").(map[string]interface{})
-	project.SetVariables(variables)
+	project.SetVariables(variables, false)
+	encryptedVariables := d.Get("encrypted_variables").(map[string]interface{})
+	project.SetVariables(encryptedVariables, true)
 	return project
 }

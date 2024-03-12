@@ -150,24 +150,29 @@ func TestAccCodefreshPipeline_Variables(t *testing.T) {
 		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshPipelineBasicConfigVariables(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "var1", "val1", "var2", "val2"),
+				Config: testAccCodefreshPipelineBasicConfigVariables(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "var1", "val1", "var2", "val2", "var1", "val1", "var2", "val2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.variables.var1", "val1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.variables.var2", "val2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.encrypted_variables.var1", "val1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.encrypted_variables.var2", "val2"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"spec.0.encrypted_variables"},
 			},
 			{
-				Config: testAccCodefreshPipelineBasicConfigVariables(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "var1", "val1_updated", "var2", "val2_updated"),
+				Config: testAccCodefreshPipelineBasicConfigVariables(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", "var1", "val1_updated", "var2", "val2_updated", "var1", "val1_updated", "var2", "val2_updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.variables.var1", "val1_updated"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.variables.var2", "val2_updated"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.encrypted_variables.var1", "val1_updated"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.encrypted_variables.var2", "val2_updated"),
 				),
 			},
 		},
@@ -369,6 +374,8 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					"codefresh-contrib/react-sample-app",
 					"triggerTestVar",
 					"triggerTestValue",
+					"triggerTestEncryptedVar",
+					"triggerTestEncryptedValue",
 					"commitstatustitle",
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -388,9 +395,10 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"spec.0.trigger.1.encrypted_variables"},
 			},
 			{
 				Config: testAccCodefreshPipelineBasicConfigTriggers(
@@ -419,6 +427,8 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					"codefresh-contrib/react-sample-app",
 					"triggerTestVar",
 					"triggerTestValue",
+					"triggerTestEncryptedVar",
+					"triggerTestEncryptedValue",
 					"commitstatustitle",
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -428,6 +438,7 @@ func TestAccCodefreshPipeline_Triggers(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.pull_request_target_branch_regex", "/release/gi"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.0.comment_regex", "/PR comment2/gi"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.variables.triggerTestVar", "triggerTestValue"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.encrypted_variables.triggerTestEncryptedVar", "triggerTestEncryptedValue"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.contexts.0", "shared_context2_update"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.options.0.no_cache", "true"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.trigger.1.options.0.no_cf_cache", "true"),
@@ -901,7 +912,7 @@ resource "codefresh_pipeline" "test" {
 `, rName, repo, path, revision, context, tag1, tag2)
 }
 
-func testAccCodefreshPipelineBasicConfigVariables(rName, repo, path, revision, context, var1Name, var1Value, var2Name, var2Value string) string {
+func testAccCodefreshPipelineBasicConfigVariables(rName, repo, path, revision, context, var1Name, var1Value, var2Name, var2Value, encVar1Name, encVar1Value, encVar2Name, encVar2Value string) string {
 	return fmt.Sprintf(`
 resource "codefresh_pipeline" "test" {
 
@@ -925,9 +936,14 @@ resource "codefresh_pipeline" "test" {
 		%q = %q
 		%q = %q
 	}
+
+	encrypted_variables = {
+		%q = %q
+		%q = %q
+	}
   }
 }
-`, rName, repo, path, revision, context, var1Name, var1Value, var2Name, var2Value)
+`, rName, repo, path, revision, context, var1Name, var1Value, var2Name, var2Value, encVar1Name, encVar1Value, encVar2Name, encVar2Value)
 }
 
 func testAccCodefreshPipelineBasicConfigContexts(rName, repo, path, revision, context, sharedContext1, sharedContext2 string) string {
@@ -1042,6 +1058,8 @@ func testAccCodefreshPipelineBasicConfigTriggers(
 	trigger2Repo,
 	trigger2VarName,
 	trigger2VarValue,
+	trigger2EncryptedVarName,
+	trigger2EncryptedVarValue,
 	trigger2CommitStatusTitle string,
 ) string {
 	return fmt.Sprintf(`
@@ -1113,6 +1131,10 @@ resource "codefresh_pipeline" "test" {
             %q = %q
 		}
 
+		encrypted_variables = {
+            %q = %q
+		}
+
 		commit_status_title = "%s"
     }
   }
@@ -1143,6 +1165,8 @@ resource "codefresh_pipeline" "test" {
 		trigger2Repo,
 		trigger2VarName,
 		trigger2VarValue,
+		trigger2EncryptedVarName,
+		trigger2EncryptedVarValue,
 		trigger2CommitStatusTitle)
 }
 

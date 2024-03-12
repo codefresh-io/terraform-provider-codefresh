@@ -74,24 +74,27 @@ func TestAccCodefreshProject_Variables(t *testing.T) {
 		CheckDestroy: testAccCheckCodefreshProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshProjectBasicConfigVariables(name, "var1", "val1", "var2", "val2"),
+				Config: testAccCodefreshProjectBasicConfigVariables(name, "var1", "val1", "var2", "val2", "encvar1", "encval1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshProjectExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "variables.var1", "val1"),
 					resource.TestCheckResourceAttr(resourceName, "variables.var2", "val2"),
+					resource.TestCheckResourceAttr(resourceName, "encrypted_variables.encvar1", "encval1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{"encrypted_variables"},
 			},
 			{
-				Config: testAccCodefreshProjectBasicConfigVariables(name, "var1", "val1_updated", "var2", "val2_updated"),
+				Config: testAccCodefreshProjectBasicConfigVariables(name, "var1", "val1_updated", "var2", "val2_updated", "encvar1", "encvar1_updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshProjectExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "variables.var1", "val1_updated"),
 					resource.TestCheckResourceAttr(resourceName, "variables.var2", "val2_updated"),
+					resource.TestCheckResourceAttr(resourceName, "encrypted_variables.encvar1", "encvar1_updated"),
 				//   resource.TestCheckResourceAttr(resourceName, "variables.", name),
 				),
 			},
@@ -167,7 +170,7 @@ resource "codefresh_project" "test" {
 `, rName, tag1, tag2)
 }
 
-func testAccCodefreshProjectBasicConfigVariables(rName, var1Name, var1Value, var2Name, var2Value string) string {
+func testAccCodefreshProjectBasicConfigVariables(rName, var1Name, var1Value, var2Name, var2Value, encrytedVar1Name,encrytedVar1Value string) string {
 	return fmt.Sprintf(`
 resource "codefresh_project" "test" {
   name = "%s"
@@ -175,6 +178,10 @@ resource "codefresh_project" "test" {
 	%q = %q
 	%q = %q
   }
+
+  encrypted_variables = {
+	%q = %q
+  }
 }
-`, rName, var1Name, var1Value, var2Name, var2Value)
+`, rName, var1Name, var1Value, var2Name, var2Value, encrytedVar1Name,encrytedVar1Value)
 }

@@ -41,6 +41,7 @@ resource "codefresh_project" "test" {
 
 ### Optional
 
+- `encrypted_variables` (Map of String) Project level encrypted variables. Please note that drift will not be detected for encrypted variables
 - `tags` (Set of String) A list of tags to mark a project for easy management and access control.
 - `variables` (Map of String) Project variables.
 

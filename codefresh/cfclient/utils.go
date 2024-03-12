@@ -7,8 +7,9 @@ import (
 
 // Variable spec
 type Variable struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+	Key       string `json:"key"`
+	Value     string `json:"value"`
+	Encrypted bool   `json:"encrypted",omitempty`
 }
 
 // CodefreshObject codefresh interface

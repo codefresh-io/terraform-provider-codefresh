@@ -151,6 +151,15 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 								Type: schema.TypeString,
 							},
 						},
+						"encrypted_variables": {
+							Description: "Pipeline level encrypted variables. Please note that drift will not be detected for encrypted variables",
+							Type:        schema.TypeMap,
+							Optional:    true,
+							Elem: &schema.Schema{
+								Type:      schema.TypeString,
+								Sensitive: true,
+							},
+						},
 						"trigger": {
 							Description: "The pipeline's triggers (currently the only nested trigger supported is git; for other trigger types, use the `codefresh_pipeline_*_trigger` resources).",
 							Type:        schema.TypeList,
@@ -336,6 +345,15 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 											Type: schema.TypeString,
 										},
 									},
+									"encrypted_variables": {
+										Description: "Trigger level encrypted variables. Please note that drift will not be detected for encrypted variables",
+										Type:        schema.TypeMap,
+										Optional:    true,
+										Elem: &schema.Schema{
+											Type:      schema.TypeString,
+											Sensitive: true,
+										},
+									},
 								},
 							},
 						},
@@ -465,6 +483,15 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 										Optional:    true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
+										},
+									},
+									"encrypted_variables": {
+										Description: "Trigger level encrypted variables. Please note that drift will not be detected for encrypted variables",
+										Type:        schema.TypeMap,
+										Optional:    true,
+										Elem: &schema.Schema{
+											Type:      schema.TypeString,
+											Sensitive: true,
 										},
 									},
 								},
@@ -608,8 +635,8 @@ Pipeline concurrency policy: Builds on 'Pending Approval' state should be:
 									},
 									"enable_notifications": {
 										Type:     schema.TypeBool,
-										Optional:    true,
-										Default:     false,
+										Optional: true,
+										Default:  false,
 									},
 								},
 							},
@@ -717,7 +744,51 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 		return err
 	}
 
-	err = d.Set("spec", flattenSpec(pipeline.Spec))
+	flattenedSpec := flattenSpec(pipeline.Spec)
+
+	// Set encrypted variables from resource data, as otherwise they cause constant diff as the value is always returned as *****
+	encryptedVariables, ok := flattenedSpec[0]["encrypted_variables"].(map[string]string)
+
+	if ok {
+		if len(encryptedVariables) > 0 {
+			setEncryptedVariablesValuesFromResource(d, encryptedVariables, "spec.0.encrypted_variables")
+		}
+	}
+
+	// Set trigger encrypted variables from resource data
+	triggers, getTriggersOK := flattenedSpec[0]["trigger"]
+
+	if getTriggersOK {
+		for triggerIndex, triggerSpec := range triggers.([]map[string]interface{}) {
+
+			triggerEncryptedVariables, ok := triggerSpec["encrypted_variables"].(map[string]string)
+
+			if ok {
+				if len(triggerEncryptedVariables) > 0 {
+					setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.trigger.%d.encrypted_variables", triggerIndex))
+				}
+			}
+		}
+	}
+
+	// Set cron trigger encrypted variables from resource data
+	cronTriggers, getCronTriggersOK := flattenedSpec[0]["cron_trigger"]
+
+	if getCronTriggersOK {
+		for triggerIndex, triggerSpec := range cronTriggers.([]map[string]interface{}) {
+
+			triggerEncryptedVariables, ok := triggerSpec["encrypted_variables"].(map[string]string)
+
+			if ok {
+				if len(triggerEncryptedVariables) > 0 {
+					setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.cron_trigger.%d.encrypted_variables", triggerIndex))
+				}
+			}
+		}
+	}
+
+	err = d.Set("spec", flattenedSpec)
+
 	if err != nil {
 		return err
 	}
@@ -735,9 +806,9 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 	return nil
 }
 
-func flattenSpec(spec cfclient.Spec) []interface{} {
+func flattenSpec(spec cfclient.Spec) []map[string]interface{} {
 
-	var res = make([]interface{}, 0)
+	var res = make([]map[string]interface{}, 0)
 	m := make(map[string]interface{})
 
 	if len(spec.Triggers) > 0 {
@@ -753,7 +824,8 @@ func flattenSpec(spec cfclient.Spec) []interface{} {
 	}
 
 	if len(spec.Variables) != 0 {
-		m["variables"] = datautil.ConvertVariables(spec.Variables)
+		// Do not set encrypted variables because they cause constant diff
+		m["variables"], m["encrypted_variables"] = datautil.ConvertVariables(spec.Variables)
 	}
 
 	if spec.RuntimeEnvironment != (cfclient.RuntimeEnvironment{}) {
@@ -884,7 +956,7 @@ func flattenTriggers(triggers []cfclient.Trigger) []map[string]interface{} {
 		m["provider"] = trigger.Provider
 		m["type"] = trigger.Type
 		m["events"] = trigger.Events
-		m["variables"] = datautil.ConvertVariables(trigger.Variables)
+		m["variables"], m["encrypted_variables"] = datautil.ConvertVariables(trigger.Variables)
 		if trigger.RuntimeEnvironment != nil {
 			m["runtime_environment"] = flattenSpecRuntimeEnvironment(*trigger.RuntimeEnvironment)
 		}
@@ -904,7 +976,7 @@ func flattenCronTriggers(cronTriggers []cfclient.CronTrigger) []map[string]inter
 		m["disabled"] = trigger.Disabled
 		m["git_trigger_id"] = trigger.GitTriggerId
 		m["branch"] = trigger.Branch
-		m["variables"] = datautil.ConvertVariables(trigger.Variables)
+		m["variables"], m["encrypted_variables"] = datautil.ConvertVariables(trigger.Variables)
 		if trigger.Options != nil {
 			m["options"] = flattenTriggerOptions(*trigger.Options)
 		}
@@ -977,7 +1049,11 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 	}
 
 	if variables, ok := d.GetOk("spec.0.variables"); ok {
-		pipeline.SetVariables(variables.(map[string]interface{}))
+		pipeline.SetVariables(variables.(map[string]interface{}), false)
+	}
+
+	if encryptedVariables, ok := d.GetOk("spec.0.encrypted_variables"); ok {
+		pipeline.SetVariables(encryptedVariables.(map[string]interface{}), true)
 	}
 
 	if triggers, ok := d.GetOk("spec.0.trigger"); ok {
@@ -1003,7 +1079,11 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 				Events:                       datautil.ConvertStringArr(events),
 			}
 			variables := d.Get(fmt.Sprintf("spec.0.trigger.%v.variables", idx)).(map[string]interface{})
-			codefreshTrigger.SetVariables(variables)
+			codefreshTrigger.SetVariables(variables, false)
+
+			encryptedVariables := d.Get(fmt.Sprintf("spec.0.trigger.%v.encrypted_variables", idx)).(map[string]interface{})
+			codefreshTrigger.SetVariables(encryptedVariables, true)
+
 			if _, ok := d.GetOk(fmt.Sprintf("spec.0.trigger.%v.options", idx)); ok {
 				options := cfclient.TriggerOptions{
 					NoCache:             d.Get(fmt.Sprintf("spec.0.trigger.%v.options.0.no_cache", idx)).(bool),
@@ -1039,7 +1119,10 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 				Branch:       d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.branch", idx)).(string),
 			}
 			variables := d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.variables", idx)).(map[string]interface{})
-			codefreshCronTrigger.SetVariables(variables)
+			codefreshCronTrigger.SetVariables(variables, false)
+			encryptedVariables := d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.encrypted_variables", idx)).(map[string]interface{})
+			codefreshCronTrigger.SetVariables(encryptedVariables, true)
+
 			if _, ok := d.GetOk(fmt.Sprintf("spec.0.cron_trigger.%v.options", idx)); ok {
 				options := cfclient.TriggerOptions{
 					NoCache:             d.Get(fmt.Sprintf("spec.0.cron_trigger.%v.options.0.no_cache", idx)).(bool),
@@ -1180,4 +1263,16 @@ func convertOnCreateBranchAttributeToPipelineFormat(src string) string {
 	return re.ReplaceAllStringFunc(src, func(w string) string {
 		return "_" + strings.ToLower(w)
 	})
+}
+
+func setEncryptedVariablesValuesFromResource(d *schema.ResourceData, flattenedVariables map[string]string, schemaPath string) error {
+
+	if len(flattenedVariables) > 0 {
+		// Iterate over variables and set the value from resource data
+		for k := range flattenedVariables {
+			flattenedVariables[k] = d.Get(fmt.Sprintf("%s.%s", schemaPath, k)).(string)
+		}
+	}
+
+	return nil
 }
