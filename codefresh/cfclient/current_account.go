@@ -60,7 +60,7 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 			currentAccount.ID = accX.Get("id").String()
 			admins := accX.Get("admins").InterSlice()
 			for _, adminI := range admins {
-				accountAdminsIDs = append(accountAdminsIDs, adminI.(string))
+				accountAdminsIDs = append(accountAdminsIDs ,adminI.(string))
 			}
 			break
 		}
@@ -95,9 +95,9 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 			Status:   status,
 		})
 
-		// If user exists in Admin list append it to addmins as well. This assumes that a user cannot be an admin without being a regular user too
+		// If user exists in Admin list append it to addmins as well. This assumes that a user cannot be an admin without being a regular user too.
 		if slices.Contains(accountAdminsIDs, userID) {
-			currentAccount.Admins = append(currentAccount.Users, CurrentAccountUser{
+			currentAccount.Admins = append(currentAccount.Admins, CurrentAccountUser{
 				ID:       userID,
 				UserName: userName,
 				Email:    email,
