@@ -96,6 +96,7 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 		})
 
 		// If user exists in Admin list append it to addmins as well. This assumes that a user cannot be an admin without being a regular user too.
+		// Which is indeed the case currenty in Codefresh
 		if slices.Contains(accountAdminsIDs, userID) {
 			currentAccount.Admins = append(currentAccount.Admins, CurrentAccountUser{
 				ID:       userID,
