@@ -3,9 +3,9 @@ package cfclient
 import (
 	"encoding/json"
 	"fmt"
-	"slices"
 
 	"github.com/stretchr/objx"
+	"golang.org/x/exp/slices"
 )
 
 // CurrentAccountUser spec
