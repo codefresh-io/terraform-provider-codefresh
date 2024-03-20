@@ -83,9 +83,9 @@ func TestAccCodefreshProject_Variables(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"encrypted_variables"},
 			},
 			{
@@ -170,7 +170,7 @@ resource "codefresh_project" "test" {
 `, rName, tag1, tag2)
 }
 
-func testAccCodefreshProjectBasicConfigVariables(rName, var1Name, var1Value, var2Name, var2Value, encrytedVar1Name,encrytedVar1Value string) string {
+func testAccCodefreshProjectBasicConfigVariables(rName, var1Name, var1Value, var2Name, var2Value, encrytedVar1Name, encrytedVar1Value string) string {
 	return fmt.Sprintf(`
 resource "codefresh_project" "test" {
   name = "%s"
@@ -183,5 +183,5 @@ resource "codefresh_project" "test" {
 	%q = %q
   }
 }
-`, rName, var1Name, var1Value, var2Name, var2Value, encrytedVar1Name,encrytedVar1Value)
+`, rName, var1Name, var1Value, var2Name, var2Value, encrytedVar1Name, encrytedVar1Value)
 }
