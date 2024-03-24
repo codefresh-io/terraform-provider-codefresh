@@ -129,6 +129,7 @@ Optional:
 - `contexts` (List of String) A list of strings representing the contexts ([shared_configuration](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/shared-configuration/)) to be configured for the pipeline.
 - `cron_trigger` (Block List) The pipeline's cron triggers. Conflicts with the deprecated [codefresh_pipeline_cron_trigger](https://registry.terraform.io/providers/codefresh-io/codefresh/latest/docs/resources/pipeline_cron_trigger) resource. (see [below for nested schema](#nestedblock--spec--cron_trigger))
 - `encrypted_variables` (Map of String) Pipeline level encrypted variables. Please note that drift will not be detected for encrypted variables
+- `external_resource` (Block List) (see [below for nested schema](#nestedblock--spec--external_resource))
 - `options` (Block List, Max: 1) The options for the pipeline. (see [below for nested schema](#nestedblock--spec--options))
 - `pack_id` (String) SAAS pack (`5cd1746617313f468d669013` for Small; `5cd1746717313f468d669014` for Medium; `5cd1746817313f468d669015` for Large; `5cd1746817313f468d669017` for XL; `5cd1746817313f468d669018` for XXL); `5cd1746817313f468d669020` for 4XL).
 - `permit_restart_from_failed_steps` (Boolean) Defines whether it is permitted to restart builds in this pipeline from failed step. Defaults to true
@@ -183,6 +184,27 @@ Optional:
 - `name` (String) The name of the runtime environment.
 - `required_available_storage` (String) Minimum disk space required for build filesystem ( unit Gi is required).
 
+
+
+<a id="nestedblock--spec--external_resource"></a>
+### Nested Schema for `spec.external_resource`
+
+Required:
+
+- `context` (String) Context name for the git repository
+- `repo` (String) git repository url
+- `revision` (String) Revision/branch in the git repository
+- `source_path` (String) The source folder in the repository (use relative path)
+- `target_path` (String) The target folder in the pipeline workspace where the file/folder will be copied to (use absolute path)
+
+Optional:
+
+- `is_folder` (Boolean) Whether or not the resource specified in source_path is a folder
+- `type` (String) Type of the external resource. Currently only git is supported
+
+Read-Only:
+
+- `id` (String) The ID of this resource.
 
 
 <a id="nestedblock--spec--options"></a>
