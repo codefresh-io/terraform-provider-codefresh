@@ -200,7 +200,7 @@ Required:
 Optional:
 
 - `is_folder` (Boolean) Whether or not the resource specified in source_path is a folder
-- `type` (String) Type of the external resource. Currently only git is supported
+- `type` (String) Type of the external resource. Currently only 'git' is supported
 
 Read-Only:
 
