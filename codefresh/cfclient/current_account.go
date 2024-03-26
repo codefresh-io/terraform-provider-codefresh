@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/stretchr/objx"
+	"golang.org/x/exp/slices"
 )
 
 // CurrentAccountUser spec
@@ -50,6 +51,8 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 		Admins: make([]CurrentAccountUser, 0),
 	}
 
+	accountAdminsIDs := make([]string, 0)
+
 	allAccountsI := currentAccountX.Get("account").InterSlice()
 	for _, accI := range allAccountsI {
 		accX := objx.New(accI)
@@ -57,16 +60,7 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 			currentAccount.ID = accX.Get("id").String()
 			admins := accX.Get("admins").InterSlice()
 			for _, adminI := range admins {
-				admin, err := client.GetUserByID(adminI.(string))
-				if err != nil {
-					return nil, err
-				}
-				currentAccount.Admins = append(currentAccount.Admins, CurrentAccountUser{
-					ID:       admin.ID,
-					UserName: admin.UserName,
-					Email:    admin.Email,
-					Status:   admin.Status,
-				})
+				accountAdminsIDs = append(accountAdminsIDs ,adminI.(string))
 			}
 			break
 		}
@@ -100,6 +94,17 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 			Email:    email,
 			Status:   status,
 		})
+
+		// If user exists in Admin list append it to addmins as well. This assumes that a user cannot be an admin without being a regular user too.
+		// Which is indeed the case currenty in Codefresh
+		if slices.Contains(accountAdminsIDs, userID) {
+			currentAccount.Admins = append(currentAccount.Admins, CurrentAccountUser{
+				ID:       userID,
+				UserName: userName,
+				Email:    email,
+				Status:   status,
+			})
+		}
 	}
 
 	return currentAccount, nil
