@@ -700,6 +700,61 @@ func TestAccCodefreshPipeline_IsPublic(t *testing.T) {
 	})
 }
 
+func TestAccCodefreshPipeline_ExternalResources(t *testing.T) {
+	name := pipelineNamePrefix + acctest.RandString(10)
+	resourceName := "codefresh_pipeline.test"
+	var pipeline cfclient.Pipeline
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodefreshPipelineExternalResources(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", 
+																  "github", "codefresh-io/external-resources1", "master", "test.py", "/codefresh/volume/test.py",
+																  "github2", "codefresh-io/external-resources2", "main", "test2.py", "/codefresh/volume/test2.py"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.0.context", "github"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.0.repo", "codefresh-io/external-resources1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.0.revision", "master"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.0.source_path", "test.py"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.0.target_path", "/codefresh/volume/test.py"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.1.context", "github2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.1.repo", "codefresh-io/external-resources2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.1.revision", "main"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.1.source_path", "test2.py"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.1.target_path", "/codefresh/volume/test2.py"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCodefreshPipelineExternalResources(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git",
+																  "github2", "codefresh-io/external-resources2", "main", "test2.py", "/codefresh/volume/test2.py", 
+																  "github", "codefresh-io/external-resources1", "master", "test.py", "/codefresh/volume/test.py"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.1.context", "github"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.1.repo", "codefresh-io/external-resources1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.1.revision", "master"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.1.source_path", "test.py"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.1.target_path", "/codefresh/volume/test.py"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.0.context", "github2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.0.repo", "codefresh-io/external-resources2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.0.revision", "main"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.0.source_path", "test2.py"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.0.target_path", "/codefresh/volume/test2.py"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCodefreshPipelineOnCreateBranchIgnoreTrigger(t *testing.T) {
 	name := pipelineNamePrefix + acctest.RandString(10)
 	resourceName := "codefresh_pipeline.test"
@@ -1476,4 +1531,47 @@ resource "codefresh_pipeline" "test" {
 
 }
 `, rName, repo, path, revision, context, isPublic)
+}
+
+func testAccCodefreshPipelineExternalResources(rName, repo, path, revision, context, extResource1Context, extResource1Repo, extResource1Revision, extResourse1SourcePath, extResource1DestPath, extResource2Context, extResource2Repo, extResource2Revision, extResourse2SourcePath, extResource2DestPath string) string {
+	return fmt.Sprintf(`
+resource "codefresh_pipeline" "test" {
+
+  lifecycle {
+    ignore_changes = [
+      revision
+    ]
+  }
+
+  name = "%s"
+
+  spec {
+	spec_template {
+    	repo        = %q
+    	path        = %q
+    	revision    = %q
+    	context     = %q
+    }
+
+	external_resource {
+		context     = %q
+		repo        = %q
+		revision    = %q
+		source_path = %q
+		target_path = %q
+	}
+
+	external_resource {
+		context     = %q
+		repo        = %q
+		revision    = %q
+		source_path = %q
+		target_path = %q
+	}
+  }
+}
+`,
+rName, repo, path, revision, context, 
+extResource1Context, extResource1Repo ,extResource1Revision, extResourse1SourcePath, extResource1DestPath, 
+extResource2Context, extResource2Repo ,extResource2Revision, extResourse2SourcePath, extResource2DestPath)
 }

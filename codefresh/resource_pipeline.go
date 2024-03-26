@@ -641,6 +641,58 @@ Pipeline concurrency policy: Builds on 'Pending Approval' state should be:
 								},
 							},
 						},
+						"external_resource": {
+							Type:	schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id" : {
+										Type: schema.TypeString,
+										Computed: true,
+									},
+									"type" : {
+										Type: schema.TypeString,
+										Optional: true,
+										Description: "Type of the external resource. Currently only 'git' is supported",
+										ValidateFunc: validation.StringInSlice([]string{
+											"git",
+										}, false),
+										Default: "git",
+									},
+									"repo" : {
+										Type: schema.TypeString,
+										Required: true,
+										Description: "git repository url",
+									},
+									"context" : {
+										Type: schema.TypeString,
+										Required: true,
+										Description: "Context name for the git repository",
+									},
+									"revision": {
+										Type: schema.TypeString,
+										Required: true,
+										Description: "Revision/branch in the git repository",
+									},
+									"is_folder": {
+										Type: schema.TypeBool,
+										Description: "Whether or not the resource specified in source_path is a folder",
+										Optional: true,
+										Default: false,
+									},
+									"source_path": {
+										Type: schema.TypeString,
+										Description: "The source folder in the repository (use relative path)",
+										Required: true,
+									},
+									"target_path": {
+										Type: schema.TypeString,
+										Description: "The target folder in the pipeline workspace where the file/folder will be copied to (use absolute path)",
+										Required: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -832,6 +884,10 @@ func flattenSpec(spec cfclient.Spec) []map[string]interface{} {
 		m["runtime_environment"] = flattenSpecRuntimeEnvironment(spec.RuntimeEnvironment)
 	}
 
+	if len(spec.ExternalResources) > 0 {
+		m["external_resource"] = flattenExternalResources(spec.ExternalResources)
+	}
+
 	if len(spec.TerminationPolicy) > 0 {
 		m["termination_policy"] = flattenSpecTerminationPolicy(spec.TerminationPolicy)
 	}
@@ -985,6 +1041,25 @@ func flattenCronTriggers(cronTriggers []cfclient.CronTrigger) []map[string]inter
 		}
 		res[i] = m
 	}
+	return res
+}
+
+func flattenExternalResources(externalResources []cfclient.ExternalResource) []map[string]interface{} {
+	var res = make([]map[string]interface{}, len(externalResources))
+	for i, externalResource := range externalResources {
+		m := make(map[string]interface{})
+		m["type"] = externalResource.Type
+		m["repo"] = externalResource.Repo
+		m["context"] = externalResource.Context
+		m["source_path"] = externalResource.Source
+		m["target_path"] = externalResource.Destination
+		m["revision"] = externalResource.Revision
+		m["is_folder"] = externalResource.IsFolder
+		m["id"] = externalResource.ID
+
+		res[i] = m
+	}
+
 	return res
 }
 
@@ -1143,6 +1218,23 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 				codefreshCronTrigger.RuntimeEnvironment = &triggerRuntime
 			}
 			pipeline.Spec.CronTriggers = append(pipeline.Spec.CronTriggers, codefreshCronTrigger)
+		}
+	}
+
+	if externalResources, ok := d.GetOk("spec.0.external_resource"); ok {
+		for idx := range externalResources.([]interface{}) {
+			codefreshExternalResource := cfclient.ExternalResource{
+				Type: d.Get(fmt.Sprintf("spec.0.external_resource.%v.type", idx)).(string),
+				Repo: d.Get(fmt.Sprintf("spec.0.external_resource.%v.repo", idx)).(string),
+				Revision: d.Get(fmt.Sprintf("spec.0.external_resource.%v.revision", idx)).(string),
+				Context: d.Get(fmt.Sprintf("spec.0.external_resource.%v.context", idx)).(string),
+				Source: d.Get(fmt.Sprintf("spec.0.external_resource.%v.source_path", idx)).(string),
+				Destination: d.Get(fmt.Sprintf("spec.0.external_resource.%v.target_path", idx)).(string),
+				IsFolder: d.Get(fmt.Sprintf("spec.0.external_resource.%v.is_folder", idx)).(bool),
+				ID: d.Get(fmt.Sprintf("spec.0.external_resource.%v.id", idx)).(string),
+			}
+
+			pipeline.Spec.ExternalResources = append(pipeline.Spec.ExternalResources, codefreshExternalResource)
 		}
 	}
 
