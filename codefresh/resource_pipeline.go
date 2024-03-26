@@ -653,7 +653,7 @@ Pipeline concurrency policy: Builds on 'Pending Approval' state should be:
 									"type" : {
 										Type: schema.TypeString,
 										Optional: true,
-										Description: "Type of the external resource. Currently only git is supported",
+										Description: "Type of the external resource. Currently only 'git' is supported",
 										ValidateFunc: validation.StringInSlice([]string{
 											"git",
 										}, false),
