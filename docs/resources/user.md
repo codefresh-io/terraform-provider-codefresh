@@ -75,11 +75,13 @@ resource "codefresh_user" "new" {
 
 - `activate` (Boolean) Whether to activate the user or to leave it as `pending`.
 - `login` (Block Set) Login settings for the user. (see [below for nested schema](#nestedblock--login))
+- `password` (String, Sensitive) Password - for users without SSO.
 - `personal` (Block List, Max: 1) Personal information about the user. (see [below for nested schema](#nestedblock--personal))
 - `roles` (Set of String) The roles of the user.
 
 ### Read-Only
 
+- `has_password` (Boolean) Whether the user has a local password.
 - `id` (String) The ID of this resource.
 - `short_profile` (List of Object) The computed short profile of the user. (see [below for nested schema](#nestedatt--short_profile))
 - `status` (String) The status of the user (e.g. `new`, `pending`).
