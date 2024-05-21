@@ -23,6 +23,10 @@ type ShortProfile struct {
 	UserName string `json:"userName,omitempty"`
 }
 
+type PublicProfile struct {
+	HasPassword bool `json:"hasPassword,omitempty"`
+}
+
 type Personal struct {
 	FirstName   string `json:"firstName,omitempty"`
 	LastName    string `json:"lastName,omitempty"`
@@ -44,6 +48,7 @@ type User struct {
 	HasPassword    bool                `json:"hasPassword,omitempty"`
 	Notifications  []NotificationEvent `json:"notifications,omitempty"`
 	ShortProfile   ShortProfile        `json:"shortProfile,omitempty"`
+	PublicProfile  PublicProfile	   `json:"publicProfile,omitempty"`
 	Logins         []Login             `json:"logins,omitempty"`
 	InviteURL      string              `json:"inviteUrl,omitempty"`
 }
@@ -367,4 +372,43 @@ func (client *Client) UpdateUserDetails(accountId, userId, userName, userEmail s
 	}
 
 	return &respUser, nil
+}
+
+func (client *Client) UpdateLocalUserPassword(userName, password string) (error) {
+
+	fullPath := "/admin/user/localProvider"
+
+	requestBody := fmt.Sprintf(`{"userName": "%s","password": "%s"}`, userName, password)
+
+	opts := RequestOptions{
+		Path:   fullPath,
+		Method: "POST",
+		Body:   []byte(requestBody),
+	}
+
+	_, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (client *Client) DeleteLocalUserPassword(userName string) (error) {
+
+	fullPath := fmt.Sprintf("/admin/user/localProvider?userName=%s", userName)
+
+	opts := RequestOptions{
+		Path:   fullPath,
+		Method: "DELETE",
+	}
+
+	_, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
