@@ -711,9 +711,9 @@ func TestAccCodefreshPipeline_ExternalResources(t *testing.T) {
 		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshPipelineExternalResources(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", 
-																  "github", "codefresh-io/external-resources1", "master", "test.py", "/codefresh/volume/test.py",
-																  "github2", "codefresh-io/external-resources2", "main", "test2.py", "/codefresh/volume/test2.py"),
+				Config: testAccCodefreshPipelineExternalResources(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git",
+					"github", "codefresh-io/external-resources1", "master", "test.py", "/codefresh/volume/test.py",
+					"github2", "codefresh-io/external-resources2", "main", "test2.py", "/codefresh/volume/test2.py"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.0.context", "github"),
@@ -735,8 +735,8 @@ func TestAccCodefreshPipeline_ExternalResources(t *testing.T) {
 			},
 			{
 				Config: testAccCodefreshPipelineExternalResources(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git",
-																  "github2", "codefresh-io/external-resources2", "main", "test2.py", "/codefresh/volume/test2.py", 
-																  "github", "codefresh-io/external-resources1", "master", "test.py", "/codefresh/volume/test.py"),
+					"github2", "codefresh-io/external-resources2", "main", "test2.py", "/codefresh/volume/test2.py",
+					"github", "codefresh-io/external-resources1", "master", "test.py", "/codefresh/volume/test.py"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.1.context", "github"),
@@ -1571,7 +1571,7 @@ resource "codefresh_pipeline" "test" {
   }
 }
 `,
-rName, repo, path, revision, context, 
-extResource1Context, extResource1Repo ,extResource1Revision, extResourse1SourcePath, extResource1DestPath, 
-extResource2Context, extResource2Repo ,extResource2Revision, extResourse2SourcePath, extResource2DestPath)
+		rName, repo, path, revision, context,
+		extResource1Context, extResource1Repo, extResource1Revision, extResourse1SourcePath, extResource1DestPath,
+		extResource2Context, extResource2Repo, extResource2Revision, extResourse2SourcePath, extResource2DestPath)
 }

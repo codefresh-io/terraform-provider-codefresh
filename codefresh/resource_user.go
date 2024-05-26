@@ -27,14 +27,14 @@ func resourceUser() *schema.Resource {
 			},
 			"password": {
 				Description: "Password - for users without SSO.",
-				Type: schema.TypeString,
-				Optional: true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
 			},
-			"has_password" : {
+			"has_password": {
 				Description: "Whether the user has a local password.",
-				Type: schema.TypeBool,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Computed:    true,
 			},
 			"email": {
 				Description: "The email of the user.",
@@ -353,7 +353,7 @@ func mapResourceToNewUser(d *schema.ResourceData) *cfclient.NewUser {
 
 func updateUserLocalPassword(d *schema.ResourceData, client *cfclient.Client) error {
 
-	if (d.HasChange("password")) {
+	if d.HasChange("password") {
 		hasPassword := d.Get("has_password").(bool)
 
 		if _, ok := d.GetOk("user_name"); !ok {
@@ -368,7 +368,7 @@ func updateUserLocalPassword(d *schema.ResourceData, client *cfclient.Client) er
 			if err != nil {
 				return err
 			}
-		// If password is not set but has_password returns true, it means that it was removed
+			// If password is not set but has_password returns true, it means that it was removed
 		} else if hasPassword {
 			err := client.DeleteLocalUserPassword(userName)
 
