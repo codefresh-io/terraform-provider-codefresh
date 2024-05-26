@@ -57,3 +57,27 @@ func (client *Client) GetActiveGitopsAccountInfo() (*GitopsActiveAccountInfo, er
 
 	return &gitopsActiveAccountInfo, nil
 }
+
+func (client *Client) UpdateActiveGitopsAccountSettings(gitProvider string, gitProviderApiUrl string, sharedConfigRepo string) error {
+	request := GraphQLRequest{
+		Query: `
+			mutation updateCsdpSettings($gitProvider: GitProviders!, $gitApiUrl: String!, $sharedConfigRepo: String!) {
+				updateCsdpSettings(gitProvider: $gitProvider, gitApiUrl: $gitApiUrl, sharedConfigRepo: $sharedConfigRepo)
+			}
+		`,
+		Variables: map[string]interface{}{
+			"gitProvider":      gitProvider,
+			"gitApiUrl":        gitProviderApiUrl,
+			"sharedConfigRepo": sharedConfigRepo,
+		},
+	}
+
+	_, err := client.SendGqlRequest(request)
+
+	if err != nil {
+		fmt.Println("Error:", err)
+		return err
+	}
+
+	return nil
+}

@@ -28,7 +28,7 @@ func dataSourceAccountGitopsSettings() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"shared_config_repo": {
+			"shared_config_repository": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +60,7 @@ func dataSourceAccountGitopsSettingsRead(d *schema.ResourceData, meta interface{
 func mapDataAccountGitopsSettingsToResource(account *cfclient.GitopsActiveAccountInfo, d *schema.ResourceData) error {
 
 	if account == nil || account.ID == "" {
-		return fmt.Errorf("data.codefresh_account - failed to mapDataAccountToResource")
+		return fmt.Errorf("cannot get gitops settings as account wasn't properly retrived")
 	}
 	d.SetId(account.ID)
 	d.Set("_id", account.ID)
@@ -68,7 +68,7 @@ func mapDataAccountGitopsSettingsToResource(account *cfclient.GitopsActiveAccoun
 	d.Set("admins", account.Admins)
 	d.Set("git_provider", account.GitProvider)
 	d.Set("git_provider_api_url", account.GitApiUrl)
-	d.Set("shared_config_repo", account.SharedConfigRepo)
+	d.Set("shared_config_repository", account.SharedConfigRepo)
 
 	return nil
 }
