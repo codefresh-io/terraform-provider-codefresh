@@ -17,16 +17,16 @@ func resourceAccountGitopsSettings() *schema.Resource {
 		Create:      resourceAccountGitopsSettingsUpdate,
 		Update:      resourceAccountGitopsSettingsUpdate,
 		// Delete not implemenented as gitops settings cannot be removed, only updated
-		Delete:      resourceAccountGitopsSettingsDelete,
+		Delete: resourceAccountGitopsSettingsDelete,
 		Schema: map[string]*schema.Schema{
 			"_id": {
 				Type:        schema.TypeString,
-				Description: "Account ID",
+				Description: "Account ID for active account",
 				Computed:    true,
 			},
 			"name": {
 				Type:        schema.TypeString,
-				Description: "Account name",
+				Description: "Account name for active account",
 				Computed:    true,
 			},
 			"git_provider": {
@@ -43,18 +43,18 @@ func resourceAccountGitopsSettings() *schema.Resource {
 				// When an empty value for provider url is provided, check if the old one was set by getting the default and surpress diff in such case
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if new == "" {
-					  defaultProviderUrl, err := gitops.GetDefaultAPIUrlForProvider(d.Get("git_provider").(string))
+						defaultProviderUrl, err := gitops.GetDefaultAPIUrlForProvider(d.Get("git_provider").(string))
 
-					  if err != nil {
-						return false
-					  }
+						if err != nil {
+							return false
+						}
 
-					  if *defaultProviderUrl == old {
-						return true
-					  }
+						if *defaultProviderUrl == old {
+							return true
+						}
 					}
 					return false
-				  },
+				},
 			},
 			"shared_config_repository": {
 				Type:         schema.TypeString,
@@ -108,8 +108,8 @@ func resourceAccountGitopsSettingsUpdate(d *schema.ResourceData, meta interface{
 	return resourceAccountGitopsSettingsRead(d, meta)
 }
 
+// Settings cannot be deleted, only updated
 func resourceAccountGitopsSettingsDelete(d *schema.ResourceData, meta interface{}) error {
-
 	return nil
 }
 
