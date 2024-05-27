@@ -2,7 +2,6 @@ package cfclient
 
 import (
 	"fmt"
-	//"log"
 	"strings"
 )
 
