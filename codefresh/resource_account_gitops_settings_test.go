@@ -6,6 +6,7 @@ import (
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/gitops"
+
 	//"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -27,6 +28,14 @@ func TestAccCodefreshAccountGitopsSettings_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGitopsSettings(resourceName, gitops.GitProviderGitHub, *expectedDefaultApiURLGithub, "https://github.com/codefresh-io/terraform-provider-isc-test.git"),
 					resource.TestCheckResourceAttr(resourceName, "git_provider", gitops.GitProviderGitHub),
+				),
+			},
+			{
+				Config: testAccountGitopsSettingsGithubExplicitApiUrl("https://github.com/codefresh-io/terraform-provider-isc-test.git", "https://api.mygithub.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGitopsSettings(resourceName, gitops.GitProviderGitHub, "https://api.mygithub.com", "https://github.com/codefresh-io/terraform-provider-isc-test.git"),
+					resource.TestCheckResourceAttr(resourceName, "git_provider", gitops.GitProviderGitHub),
+					resource.TestCheckResourceAttr(resourceName, "git_provider_api_url", "https://api.mygithub.com"),
 				),
 			},
 			{
@@ -79,4 +88,13 @@ func testAccountGitopsSettingsGithubDefaultApiUrl(sharedConfigRepository string)
 		git_provider = "GITHUB"
 		shared_config_repository = "%s"
 	  }`, sharedConfigRepository)
+}
+
+func testAccountGitopsSettingsGithubExplicitApiUrl(sharedConfigRepository string, gitProviderApiUrl string) string {
+	return fmt.Sprintf(`
+	resource "codefresh_account_gitops_settings" "test" {
+		git_provider = "GITHUB"
+		shared_config_repository = "%s"
+		git_provider_api_url = "%s"
+	}`, sharedConfigRepository, gitProviderApiUrl)
 }

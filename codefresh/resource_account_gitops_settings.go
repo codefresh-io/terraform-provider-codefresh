@@ -3,6 +3,7 @@ package codefresh
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/gitops"
@@ -12,7 +13,7 @@ import (
 
 func resourceAccountGitopsSettings() *schema.Resource {
 	return &schema.Resource{
-		Description: "This data source retrieves gitops settings for the active account",
+		Description: "Codefresh account gitops setting - such as git provider, API URL for the git provider and internal shared config repository",
 		Read:        resourceAccountGitopsSettingsRead,
 		Create:      resourceAccountGitopsSettingsUpdate,
 		Update:      resourceAccountGitopsSettingsUpdate,
@@ -22,11 +23,6 @@ func resourceAccountGitopsSettings() *schema.Resource {
 		// Delete not implemenented as gitops settings cannot be removed, only updated
 		Delete: resourceAccountGitopsSettingsDelete,
 		Schema: map[string]*schema.Schema{
-			"_id": {
-				Type:        schema.TypeString,
-				Description: "Account ID for active account",
-				Computed:    true,
-			},
 			"name": {
 				Type:        schema.TypeString,
 				Description: "Account name for active account",
@@ -34,7 +30,7 @@ func resourceAccountGitopsSettings() *schema.Resource {
 			},
 			"git_provider": {
 				Type:         schema.TypeString,
-				Description:  "Git provider name",
+				Description:  fmt.Sprintf("Git provider name - currently supported values are: %s", strings.Join(gitops.GetSupportedGitProvidersList(), " ,")),
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(gitops.GetSupportedGitProvidersList(), false),
 			},

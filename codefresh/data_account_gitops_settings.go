@@ -12,10 +12,6 @@ func dataSourceAccountGitopsSettings() *schema.Resource {
 		Description: "This data source retrieves gitops settings for the active account",
 		Read:        dataSourceAccountGitopsSettingsRead,
 		Schema: map[string]*schema.Schema{
-			"_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
