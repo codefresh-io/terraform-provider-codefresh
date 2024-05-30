@@ -38,12 +38,11 @@ resource "codefresh_account_gitops_settings" "gitops-settings" {
 
 ### Read-Only
 
-- `_id` (String) Account ID for active account
 - `id` (String) The ID of this resource.
 - `name` (String) Account name for active account
 
-
--> Once internal config repository is cloned successfully by one or more runtimes it can no longer be changed and all attempted updates will fail.
+[!WARNING]
+Once internal config repository is cloned successfully by one or more runtimes it can no longer be changed and all attempted updated will fail.
 If you need to change the repository please contact Codefresh support.
 
 ## Import

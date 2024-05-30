@@ -17,7 +17,6 @@ This data source retrieves gitops settings for the active account
 
 ### Read-Only
 
-- `_id` (String)
 - `admins` (List of String)
 - `git_provider` (String)
 - `git_provider_api_url` (String)
