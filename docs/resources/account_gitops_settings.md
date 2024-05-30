@@ -38,7 +38,7 @@ resource "codefresh_account_gitops_settings" "gitops-settings" {
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
+- `id` (String) Account Id
 - `name` (String) Account name for active account
 
 [!WARNING]

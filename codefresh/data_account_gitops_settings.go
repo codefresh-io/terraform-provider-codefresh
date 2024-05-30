@@ -12,6 +12,11 @@ func dataSourceAccountGitopsSettings() *schema.Resource {
 		Description: "This data source retrieves gitops settings for the active account",
 		Read:        dataSourceAccountGitopsSettingsRead,
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:     schema.TypeString,
+				Description: "Account Id",
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -59,7 +64,6 @@ func mapDataAccountGitopsSettingsToResource(account *cfclient.GitopsActiveAccoun
 		return fmt.Errorf("cannot get gitops settings as account wasn't properly retrived")
 	}
 	d.SetId(account.ID)
-	d.Set("_id", account.ID)
 	d.Set("name", account.AccountName)
 	d.Set("admins", account.Admins)
 	d.Set("git_provider", account.GitProvider)

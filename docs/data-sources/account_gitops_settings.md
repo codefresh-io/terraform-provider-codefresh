@@ -20,7 +20,7 @@ This data source retrieves gitops settings for the active account
 - `admins` (List of String)
 - `git_provider` (String)
 - `git_provider_api_url` (String)
-- `id` (String) The ID of this resource.
+- `id` (String) Account Id
 - `name` (String)
 - `shared_config_repository` (String)
 

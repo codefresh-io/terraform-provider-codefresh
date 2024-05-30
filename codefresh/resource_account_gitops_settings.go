@@ -23,6 +23,11 @@ func resourceAccountGitopsSettings() *schema.Resource {
 		// Delete not implemenented as gitops settings cannot be removed, only updated
 		Delete: resourceAccountGitopsSettingsDelete,
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:     schema.TypeString,
+				Description: "Account Id",
+				Computed: true,
+			},
 			"name": {
 				Type:        schema.TypeString,
 				Description: "Account name for active account",
@@ -117,8 +122,8 @@ func mapAccountGitopsSettingsToResource(account *cfclient.GitopsActiveAccountInf
 	if account == nil || account.ID == "" {
 		return fmt.Errorf("cannot get gitops settings as account wasn't properly retrived")
 	}
+
 	d.SetId(account.ID)
-	d.Set("_id", account.ID)
 	d.Set("name", account.AccountName)
 	d.Set("git_provider", account.GitProvider)
 	d.Set("git_provider_api_url", account.GitApiUrl)
