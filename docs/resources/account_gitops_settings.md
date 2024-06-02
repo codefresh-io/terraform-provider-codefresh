@@ -13,7 +13,7 @@ Codefresh account gitops setting - such as git provider, API URL for the git pro
 ```hcl
 resource "codefresh_account_gitops_settings" "gitops-settings" {
   git_provider = "GITHUB"
-  shared_config_repository = "https://github.com/example-org/codefresh-internal-shared-config.git"
+  shared_config_repository = "https://github.com/example-org/codefresh-internal-shared-config.git?ref=main"
 }
 ```
 ```hcl
@@ -30,7 +30,7 @@ resource "codefresh_account_gitops_settings" "gitops-settings" {
 ### Required
 
 - `git_provider` (String) Git provider name - currently supported values are: GITHUB ,GERRIT ,GITLAB ,BITBUCKET ,BITBUCKET_SERVER
-- `shared_config_repository` (String) Shared config repository url. Must be a valid git url which contains `.git`. May also includ path and branch references
+- `shared_config_repository` (String) Shared config repository url. Must be a valid git url which contains `.git`. May also include path and branch references
 
 ### Optional
 
@@ -42,7 +42,7 @@ resource "codefresh_account_gitops_settings" "gitops-settings" {
 - `name` (String) Account name for active account
 
 [!WARNING]
-Once internal config repository is cloned successfully by one or more runtimes it can no longer be changed and all attempted updated will fail.
+Once internal config repository is cloned successfully by one or more runtimes it can no longer be changed and all attempted updates will fail.
 If you need to change the repository please contact Codefresh support.
 
 ## Import

@@ -62,7 +62,7 @@ func resourceAccountGitopsSettings() *schema.Resource {
 			},
 			"shared_config_repository": {
 				Type:         schema.TypeString,
-				Description:  "Shared config repository url. Must be a valid git url which contains `.git`. May also includ path and branch references",
+				Description:  "Shared config repository url. Must be a valid git url which contains `.git`. May also include path and branch references",
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(https?:\/\/)(\S+)(.git)(\S*)$`), "must be a valid git url and must contain .git For example https://github.com/owner/repo.git or https://github.com/owner/repo.git/some/path?ref=branch-name"),
 				Required:     true,
 			},
