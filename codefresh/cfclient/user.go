@@ -2,7 +2,6 @@ package cfclient
 
 import (
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -222,25 +221,41 @@ func (client *Client) DeleteUserAsAccountAdmin(accountId, userId string) error {
 
 func (client *Client) GetAllUsers() (*[]User, error) {
 
-	opts := RequestOptions{
-		Path:   "/admin/user",
-		Method: "GET",
+	limitPerQuery := 100
+	bIsDone := false
+	nPageIndex := 1
+
+	var allUsers []User
+
+	for !bIsDone {
+		var userPaginatedResp struct{Docs []User `json:"docs"`}
+
+		opts := RequestOptions{
+			Path:   fmt.Sprintf("/admin/user?limit=%d&page=%d", limitPerQuery, nPageIndex),
+			Method: "GET",
+		}
+
+		resp, err := client.RequestAPI(&opts)
+
+		if err != nil {
+			return nil, err
+		}
+
+		err = DecodeResponseInto(resp, &userPaginatedResp)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(userPaginatedResp.Docs) > 0 {
+			allUsers = append(allUsers,userPaginatedResp.Docs...)
+			nPageIndex++
+		} else {
+			bIsDone = true
+		}
 	}
 
-	resp, err := client.RequestAPI(&opts)
-	if err != nil {
-		return nil, err
-	}
-
-	var users []User
-	respStr := string(resp)
-	log.Printf("[INFO] GetAllUsers resp: %s", respStr)
-	err = DecodeResponseInto(resp, &users)
-	if err != nil {
-		return nil, err
-	}
-
-	return &users, nil
+	return &allUsers, nil
 }
 
 func (client *Client) GetUserByID(userId string) (*User, error) {
