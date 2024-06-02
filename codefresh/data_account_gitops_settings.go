@@ -20,18 +20,22 @@ func dataSourceAccountGitopsSettings() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Description: "Account name for active account",
 			},
 			"git_provider": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Description: "Git provider name",
 			},
 			"git_provider_api_url": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Description: "Git provider API url",
 			},
 			"shared_config_repository": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Description: "Codefresh shared config repository url",
 			},
 			"admins": {
 				Type:     schema.TypeList,
