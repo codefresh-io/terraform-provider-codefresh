@@ -22,6 +22,6 @@ This data source retrieves gitops settings for the active account
 - `git_provider_api_url` (String) Git provider API url
 - `id` (String) Account Id
 - `name` (String) Account name for active account
-- `shared_config_repository` (String) Codefresh shared config repository url
+- `shared_config_repository` (String) Shared config repository url
 
 
