@@ -35,7 +35,7 @@ func dataSourceAccountGitopsSettings() *schema.Resource {
 			"shared_config_repository": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Description: "Codefresh shared config repository url",
+				Description: "Shared config repository url",
 			},
 			"admins": {
 				Type:     schema.TypeList,
