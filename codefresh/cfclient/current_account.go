@@ -60,7 +60,7 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 			currentAccount.ID = accX.Get("id").String()
 			admins := accX.Get("admins").InterSlice()
 			for _, adminI := range admins {
-				accountAdminsIDs = append(accountAdminsIDs ,adminI.(string))
+				accountAdminsIDs = append(accountAdminsIDs, adminI.(string))
 			}
 			break
 		}

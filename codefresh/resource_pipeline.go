@@ -642,53 +642,53 @@ Pipeline concurrency policy: Builds on 'Pending Approval' state should be:
 							},
 						},
 						"external_resource": {
-							Type:	schema.TypeList,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"id" : {
-										Type: schema.TypeString,
+									"id": {
+										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"type" : {
-										Type: schema.TypeString,
-										Optional: true,
+									"type": {
+										Type:        schema.TypeString,
+										Optional:    true,
 										Description: "Type of the external resource. Currently only 'git' is supported",
 										ValidateFunc: validation.StringInSlice([]string{
 											"git",
 										}, false),
 										Default: "git",
 									},
-									"repo" : {
-										Type: schema.TypeString,
-										Required: true,
+									"repo": {
+										Type:        schema.TypeString,
+										Required:    true,
 										Description: "git repository url",
 									},
-									"context" : {
-										Type: schema.TypeString,
-										Required: true,
+									"context": {
+										Type:        schema.TypeString,
+										Required:    true,
 										Description: "Context name for the git repository",
 									},
 									"revision": {
-										Type: schema.TypeString,
-										Required: true,
+										Type:        schema.TypeString,
+										Required:    true,
 										Description: "Revision/branch in the git repository",
 									},
 									"is_folder": {
-										Type: schema.TypeBool,
+										Type:        schema.TypeBool,
 										Description: "Whether or not the resource specified in source_path is a folder",
-										Optional: true,
-										Default: false,
+										Optional:    true,
+										Default:     false,
 									},
 									"source_path": {
-										Type: schema.TypeString,
+										Type:        schema.TypeString,
 										Description: "The source folder in the repository (use relative path)",
-										Required: true,
+										Required:    true,
 									},
 									"target_path": {
-										Type: schema.TypeString,
+										Type:        schema.TypeString,
 										Description: "The target folder in the pipeline workspace where the file/folder will be copied to (use absolute path)",
-										Required: true,
+										Required:    true,
 									},
 								},
 							},
@@ -1224,14 +1224,14 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 	if externalResources, ok := d.GetOk("spec.0.external_resource"); ok {
 		for idx := range externalResources.([]interface{}) {
 			codefreshExternalResource := cfclient.ExternalResource{
-				Type: d.Get(fmt.Sprintf("spec.0.external_resource.%v.type", idx)).(string),
-				Repo: d.Get(fmt.Sprintf("spec.0.external_resource.%v.repo", idx)).(string),
-				Revision: d.Get(fmt.Sprintf("spec.0.external_resource.%v.revision", idx)).(string),
-				Context: d.Get(fmt.Sprintf("spec.0.external_resource.%v.context", idx)).(string),
-				Source: d.Get(fmt.Sprintf("spec.0.external_resource.%v.source_path", idx)).(string),
+				Type:        d.Get(fmt.Sprintf("spec.0.external_resource.%v.type", idx)).(string),
+				Repo:        d.Get(fmt.Sprintf("spec.0.external_resource.%v.repo", idx)).(string),
+				Revision:    d.Get(fmt.Sprintf("spec.0.external_resource.%v.revision", idx)).(string),
+				Context:     d.Get(fmt.Sprintf("spec.0.external_resource.%v.context", idx)).(string),
+				Source:      d.Get(fmt.Sprintf("spec.0.external_resource.%v.source_path", idx)).(string),
 				Destination: d.Get(fmt.Sprintf("spec.0.external_resource.%v.target_path", idx)).(string),
-				IsFolder: d.Get(fmt.Sprintf("spec.0.external_resource.%v.is_folder", idx)).(bool),
-				ID: d.Get(fmt.Sprintf("spec.0.external_resource.%v.id", idx)).(string),
+				IsFolder:    d.Get(fmt.Sprintf("spec.0.external_resource.%v.is_folder", idx)).(bool),
+				ID:          d.Get(fmt.Sprintf("spec.0.external_resource.%v.id", idx)).(string),
 			}
 
 			pipeline.Spec.ExternalResources = append(pipeline.Spec.ExternalResources, codefreshExternalResource)

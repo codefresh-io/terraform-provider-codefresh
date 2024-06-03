@@ -47,7 +47,7 @@ type User struct {
 	HasPassword    bool                `json:"hasPassword,omitempty"`
 	Notifications  []NotificationEvent `json:"notifications,omitempty"`
 	ShortProfile   ShortProfile        `json:"shortProfile,omitempty"`
-	PublicProfile  PublicProfile	   `json:"publicProfile,omitempty"`
+	PublicProfile  PublicProfile       `json:"publicProfile,omitempty"`
 	Logins         []Login             `json:"logins,omitempty"`
 	InviteURL      string              `json:"inviteUrl,omitempty"`
 }
@@ -389,7 +389,7 @@ func (client *Client) UpdateUserDetails(accountId, userId, userName, userEmail s
 	return &respUser, nil
 }
 
-func (client *Client) UpdateLocalUserPassword(userName, password string) (error) {
+func (client *Client) UpdateLocalUserPassword(userName, password string) error {
 
 	fullPath := "/admin/user/localProvider"
 
@@ -410,7 +410,7 @@ func (client *Client) UpdateLocalUserPassword(userName, password string) (error)
 	return nil
 }
 
-func (client *Client) DeleteLocalUserPassword(userName string) (error) {
+func (client *Client) DeleteLocalUserPassword(userName string) error {
 
 	fullPath := fmt.Sprintf("/admin/user/localProvider?userName=%s", userName)
 
