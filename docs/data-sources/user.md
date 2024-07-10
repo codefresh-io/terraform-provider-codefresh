@@ -7,7 +7,7 @@ description: |-
 
 # codefresh_user (Data Source)
 
-This data source retrieves a user by email.
+This data source retrieves a user by email. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.
 
 ## Example usage
 

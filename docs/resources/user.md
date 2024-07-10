@@ -2,7 +2,7 @@
 page_title: "codefresh_user Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  This resource is used to manage a Codefresh user.
+  This resource is used to manage a Codefresh user. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.
 ---
 
 # codefresh_user (Resource)
@@ -43,7 +43,7 @@ resource "codefresh_user" "new" {
       idp_id = data.codefresh_idps.idp_azure.id
       sso = true
   }
-  
+
   login  {
       idp_id = data.codefresh_idps.local.id
       //sso = false
@@ -119,4 +119,3 @@ Read-Only:
 ```sh
 terraform import codefresh_user.new xxxxxxxxxxxxxxxxxxx
 ```
-

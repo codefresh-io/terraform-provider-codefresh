@@ -7,7 +7,7 @@ description: |-
 
 # codefresh_users (Data Source)
 
-This data source retrieves all users in the system.
+This data source retrieves all users in the system. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.
 
 ## Example usage
 

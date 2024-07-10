@@ -2,7 +2,7 @@
 page_title: "codefresh_account Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  By creating different accounts for different teams within the same company a customer can achieve complete segregation of assets between the teams.
+  By creating different accounts for different teams within the same company a customer can achieve complete segregation of assets between the teams. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.
 ---
 
 # codefresh_account (Resource)
