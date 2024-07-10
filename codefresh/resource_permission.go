@@ -99,9 +99,6 @@ The tags for which to apply the permission. Supports two custom tags:
 		},
 		CustomizeDiff: customdiff.All(
 			resourcePermissionCustomDiff,
-			customdiff.ForceNewIfChange("related_resource", func(ctx context.Context, oldValue, newValue, meta interface{}) bool {
-				return true
-			}),
 		),
 	}
 }
@@ -163,18 +160,30 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfclient.Client)
-
 	permission := *mapResourceToPermission(d)
-	resp, err := client.CreatePermission(&permission)
-	if err != nil {
-		return err
-	}
 
-	deleteErr := resourcePermissionDelete(d, meta)
-	if deleteErr != nil {
-		log.Printf("[WARN] failed to delete permission %v: %v", permission, deleteErr)
+	// In case team, action or relatedResource or resource have changed - a new permission needs to be created (but without recreating the terraform resource as destruction of resources is alarming for end users)
+	if d.HasChanges("team", "action", "related_resource", "resource") {
+		deleteErr := resourcePermissionDelete(d, meta)
+
+		if deleteErr != nil {
+			log.Printf("[WARN] failed to delete permission %v: %v", permission, deleteErr)
+		}
+
+		resp, err := client.CreatePermission(&permission)
+
+		if err != nil {
+			return err
+		}
+
+		d.SetId(resp.ID)
+		// Only tags can be updated
+	} else if d.HasChange("tags") {
+		err := client.UpdatePermissionTags(&permission)
+		if err != nil {
+			return err
+		}
 	}
-	d.SetId(resp.ID)
 
 	return resourcePermissionRead(d, meta)
 }

@@ -142,3 +142,24 @@ func (client *Client) DeletePermission(id string) error {
 
 	return nil
 }
+
+func (client *Client) UpdatePermissionTags(permission *Permission) error {
+
+	fullPath := fmt.Sprintf("/abac/tags/rule/%s", permission.ID)
+
+	body, _ := EncodeToJSON(permission.Tags)
+
+	opts := RequestOptions{
+		Path:   fullPath,
+		Method: "POST",
+		Body:   body,
+	}
+
+	_, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

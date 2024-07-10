@@ -27,7 +27,7 @@ func TestAccCodefreshPermissionConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action", "create"),
 					resource.TestCheckResourceAttr(resourceName, "resource", "pipeline"),
 					resource.TestCheckResourceAttr(resourceName, "tags.0", "*"),
-					resource.TestCheckResourceAttr(resourceName, "related_resource",""),
+					resource.TestCheckResourceAttr(resourceName, "related_resource", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.1", "production"),
 				),
 			},
