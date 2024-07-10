@@ -24,9 +24,9 @@ func resourceAccountGitopsSettings() *schema.Resource {
 		Delete: resourceAccountGitopsSettingsDelete,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
+				Type:        schema.TypeString,
 				Description: "Account Id",
-				Computed: true,
+				Computed:    true,
 			},
 			"name": {
 				Type:        schema.TypeString,

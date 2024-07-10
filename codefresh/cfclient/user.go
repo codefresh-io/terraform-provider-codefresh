@@ -228,7 +228,9 @@ func (client *Client) GetAllUsers() (*[]User, error) {
 	var allUsers []User
 
 	for !bIsDone {
-		var userPaginatedResp struct{Docs []User `json:"docs"`}
+		var userPaginatedResp struct {
+			Docs []User `json:"docs"`
+		}
 
 		opts := RequestOptions{
 			Path:   fmt.Sprintf("/admin/user?limit=%d&page=%d", limitPerQuery, nPageIndex),
@@ -248,7 +250,7 @@ func (client *Client) GetAllUsers() (*[]User, error) {
 		}
 
 		if len(userPaginatedResp.Docs) > 0 {
-			allUsers = append(allUsers,userPaginatedResp.Docs...)
+			allUsers = append(allUsers, userPaginatedResp.Docs...)
 			nPageIndex++
 		} else {
 			bIsDone = true

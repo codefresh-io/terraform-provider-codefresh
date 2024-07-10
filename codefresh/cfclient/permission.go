@@ -9,7 +9,7 @@ type Permission struct {
 	ID              string   `json:"id,omitempty"`
 	Team            string   `json:"role,omitempty"`
 	Resource        string   `json:"resource,omitempty"`
-	RelatedResource string   `json:"related_resource,omitempty"`
+	RelatedResource string   `json:"relatedResource,omitempty"`
 	Action          string   `json:"action,omitempty"`
 	Account         string   `json:"account,omitempty"`
 	Tags            []string `json:"attributes,omitempty"`
@@ -20,7 +20,7 @@ type NewPermission struct {
 	ID              string   `json:"_id,omitempty"`
 	Team            string   `json:"team,omitempty"`
 	Resource        string   `json:"resource,omitempty"`
-	RelatedResource string   `json:"related_resource,omitempty"`
+	RelatedResource string   `json:"relatedResource,omitempty"`
 	Action          string   `json:"action,omitempty"`
 	Account         string   `json:"account,omitempty"`
 	Tags            []string `json:"tags,omitempty"`

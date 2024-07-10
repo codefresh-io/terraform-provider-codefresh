@@ -7,6 +7,7 @@ import (
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	funk "github.com/thoas/go-funk"
@@ -96,7 +97,12 @@ The tags for which to apply the permission. Supports two custom tags:
 				},
 			},
 		},
-		CustomizeDiff: resourcePermissionCustomDiff,
+		CustomizeDiff: customdiff.All(
+			resourcePermissionCustomDiff,
+			customdiff.ForceNewIfChange("related_resource", func(ctx context.Context, oldValue, newValue, meta interface{}) bool {
+				return true
+			}),
+		),
 	}
 }
 
@@ -206,6 +212,11 @@ func mapPermissionToResource(permission *cfclient.Permission, d *schema.Resource
 		return err
 	}
 
+	err = d.Set("related_resource", permission.RelatedResource)
+	if err != nil {
+		return err
+	}
+
 	err = d.Set("tags", permission.Tags)
 	if err != nil {
 		return err
@@ -224,11 +235,12 @@ func mapResourceToPermission(d *schema.ResourceData) *cfclient.Permission {
 		tags = []string{"*", "untagged"}
 	}
 	permission := &cfclient.Permission{
-		ID:       d.Id(),
-		Team:     d.Get("team").(string),
-		Action:   d.Get("action").(string),
-		Resource: d.Get("resource").(string),
-		Tags:     tags,
+		ID:              d.Id(),
+		Team:            d.Get("team").(string),
+		Action:          d.Get("action").(string),
+		Resource:        d.Get("resource").(string),
+		RelatedResource: d.Get("related_resource").(string),
+		Tags:            tags,
 	}
 
 	return permission
