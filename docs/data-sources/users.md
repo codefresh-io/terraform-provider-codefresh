@@ -2,7 +2,7 @@
 page_title: "codefresh_users Data Source - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  This data source retrieves all users in the system.
+  This data source retrieves all users in the system. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.
 ---
 
 # codefresh_users (Data Source)

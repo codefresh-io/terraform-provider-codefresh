@@ -7,7 +7,7 @@ description: |-
 
 # codefresh_account (Resource)
 
-By creating different accounts for different teams within the same company a customer can achieve complete segregation of assets between the teams.
+By creating different accounts for different teams within the same company a customer can achieve complete segregation of assets between the teams. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.
 
 See the [documentation](https://codefresh.io/docs/docs/administration/account-user-management/).
 

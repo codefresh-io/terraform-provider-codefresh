@@ -7,7 +7,7 @@ description: |-
 
 # codefresh_account_admins (Resource)
 
-Use this resource to set a list of admins for any account.
+Use this resource to set a list of admins for any account. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.
 
 ## Example usage
 

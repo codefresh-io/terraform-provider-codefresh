@@ -7,7 +7,7 @@ description: |-
 
 # codefresh_idps (Data Source)
 
-This data source retrieves all Identity Providers (IdPs) in the system.
+This data source retrieves all Identity Providers (IdPs) in the system. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.
 
 ## Example Usage
 
@@ -55,7 +55,7 @@ resource "codefresh_user" "user1" {
       idp_id = data.codefresh_idps.idp_azure.id
       sso = true
   }
-
+  
   login  {
       idp_id = data.codefresh_idps.local.id
       //sso = false

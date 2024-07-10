@@ -11,7 +11,7 @@ import (
 
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
-		Description: "This resource is used to manage a Codefresh user.",
+		Description: "This resource is used to manage a Codefresh user. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.",
 		Create:      resourceUsersCreate,
 		Read:        resourceUsersRead,
 		Update:      resourceUsersUpdate,

@@ -14,6 +14,7 @@ func resourceApiKey() *schema.Resource {
 	return &schema.Resource{
 		Description: `
 		Manages an API Key tied to an Account and a User.
+		Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.
 		`,
 		Create: resourceApiKeyCreate,
 		Read:   resourceApiKeyRead,

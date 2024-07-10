@@ -9,7 +9,7 @@ import (
 
 func dataSourceAccount() *schema.Resource {
 	return &schema.Resource{
-		Description: "This data source retrieves an account by _id or name.",
+		Description: "This data source retrieves an account by _id or name. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.",
 		Read:        dataSourceAccountRead,
 		Schema: map[string]*schema.Schema{
 			"_id": {

@@ -10,7 +10,7 @@ import (
 
 func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		Description: "This data source retrieves a user by email.",
+		Description: "This data source retrieves a user by email. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.",
 		Read:        dataSourceUserRead,
 		Schema:      *UserSchema(),
 	}
