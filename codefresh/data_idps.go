@@ -10,7 +10,7 @@ import (
 
 func dataSourceIdps() *schema.Resource {
 	return &schema.Resource{
-		Description: "This data source retrieves all Identity Providers (IdPs) in the system.",
+		Description: "This data source retrieves all Identity Providers (IdPs) in the system. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.",
 		Read:        dataSourceIdpRead,
 		Schema:      IdpSchema(),
 	}

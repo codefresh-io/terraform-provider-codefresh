@@ -2,12 +2,12 @@
 page_title: "codefresh_account Data Source - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  This data source retrieves an account by _id or name.
+  This data source retrieves an account by _id or name. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 ---
 
 # codefresh_account (Data Source)
 
-This data source retrieves an account by _id or name.
+This data source retrieves an account by _id or name. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 
 ## Example Usage
 

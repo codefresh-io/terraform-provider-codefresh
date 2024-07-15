@@ -9,7 +9,7 @@ import (
 func resourceAccountAdmins() *schema.Resource {
 	return &schema.Resource{
 		Description: `
-		Use this resource to set a list of admins for any account.
+		Use this resource to set a list of admins for any account. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 		`,
 		Create: resourceAccountAdminsCreate,
 		Read:   resourceAccountAdminsRead,

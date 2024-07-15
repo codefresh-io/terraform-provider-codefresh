@@ -8,7 +8,7 @@ import (
 func resourceAccount() *schema.Resource {
 	return &schema.Resource{
 		Description: `
-		By creating different accounts for different teams within the same company a customer can achieve complete segregation of assets between the teams.
+		By creating different accounts for different teams within the same company a customer can achieve complete segregation of assets between the teams. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 		`,
 		Create: resourceAccountCreate,
 		Read:   resourceAccountRead,

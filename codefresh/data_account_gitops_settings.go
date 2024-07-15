@@ -13,28 +13,28 @@ func dataSourceAccountGitopsSettings() *schema.Resource {
 		Read:        dataSourceAccountGitopsSettingsRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
+				Type:        schema.TypeString,
 				Description: "Account Id",
-				Computed: true,
+				Computed:    true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 				Description: "Account name for active account",
 			},
 			"git_provider": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 				Description: "Git provider name",
 			},
 			"git_provider_api_url": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 				Description: "Git provider API url",
 			},
 			"shared_config_repository": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 				Description: "Shared config repository url",
 			},
 			"admins": {

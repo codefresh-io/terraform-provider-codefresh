@@ -3,11 +3,13 @@ page_title: "codefresh_api_key Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
   Manages an API Key tied to an Account and a User.
+      Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 ---
 
 # codefresh_api_key (Resource)
 
 Manages an API Key tied to an Account and a User.
+		Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 
 terraform-provider-codefresh itself uses an API key, passed as provider's attribute, but it's possible to use that API Key to generate a new one. 
 This resource requires Codefresh system admin permissions, hence is relevant for on-prem deployments of Codefresh only.

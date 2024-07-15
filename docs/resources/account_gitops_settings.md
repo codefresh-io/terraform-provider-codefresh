@@ -41,7 +41,7 @@ resource "codefresh_account_gitops_settings" "gitops-settings" {
 - `id` (String) Account Id
 - `name` (String) Account name for active account
 
-[!WARNING]
+~>
 Once internal config repository is cloned successfully by one or more runtimes it can no longer be changed and all attempted updates will fail.
 If you need to change the repository please contact Codefresh support.
 
