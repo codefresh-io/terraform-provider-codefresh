@@ -9,7 +9,7 @@ type Permission struct {
 	ID              string   `json:"id,omitempty"`
 	Team            string   `json:"role,omitempty"`
 	Resource        string   `json:"resource,omitempty"`
-	RelatedResource string   `json:"related_resource,omitempty"`
+	RelatedResource string   `json:"relatedResource,omitempty"`
 	Action          string   `json:"action,omitempty"`
 	Account         string   `json:"account,omitempty"`
 	Tags            []string `json:"attributes,omitempty"`
@@ -20,7 +20,7 @@ type NewPermission struct {
 	ID              string   `json:"_id,omitempty"`
 	Team            string   `json:"team,omitempty"`
 	Resource        string   `json:"resource,omitempty"`
-	RelatedResource string   `json:"related_resource,omitempty"`
+	RelatedResource string   `json:"relatedResource,omitempty"`
 	Action          string   `json:"action,omitempty"`
 	Account         string   `json:"account,omitempty"`
 	Tags            []string `json:"tags,omitempty"`
@@ -132,6 +132,27 @@ func (client *Client) DeletePermission(id string) error {
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "DELETE",
+	}
+
+	_, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (client *Client) UpdatePermissionTags(permission *Permission) error {
+
+	fullPath := fmt.Sprintf("/abac/tags/rule/%s", permission.ID)
+
+	body, _ := EncodeToJSON(permission.Tags)
+
+	opts := RequestOptions{
+		Path:   fullPath,
+		Method: "POST",
+		Body:   body,
 	}
 
 	_, err := client.RequestAPI(&opts)

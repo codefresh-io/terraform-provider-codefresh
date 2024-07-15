@@ -7,6 +7,7 @@ import (
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	funk "github.com/thoas/go-funk"
@@ -96,7 +97,9 @@ The tags for which to apply the permission. Supports two custom tags:
 				},
 			},
 		},
-		CustomizeDiff: resourcePermissionCustomDiff,
+		CustomizeDiff: customdiff.All(
+			resourcePermissionCustomDiff,
+		),
 	}
 }
 
@@ -157,18 +160,30 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfclient.Client)
-
 	permission := *mapResourceToPermission(d)
-	resp, err := client.CreatePermission(&permission)
-	if err != nil {
-		return err
-	}
 
-	deleteErr := resourcePermissionDelete(d, meta)
-	if deleteErr != nil {
-		log.Printf("[WARN] failed to delete permission %v: %v", permission, deleteErr)
+	// In case team, action or relatedResource or resource have changed - a new permission needs to be created (but without recreating the terraform resource as destruction of resources is alarming for end users)
+	if d.HasChanges("team", "action", "related_resource", "resource") {
+		deleteErr := resourcePermissionDelete(d, meta)
+
+		if deleteErr != nil {
+			log.Printf("[WARN] failed to delete permission %v: %v", permission, deleteErr)
+		}
+
+		resp, err := client.CreatePermission(&permission)
+
+		if err != nil {
+			return err
+		}
+
+		d.SetId(resp.ID)
+		// Only tags can be updated
+	} else if d.HasChange("tags") {
+		err := client.UpdatePermissionTags(&permission)
+		if err != nil {
+			return err
+		}
 	}
-	d.SetId(resp.ID)
 
 	return resourcePermissionRead(d, meta)
 }
@@ -206,6 +221,11 @@ func mapPermissionToResource(permission *cfclient.Permission, d *schema.Resource
 		return err
 	}
 
+	err = d.Set("related_resource", permission.RelatedResource)
+	if err != nil {
+		return err
+	}
+
 	err = d.Set("tags", permission.Tags)
 	if err != nil {
 		return err
@@ -224,11 +244,12 @@ func mapResourceToPermission(d *schema.ResourceData) *cfclient.Permission {
 		tags = []string{"*", "untagged"}
 	}
 	permission := &cfclient.Permission{
-		ID:       d.Id(),
-		Team:     d.Get("team").(string),
-		Action:   d.Get("action").(string),
-		Resource: d.Get("resource").(string),
-		Tags:     tags,
+		ID:              d.Id(),
+		Team:            d.Get("team").(string),
+		Action:          d.Get("action").(string),
+		Resource:        d.Get("resource").(string),
+		RelatedResource: d.Get("related_resource").(string),
+		Tags:            tags,
 	}
 
 	return permission

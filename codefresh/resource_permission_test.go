@@ -27,6 +27,18 @@ func TestAccCodefreshPermissionConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action", "create"),
 					resource.TestCheckResourceAttr(resourceName, "resource", "pipeline"),
 					resource.TestCheckResourceAttr(resourceName, "tags.0", "*"),
+					resource.TestCheckResourceAttr(resourceName, "related_resource", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.1", "production"),
+				),
+			},
+			{
+				Config: testAccCodefreshPermissionConfig("create", "pipeline", "project", []string{"production", "*"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPermissionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "action", "create"),
+					resource.TestCheckResourceAttr(resourceName, "resource", "pipeline"),
+					resource.TestCheckResourceAttr(resourceName, "related_resource", "project"),
+					resource.TestCheckResourceAttr(resourceName, "tags.0", "*"),
 					resource.TestCheckResourceAttr(resourceName, "tags.1", "production"),
 				),
 			},
