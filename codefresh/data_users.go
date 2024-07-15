@@ -9,7 +9,7 @@ import (
 
 func dataSourceUsers() *schema.Resource {
 	return &schema.Resource{
-		Description: "This data source retrieves all users in the system.",
+		Description: "This data source retrieves all users in the system. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.",
 		Read:        dataSourceUsersRead,
 		Schema: map[string]*schema.Schema{
 			"users": {

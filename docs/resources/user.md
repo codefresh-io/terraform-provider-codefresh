@@ -2,12 +2,12 @@
 page_title: "codefresh_user Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  This resource is used to manage a Codefresh user.
+  This resource is used to manage a Codefresh user. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 ---
 
 # codefresh_user (Resource)
 
-This resource is used to manage a Codefresh user.
+This resource is used to manage a Codefresh user. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 
 
 

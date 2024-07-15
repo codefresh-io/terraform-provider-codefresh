@@ -2,12 +2,12 @@
 page_title: "codefresh_idps Data Source - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  This data source retrieves all Identity Providers (IdPs) in the system.
+  This data source retrieves all Identity Providers (IdPs) in the system. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 ---
 
 # codefresh_idps (Data Source)
 
-This data source retrieves all Identity Providers (IdPs) in the system.
+This data source retrieves all Identity Providers (IdPs) in the system. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 
 ## Example Usage
 
