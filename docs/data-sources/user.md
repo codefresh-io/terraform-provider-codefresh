@@ -2,12 +2,12 @@
 page_title: "codefresh_user Data Source - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  This data source retrieves a user by email. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.
+  This data source retrieves a user by email. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 ---
 
 # codefresh_user (Data Source)
 
-This data source retrieves a user by email. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.
+This data source retrieves a user by email. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 
 ## Example usage
 

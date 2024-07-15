@@ -2,12 +2,12 @@
 page_title: "codefresh_account_admins Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  Use this resource to set a list of admins for any account. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.
+  Use this resource to set a list of admins for any account. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 ---
 
 # codefresh_account_admins (Resource)
 
-Use this resource to set a list of admins for any account. Requires Codefresh admin token and hence is relevant only for on premise installations of Codefresh.
+Use this resource to set a list of admins for any account. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 
 ## Example usage
 

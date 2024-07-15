@@ -2,12 +2,12 @@
 page_title: "codefresh_idp Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  Codefresh global level identity provider. Requires Codefresh admin token, hence is relevant only for on-prem deployments of Codefresh
+  Codefresh global level identity provider. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 ---
 
 # codefresh_idp (Resource)
 
-Codefresh global level identity provider. Requires Codefresh admin token, hence is relevant only for on-prem deployments of Codefresh
+Codefresh global level identity provider. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 
 ## Example usage
 ```hcl

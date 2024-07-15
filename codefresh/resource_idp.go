@@ -16,7 +16,7 @@ import (
 
 func resourceIdp() *schema.Resource {
 	return &schema.Resource{
-		Description: "Codefresh global level identity provider. Requires Codefresh admin token, hence is relevant only for on-prem deployments of Codefresh",
+		Description: "Codefresh global level identity provider. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.",
 		Create:      resourceIDPCreate,
 		Read:        resourceIDPRead,
 		Update:      resourceIDPUpdate,
