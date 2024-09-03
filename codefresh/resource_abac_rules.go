@@ -41,7 +41,7 @@ The type of resources the ABAC rules applies to. Possible values:
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"gitopsApplications, promotionFlows, products, environments",
+					"gitopsApplications", "promotionFlows", "products", "environments",
 				}, false),
 			},
 			"teams": {
@@ -70,9 +70,9 @@ Action to be allowed. Possible values:
 	* TERMINATE_SYNC
 	* VIEW_POD_LOGS
 	* APP_ROLLBACK
-	* "TRIGGER_PROMOTION"
-	* "RETRY_RELEASE"
-	* "PROMOTE_TO"
+	* TRIGGER_PROMOTION
+	* RETRY_RELEASE
+	* PROMOTE_TO
 				`,
 				Type:     schema.TypeSet,
 				Required: true,

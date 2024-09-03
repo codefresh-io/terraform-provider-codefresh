@@ -48,8 +48,14 @@ resource "codefresh_abac_rules" "app_rule" {
 	* TERMINATE_SYNC
 	* VIEW_POD_LOGS
 	* APP_ROLLBACK
+	* TRIGGER_PROMOTION
+	* RETRY_RELEASE
+	* PROMOTE_TO
 - `entity_type` (String) The type of resources the ABAC rules applies to. Possible values:
 	* gitopsApplications
+	* promotionFlows
+	* products
+	* environments
 - `teams` (Set of String) The IDs of the teams the ABAC rules apply to.
 
 ### Optional
