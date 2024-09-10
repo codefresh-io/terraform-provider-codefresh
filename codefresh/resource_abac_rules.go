@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var validSetValues = []string{"REFRESH", "SYNC", "TERMINATE_SYNC", "VIEW_POD_LOGS", "APP_ROLLBACK"}
+var validSetValues = []string{"REFRESH", "SYNC", "TERMINATE_SYNC", "VIEW_POD_LOGS", "APP_ROLLBACK", "TRIGGER_PROMOTION", "RETRY_RELEASE", "PROMOTE_TO"}
 
 func resourceGitopsAbacRule() *schema.Resource {
 	return &schema.Resource{
@@ -34,11 +34,14 @@ func resourceGitopsAbacRule() *schema.Resource {
 				Description: `
 The type of resources the ABAC rules applies to. Possible values:
 	* gitopsApplications
+	* promotionFlows
+	* products
+	* environments
 				`,
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"gitopsApplications",
+					"gitopsApplications", "promotionFlows", "products", "environments",
 				}, false),
 			},
 			"teams": {
@@ -67,6 +70,9 @@ Action to be allowed. Possible values:
 	* TERMINATE_SYNC
 	* VIEW_POD_LOGS
 	* APP_ROLLBACK
+	* TRIGGER_PROMOTION
+	* RETRY_RELEASE
+	* PROMOTE_TO
 				`,
 				Type:     schema.TypeSet,
 				Required: true,
