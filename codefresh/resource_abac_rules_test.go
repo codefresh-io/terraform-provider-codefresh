@@ -6,9 +6,8 @@ import (
 	"testing"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	funk "github.com/thoas/go-funk"
 )
 
@@ -39,6 +38,58 @@ func TestAccCodefreshAbacRulesConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attribute.0.value", "VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.0", "*"),
 					resource.TestCheckResourceAttr(resourceName, "tags.1", "production"),
+				),
+			},
+			{
+				Config: testAccCodefreshAbacRulesConfig(
+					"promotionFlows",
+					"",
+					"",
+					"",
+					[]string{"TRIGGER_PROMOTION"},
+					[]string{"staging"},
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshAbacRulesExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entity_type", "promotionFlows"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0", "TRIGGER_PROMOTION"),
+					resource.TestCheckResourceAttr(resourceName, "tags.0", "staging"),
+				),
+			},
+			{
+				Config: testAccCodefreshAbacRulesConfig(
+					"products",
+					"",
+					"",
+					"",
+					[]string{"TRIGGER_PROMOTION", "RETRY_RELEASE"},
+					[]string{"dev", "qa"},
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshAbacRulesExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entity_type", "products"),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "TRIGGER_PROMOTION"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "RETRY_RELEASE"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tags.*", "dev"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tags.*", "qa"),
+				),
+			},
+			{
+				Config: testAccCodefreshAbacRulesConfig(
+					"environments",
+					"",
+					"",
+					"",
+					[]string{"PROMOTE_TO"},
+					[]string{"production"},
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshAbacRulesExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entity_type", "environments"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0", "PROMOTE_TO"),
+					resource.TestCheckResourceAttr(resourceName, "tags.0", "production"),
 				),
 			},
 			{
