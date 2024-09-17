@@ -16,9 +16,9 @@ require (
 	github.com/imdario/mergo v0.3.15
 	github.com/mikefarah/yq/v4 v4.33.3
 	github.com/robfig/cron v1.2.0
-	github.com/sclevine/yj v0.0.0-20210612025309-737bdf40a5d1
 	github.com/stretchr/objx v0.5.0
 	github.com/thoas/go-funk v0.9.3
+	golang.org/x/exp v0.0.0-20240318143956-a85f2c67cd81
 	gopkg.in/op/go-logging.v1 v1.0.0-20160211212156-b2cb9fa56473
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -164,7 +164,6 @@ require (
 	github.com/nunnatsa/ginkgolinter v0.11.0 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/polyfloyd/go-errorlint v1.4.0 // indirect
@@ -225,7 +224,6 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/exp v0.0.0-20240318143956-a85f2c67cd81 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.22.0 // indirect
