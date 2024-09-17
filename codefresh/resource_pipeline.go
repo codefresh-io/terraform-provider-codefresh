@@ -1280,7 +1280,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 // This function is used to extract the spec attributes from the original_yaml_string attribute.
 // Typically, unmarshalling the YAML string is problematic because the order of the attributes is not preserved.
 // Namely, we care a lot about the order of the steps and stages attributes.
-// For this purpose we use yq that preserves the order or attributes when converting to json.
+// For this purpose we use yq that preserves the order of attributes when converting to json.
 func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfclient.Pipeline) error {
 
 	for _, attribute := range []string{"stages", "steps", "hooks"} {
