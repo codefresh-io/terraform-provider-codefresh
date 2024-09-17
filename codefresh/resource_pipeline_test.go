@@ -263,10 +263,16 @@ func TestAccCodefreshPipeline_OriginalYamlString_All(t *testing.T) {
 	resourceName := "codefresh_pipeline.test"
 	originalYamlString := `version: 1.0
 fail_fast: false
+indicators:
+- environment: &my_common_envs
+    - MYSQL_HOST=mysql
+    - MYSQL_USER=user
+    - MYSQL_PASS=password
+    - MYSQL_PORT=3351
 stages:
   - test
 mode: parallel
-hooks: 
+hooks:
   on_finish:
     steps:
       secondmycleanup:
@@ -282,6 +288,7 @@ hooks:
       commands:
        - echo 'Creating an adhoc test environment'
       image: alpine:3.9
+      environment: *my_common_envs
     annotations:
       set:
         - annotations:
@@ -292,23 +299,25 @@ steps:
   zz_firstStep:
     stage: test
     image: alpine
+    environment: *my_common_envs
     commands:
       - echo Hello World First Step
   aa_secondStep:
     stage: test
     image: alpine
     commands:
-      - echo Hello World Second Step`
+    - echo Hello World Second Step
+`
 
 	expectedSpecAttributes := &cfclient.Spec{
 		Steps: &cfclient.Steps{
-			Steps: `{"zz_firstStep":{"stage":"test","image":"alpine","commands":["echo Hello World First Step"]},"aa_secondStep":{"stage":"test","image":"alpine","commands":["echo Hello World Second Step"]}}`,
+			Steps: `{"zz_firstStep":{"stage":"test","image":"alpine","environment":["MYSQL_HOST=mysql","MYSQL_USER=user","MYSQL_PASS=password","MYSQL_PORT=3351"],"commands":["echo Hello World First Step"]},"aa_secondStep":{"stage":"test","image":"alpine","commands":["echo Hello World Second Step"]}}`,
 		},
 		Stages: &cfclient.Stages{
 			Stages: `["test"]`,
 		},
 		Hooks: &cfclient.Hooks{
-			Hooks: `{"on_finish":{"steps":{"secondmycleanup":{"commands":["echo echo cleanup step"],"image":"alpine:3.9"},"firstmynotification":{"commands":["echo Notify slack"],"image":"cloudposse/slack-notifier"}}},"on_elected":{"exec":{"commands":["echo 'Creating an adhoc test environment'"],"image":"alpine:3.9"},"annotations":{"set":[{"annotations":[{"my_annotation_example1":10.45},{"my_string_annotation":"Hello World"}],"entity_type":"build"}]}}}`,
+			Hooks: `{"on_finish":{"steps":{"secondmycleanup":{"commands":["echo echo cleanup step"],"image":"alpine:3.9"},"firstmynotification":{"commands":["echo Notify slack"],"image":"cloudposse/slack-notifier"}}},"on_elected":{"exec":{"commands":["echo 'Creating an adhoc test environment'"],"image":"alpine:3.9","environment":["MYSQL_HOST=mysql","MYSQL_USER=user","MYSQL_PASS=password","MYSQL_PORT=3351"]},"annotations":{"set":[{"annotations":[{"my_annotation_example1":10.45},{"my_string_annotation":"Hello World"}],"entity_type":"build"}]}}}`,
 		},
 	}
 
@@ -327,6 +336,7 @@ steps:
 					resource.TestCheckResourceAttr(resourceName, "original_yaml_string", originalYamlString),
 					testAccCheckCodefreshPipelineOriginalYamlStringAttributePropagation(resourceName, expectedSpecAttributes),
 				),
+				Destroy: false,
 			},
 			{
 				ResourceName:      resourceName,

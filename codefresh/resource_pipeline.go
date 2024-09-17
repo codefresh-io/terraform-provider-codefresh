@@ -1280,17 +1280,17 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 // This function is used to extract the spec attributes from the original_yaml_string attribute.
 // Typically, unmarshalling the YAML string is problematic because the order of the attributes is not preserved.
 // Namely, we care a lot about the order of the steps and stages attributes.
-// Luckily, the yj package introduces a MapSlice type that preserves the order Map items (see utils.go).
+// For this purpose we use yq that preserves the order of attributes when converting to json.
 func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfclient.Pipeline) error {
+
 	for _, attribute := range []string{"stages", "steps", "hooks"} {
-		yamlString, err := datautil.Yq(fmt.Sprintf(".%s", attribute), originalYamlString)
+		attributeJson, err := datautil.Yq(fmt.Sprintf(".%s", attribute), originalYamlString, "json")
 		if err != nil {
 			return fmt.Errorf("error while extracting '%s' from original YAML string: %v", attribute, err)
-		} else if yamlString == "" {
+		} else if attributeJson == "" {
 			continue
 		}
 
-		attributeJson, err := datautil.YamlToJson(yamlString)
 		if err != nil {
 			return fmt.Errorf("error while converting '%s' YAML to JSON: %v", attribute, err)
 		}
@@ -1311,14 +1311,14 @@ func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipe
 		}
 	}
 
-	mode, err := datautil.Yq(".mode", originalYamlString)
+	mode, err := datautil.Yq(".mode", originalYamlString, "yaml")
 	if err != nil {
 		return fmt.Errorf("error while extracting 'mode' from original YAML string: %v", err)
 	} else if mode != "" {
 		pipeline.Spec.Mode = mode
 	}
 
-	ff, err := datautil.Yq(".fail_fast", originalYamlString)
+	ff, err := datautil.Yq(".fail_fast", originalYamlString, "yaml")
 	if err != nil {
 		return fmt.Errorf("error while extracting 'mode' from original YAML string: %v", err)
 	} else if ff != "" {
