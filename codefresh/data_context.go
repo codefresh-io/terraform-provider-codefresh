@@ -36,7 +36,7 @@ func dataSourceContextRead(d *schema.ResourceData, meta interface{}) error {
 	var err error
 
 	if name, nameOk := d.GetOk("name"); nameOk {
-		context, err = client.GetContext(name.(string))
+		context, err = client.GetContext(name.(string), true)
 	} else {
 		return fmt.Errorf("data.codefresh_context - must specify name")
 	}

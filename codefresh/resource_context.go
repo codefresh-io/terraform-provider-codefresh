@@ -28,6 +28,11 @@ var supportedContextType = []string{
 	contextSecretYaml,
 }
 
+var encryptedContextTypes = []string{
+	contextSecret,
+	contextSecretYaml,
+}
+
 func getConflictingContexts(context string) []string {
 	var conflictingTypes []string
 	normalizedContext := schemautil.MustNormalizeFieldName(context)
@@ -56,6 +61,12 @@ func resourceContext() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
+			},
+			"decrypt_spec": {
+				Type:        schema.TypeBool,
+				Default:     true,
+				Optional:    true,
+				Description: "Whether to allow decryption of context spec for encrypted contexts on read. If set to false context content diff will not be calculated against the API. Must be set to false if `forbidDecrypt` feature flag on Codefresh platfrom is enabled",
 			},
 			"spec": {
 				Description: "The context's specs.",
@@ -174,12 +185,18 @@ func resourceContextRead(d *schema.ResourceData, meta interface{}) error {
 
 	contextName := d.Id()
 
+	currentContextType := getContextTypeFromResource(d)
+
+	// Explicitly set decypt flag to true only if context type is encrypted and decrypt_spec is set to true
+	setExplicitDecrypt := contains(encryptedContextTypes, currentContextType) && d.Get("decrypt_spec").(bool)
+
 	if contextName == "" {
 		d.SetId("")
 		return nil
 	}
 
-	context, err := client.GetContext(contextName)
+	context, err := client.GetContext(contextName, setExplicitDecrypt)
+
 	if err != nil {
 		log.Printf("[DEBUG] Error while getting context. Error = %v", contextName)
 		return err
@@ -225,14 +242,22 @@ func resourceContextDelete(d *schema.ResourceData, meta interface{}) error {
 func mapContextToResource(context cfclient.Context, d *schema.ResourceData) error {
 
 	err := d.Set("name", context.Metadata.Name)
+
 	if err != nil {
 		return err
 	}
 
-	err = d.Set("spec", flattenContextSpec(context.Spec))
-	if err != nil {
-		log.Printf("[DEBUG] Failed to flatten Context spec = %v", context.Spec)
-		return err
+	currentContextType := getContextTypeFromResource(d)
+
+	// Read spec from API if context is not encrypted or decrypt_spec is set to true explicitly
+	if d.Get("decrypt_spec").(bool) || !contains(encryptedContextTypes, currentContextType) {
+
+		err = d.Set("spec", flattenContextSpec(context.Spec))
+
+		if err != nil {
+			log.Printf("[DEBUG] Failed to flatten Context spec = %v", context.Spec)
+			return err
+		}
 	}
 
 	return nil
@@ -253,7 +278,6 @@ func flattenContextSpec(spec cfclient.ContextSpec) []interface{} {
 	case contextAzureStorage:
 		m[schemautil.MustNormalizeFieldName(currentContextType)] = storageContext.FlattenAzureStorageContextConfig(spec)
 	default:
-		log.Printf("[DEBUG] Invalid context type = %v", currentContextType)
 		return nil
 	}
 
@@ -318,4 +342,24 @@ func mapResourceToContext(d *schema.ResourceData) *cfclient.Context {
 			Data: normalizedContextData,
 		},
 	}
+}
+
+func getContextTypeFromResource(d *schema.ResourceData) string {
+	if _, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextConfig) + ".0.data"); ok {
+		return contextConfig
+	} else if _, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextSecret) + ".0.data"); ok {
+		return contextSecret
+	} else if _, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextYaml) + ".0.data"); ok {
+		return contextYaml
+	} else if _, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextSecretYaml) + ".0.data"); ok {
+		return contextSecretYaml
+	} else if _, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextGoogleStorage) + ".0.data"); ok {
+		return contextGoogleStorage
+	} else if _, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextS3Storage) + ".0.data"); ok {
+		return contextS3Storage
+	} else if _, ok := d.GetOk("spec.0." + schemautil.MustNormalizeFieldName(contextAzureStorage) + ".0.data"); ok {
+		return contextAzureStorage
+	}
+
+	return ""
 }

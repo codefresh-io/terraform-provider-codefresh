@@ -159,7 +159,7 @@ func testAccCheckCodefreshContextExists(resource string) resource.TestCheckFunc 
 		contextID := rs.Primary.ID
 
 		apiClient := testAccProvider.Meta().(*cfclient.Client)
-		_, err := apiClient.GetContext(contextID)
+		_, err := apiClient.GetContext(contextID, true)
 
 		if err != nil {
 			return fmt.Errorf("error fetching context with ID %s. %s", contextID, err)
@@ -177,7 +177,7 @@ func testAccCheckCodefreshContextDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := apiClient.GetContext(rs.Primary.ID)
+		_, err := apiClient.GetContext(rs.Primary.ID, true)
 
 		if err == nil {
 			return fmt.Errorf("Alert still exists")
@@ -204,7 +204,7 @@ resource "codefresh_context" "test" {
 
   spec {
 	config {
-		data = { 
+		data = {
 			%q = %q
 			%q = %q
 		}
@@ -223,7 +223,7 @@ resource "codefresh_context" "test" {
 
   spec {
 	secret {
-		data = { 
+		data = {
 			%q = %q
 			%q = %q
 		}

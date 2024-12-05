@@ -31,8 +31,13 @@ func (context *Context) GetID() string {
 	return context.Metadata.Name
 }
 
-func (client *Client) GetContext(name string) (*Context, error) {
-	fullPath := fmt.Sprintf("/contexts/%s?decrypt=true", url.PathEscape(name))
+func (client *Client) GetContext(name string, decrypt bool) (*Context, error) {
+	fullPath := fmt.Sprintf("/contexts/%s", url.PathEscape(name))
+
+	if decrypt {
+		fullPath += "?decrypt=true"
+	}
+
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "GET",
