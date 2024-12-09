@@ -31,6 +31,8 @@ var supportedContextType = []string{
 var encryptedContextTypes = []string{
 	contextSecret,
 	contextSecretYaml,
+	contextS3Storage,
+	contextAzureStorage,
 }
 
 func getConflictingContexts(context string) []string {
