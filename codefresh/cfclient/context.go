@@ -70,8 +70,15 @@ func (client *Client) GetContext(name string) (*Context, error) {
 		return nil, err
 	}
 
+	// This is so not to break existing behavior while adding support for forbidDecrypt feature flag
+	// The provider used to always decrypt the contexts, hence we treat all contexts as decrypted unless forbidDecrypt is set
 	isEncryptedType := slices.Contains(encryptedContextTypes, respContext.Spec.Type)
-	respContext.IsEncrypred = isEncryptedType && !forbidDecrypt
+
+	respContext.IsEncrypred = false
+
+	if forbidDecrypt && isEncryptedType {
+		respContext.IsEncrypred = true
+	}
 
 	return &respContext, nil
 }
