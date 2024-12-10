@@ -28,13 +28,6 @@ var supportedContextType = []string{
 	contextSecretYaml,
 }
 
-var encryptedContextTypes = []string{
-	contextSecret,
-	contextSecretYaml,
-	contextS3Storage,
-	contextAzureStorage,
-}
-
 func getConflictingContexts(context string) []string {
 	var conflictingTypes []string
 	normalizedContext := schemautil.MustNormalizeFieldName(context)
