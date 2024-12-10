@@ -4,7 +4,15 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"slices"
 )
+
+var encryptedContextTypes = []string{
+	"secret",
+	"secret-yaml",
+	"storage.s3",
+	"storage.azuref",
+}
 
 type ContextErrorResponse struct {
 	Status  int    `json:"status,omitempty"`
@@ -17,9 +25,10 @@ type ContextMetadata struct {
 }
 
 type Context struct {
-	Metadata ContextMetadata `json:"metadata,omitempty"`
-	Spec     ContextSpec     `json:"spec,omitempty"`
-	Version  string          `json:"version,omitempty"`
+	Metadata    ContextMetadata `json:"metadata,omitempty"`
+	Spec        ContextSpec     `json:"spec,omitempty"`
+	Version     string          `json:"version,omitempty"`
+	IsEncrypred bool            `json:"isEncrypted,omitempty"`
 }
 
 type ContextSpec struct {
@@ -31,10 +40,16 @@ func (context *Context) GetID() string {
 	return context.Metadata.Name
 }
 
-func (client *Client) GetContext(name string, decrypt bool) (*Context, error) {
+func (client *Client) GetContext(name string) (*Context, error) {
 	fullPath := fmt.Sprintf("/contexts/%s", url.PathEscape(name))
 
-	if decrypt {
+	forbidDecrypt, err := client.isFeatureFlagEnabled("forbidDecrypt")
+
+	if err != nil {
+		forbidDecrypt = false
+	}
+
+	if !forbidDecrypt {
 		fullPath += "?decrypt=true"
 	}
 
@@ -54,8 +69,10 @@ func (client *Client) GetContext(name string, decrypt bool) (*Context, error) {
 		return nil, err
 	}
 
-	return &respContext, nil
+	isEncryptedType := slices.Contains(encryptedContextTypes, respContext.Spec.Type)
+	respContext.IsEncrypred = isEncryptedType && !forbidDecrypt
 
+	return &respContext, nil
 }
 
 func (client *Client) CreateContext(context *Context) (*Context, error) {

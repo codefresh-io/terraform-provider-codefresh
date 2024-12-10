@@ -129,7 +129,7 @@ func TestAccCodefreshContextSecretYaml(t *testing.T) {
 		CheckDestroy: testAccCheckCodefreshContextDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshContextSecretYaml(name, "rootKey", "plainKey", "plainValue", "listKey", "listValue1", "listValue2", true),
+				Config: testAccCodefreshContextSecretYaml(name, "rootKey", "plainKey", "plainValue", "listKey", "listValue1", "listValue2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshContextExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -159,7 +159,7 @@ func testAccCheckCodefreshContextExists(resource string) resource.TestCheckFunc 
 		contextID := rs.Primary.ID
 
 		apiClient := testAccProvider.Meta().(*cfclient.Client)
-		_, err := apiClient.GetContext(contextID, false)
+		_, err := apiClient.GetContext(contextID)
 
 		if err != nil {
 			return fmt.Errorf("error fetching context with ID %s. %s", contextID, err)
@@ -177,7 +177,7 @@ func testAccCheckCodefreshContextDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := apiClient.GetContext(rs.Primary.ID, false)
+		_, err := apiClient.GetContext(rs.Primary.ID)
 
 		if err == nil {
 			return fmt.Errorf("Alert still exists")
@@ -249,14 +249,12 @@ resource "codefresh_context" "test" {
 `, rName, rootKey, plainKey, plainValue, listKey, listValue1, listValue2)
 }
 
-func testAccCodefreshContextSecretYaml(rName, rootKey, plainKey, plainValue, listKey, listValue1, listValue2 string, decryptSpec bool) string {
+func testAccCodefreshContextSecretYaml(rName, rootKey, plainKey, plainValue, listKey, listValue1, listValue2 string) string {
 
 	return fmt.Sprintf(`
 resource "codefresh_context" "test" {
 
   name = "%s"
-
-  decrypt_spec = %v
 
   spec {
 	secretyaml {
@@ -264,5 +262,5 @@ resource "codefresh_context" "test" {
 	}
   }
 }
-`, rName, decryptSpec, rootKey, plainKey, plainValue, listKey, listValue1, listValue2)
+`, rName, rootKey, plainKey, plainValue, listKey, listValue1, listValue2)
 }
