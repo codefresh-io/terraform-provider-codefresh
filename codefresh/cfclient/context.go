@@ -4,7 +4,16 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+
+	"golang.org/x/exp/slices"
 )
+
+var encryptedContextTypes = []string{
+	"secret",
+	"secret-yaml",
+	"storage.s3",
+	"storage.azuref",
+}
 
 type ContextErrorResponse struct {
 	Status  int    `json:"status,omitempty"`
@@ -17,9 +26,10 @@ type ContextMetadata struct {
 }
 
 type Context struct {
-	Metadata ContextMetadata `json:"metadata,omitempty"`
-	Spec     ContextSpec     `json:"spec,omitempty"`
-	Version  string          `json:"version,omitempty"`
+	Metadata    ContextMetadata `json:"metadata,omitempty"`
+	Spec        ContextSpec     `json:"spec,omitempty"`
+	Version     string          `json:"version,omitempty"`
+	IsEncrypred bool            `json:"isEncrypted,omitempty"`
 }
 
 type ContextSpec struct {
@@ -32,7 +42,18 @@ func (context *Context) GetID() string {
 }
 
 func (client *Client) GetContext(name string) (*Context, error) {
-	fullPath := fmt.Sprintf("/contexts/%s?decrypt=true", url.PathEscape(name))
+	fullPath := fmt.Sprintf("/contexts/%s", url.PathEscape(name))
+
+	forbidDecrypt, err := client.isFeatureFlagEnabled("forbidDecrypt")
+
+	if err != nil {
+		forbidDecrypt = false
+	}
+
+	if !forbidDecrypt {
+		fullPath += "?decrypt=true"
+	}
+
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "GET",
@@ -49,8 +70,17 @@ func (client *Client) GetContext(name string) (*Context, error) {
 		return nil, err
 	}
 
-	return &respContext, nil
+	// This is so not to break existing behavior while adding support for forbidDecrypt feature flag
+	// The provider used to always decrypt the contexts, hence we treat all contexts as decrypted unless forbidDecrypt is set
+	isEncryptedType := slices.Contains(encryptedContextTypes, respContext.Spec.Type)
 
+	respContext.IsEncrypred = false
+
+	if forbidDecrypt && isEncryptedType {
+		respContext.IsEncrypred = true
+	}
+
+	return &respContext, nil
 }
 
 func (client *Client) CreateContext(context *Context) (*Context, error) {

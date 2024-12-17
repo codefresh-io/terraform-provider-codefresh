@@ -11,11 +11,12 @@ import (
 
 // Client token, host, htpp.Client
 type Client struct {
-	Token       string
-	TokenHeader string
-	Host        string
-	HostV2      string
-	Client      *http.Client
+	Token        string
+	TokenHeader  string
+	Host         string
+	HostV2       string
+	featureFlags map[string]bool
+	Client       *http.Client
 }
 
 // RequestOptions  path, method, etc
@@ -35,11 +36,12 @@ func NewClient(hostname string, hostnameV2 string, token string, tokenHeader str
 		tokenHeader = "Authorization"
 	}
 	return &Client{
-		Host:        hostname,
-		HostV2:      hostnameV2,
-		Token:       token,
-		TokenHeader: tokenHeader,
-		Client:      &http.Client{},
+		Host:         hostname,
+		HostV2:       hostnameV2,
+		Token:        token,
+		TokenHeader:  tokenHeader,
+		Client:       &http.Client{},
+		featureFlags: map[string]bool{},
 	}
 
 }
@@ -110,6 +112,25 @@ func (client *Client) RequestApiXAccessToken(opt *RequestOptions) ([]byte, error
 		return nil, fmt.Errorf("%v, %s", resp.Status, string(body))
 	}
 	return body, nil
+}
+
+func (client *Client) isFeatureFlagEnabled(flagName string) (bool, error) {
+
+	if len(client.featureFlags) == 0 {
+		currAcc, err := client.GetCurrentAccount()
+
+		if err != nil {
+			return false, err
+		}
+
+		client.featureFlags = currAcc.FeatureFlags
+	}
+
+	if val, ok := client.featureFlags[flagName]; ok {
+		return val, nil
+	}
+
+	return false, nil
 }
 
 // ToQS add extra parameters to path

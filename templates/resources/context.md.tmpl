@@ -88,10 +88,87 @@ YAML
 ```hcl
 resource "codefresh_context" "test-secret-yaml" {
     name = "my-shared-secret-yaml"
+    decrypt_spec = false
     spec {
         # NOTE: The `-` from secret-yaml is stripped because the character is not allowed in Field name
         # File passed MUST be a valid YAML
         secretyaml = file("test.yaml")
+    }
+}
+```
+
+#### AWS S3 storage context
+
+```hcl
+resource "codefresh_context" "test-s3" {
+    name = "my-s3-context"
+
+    decrypt_spec = false
+
+    spec {
+        storages3 {
+            data {
+                auth {
+                    type = "basic"
+                    json_config = {accessKeyId = "key", secretAccessKey = "secret"}
+                }
+            }
+        }
+    }
+}
+```
+
+#### Azure file storage context
+
+```hcl
+resource "codefresh_context" "test-azure" {
+    name = "my-azure-file-context"
+
+    decrypt_spec = false
+
+    spec {
+        storageazuref {
+            data {
+                auth {
+                    type = "basic"
+                    account_name = "account"
+                    account_key = "key"
+                }
+            }
+        }
+    }
+}
+```
+
+#### Google cloud storage context
+
+```hcl
+resource "codefresh_context" "test-google-cloud-storage" {
+    name = "my-gcs-context"
+
+    spec {
+        storagegc {
+            data {
+                auth {
+                    type = "basic"
+                    json_config  = jsondecode(<<EOF
+                    {
+                    "type": "service_account",
+                    "project_id": "PROJECT_ID",
+                    "private_key_id": "KEY_ID",
+                    "private_key": "-----BEGIN PRIVATE KEY-----\nPRIVATE_KEY\n-----END PRIVATE KEY-----\n",
+                    "client_email": "SERVICE_ACCOUNT_EMAIL",
+                    "client_id": "CLIENT_ID",
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://accounts.google.com/o/oauth2/token",
+                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/SERVICE_ACCOUNT_EMAIL"
+                    }
+                    EOF
+                    )
+                }
+            }
+        }
     }
 }
 ```
