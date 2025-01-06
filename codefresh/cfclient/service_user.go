@@ -3,21 +3,20 @@ package cfclient
 import (
 	"fmt"
 	"golang.org/x/exp/slices"
-
 )
 
 type ServiceUser struct {
-	ID       	   string   `json:"_id,omitempty"`
-	Name 	 	   string   `json:"userName,omitempty"`
-	Teams  	       []Team   `json:"teams,omitempty"`
-	Roles 		   []string `json:"roles,omitempty"`
+	ID    string   `json:"_id,omitempty"`
+	Name  string   `json:"userName,omitempty"`
+	Teams []Team   `json:"teams,omitempty"`
+	Roles []string `json:"roles,omitempty"`
 }
 
 type ServiceUserCreateUpdate struct {
-	ID       	    string   `json:"_id,omitempty"`
-	Name 	 	    string   `json:"userName,omitempty"`
-	TeamIDs		    []string `json:"teamIds,omitempty"`
-	AssignAdminRole bool    `json:"assignAdminRole,omitempty"`
+	ID              string   `json:"_id,omitempty"`
+	Name            string   `json:"userName,omitempty"`
+	TeamIDs         []string `json:"teamIds,omitempty"`
+	AssignAdminRole bool     `json:"assignAdminRole,omitempty"`
 }
 
 // GetID implement CodefreshObject interface
@@ -104,7 +103,7 @@ func (client *Client) CreateServiceUser(serviceUserCreateUpdate *ServiceUserCrea
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "POST",
-		Body: body,
+		Body:   body,
 	}
 
 	resp, err := client.RequestAPI(&opts)
@@ -135,7 +134,7 @@ func (client *Client) UpdateServiceUser(serviceUserCreateUpdate *ServiceUserCrea
 	opts := RequestOptions{
 		Path:   fullPath,
 		Method: "PATCH",
-		Body: body,
+		Body:   body,
 	}
 
 	resp, err := client.RequestAPI(&opts)

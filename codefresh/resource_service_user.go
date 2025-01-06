@@ -26,9 +26,9 @@ func resourceServiceAccount() *schema.Resource {
 			},
 			"assign_admin_role": {
 				Description: "Whether or not to assign account admin role to the service account",
-				Type: 	  schema.TypeBool,
-				Optional: true,
-				Default: false,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
 			},
 			"assigned_teams": {
 				Description: "A list of team IDs the service account is be assigned to",
@@ -86,7 +86,6 @@ func resourceServiceAccountUpdate(d *schema.ResourceData, meta interface{}) erro
 	client := meta.(*cfclient.Client)
 
 	updateServiceAccount := *mapResourceToServiceAccount(d)
-
 
 	_, err := client.UpdateServiceUser(&updateServiceAccount)
 
@@ -152,9 +151,9 @@ func flattenServiceAccountTeams(users []cfclient.TeamUser) []string {
 func mapResourceToServiceAccount(d *schema.ResourceData) *cfclient.ServiceUserCreateUpdate {
 
 	return &cfclient.ServiceUserCreateUpdate{
-		ID:             d.Id(),
-		Name:           d.Get("name").(string),
-		TeamIDs:        datautil.ConvertStringArr(d.Get("assigned_teams").(*schema.Set).List()),
+		ID:              d.Id(),
+		Name:            d.Get("name").(string),
+		TeamIDs:         datautil.ConvertStringArr(d.Get("assigned_teams").(*schema.Set).List()),
 		AssignAdminRole: d.Get("assign_admin_role").(bool),
 	}
 }
