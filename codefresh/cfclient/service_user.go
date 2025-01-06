@@ -5,11 +5,15 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+type ServiceUserTeam struct {
+	ID string `json:"_id,omitempty"`
+}
+
 type ServiceUser struct {
-	ID    string   `json:"_id,omitempty"`
-	Name  string   `json:"userName,omitempty"`
-	Teams []Team   `json:"teams,omitempty"`
-	Roles []string `json:"roles,omitempty"`
+	ID    string            `json:"_id,omitempty"`
+	Name  string            `json:"userName,omitempty"`
+	Teams []ServiceUserTeam `json:"teams,omitempty"`
+	Roles []string          `json:"roles,omitempty"`
 }
 
 type ServiceUserCreateUpdate struct {
