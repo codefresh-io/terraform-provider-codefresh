@@ -140,14 +140,6 @@ func mapServiceAccountToResource(serviceAccount *cfclient.ServiceUser, d *schema
 	return nil
 }
 
-func flattenServiceAccountTeams(users []cfclient.TeamUser) []string {
-	res := []string{}
-	for _, user := range users {
-		res = append(res, user.ID)
-	}
-	return res
-}
-
 func mapResourceToServiceAccount(d *schema.ResourceData) *cfclient.ServiceUserCreateUpdate {
 
 	return &cfclient.ServiceUserCreateUpdate{
