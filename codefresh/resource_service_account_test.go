@@ -13,11 +13,11 @@ import (
 
 var serviceUserNamePrefix = "TerraformAccTest_"
 
-func TestAccCodefreshServiceUser_basic(t *testing.T) {
+func TestAccCodefreshServiceUser_WithTeamAssignment(t *testing.T) {
 	name := serviceUserNamePrefix + acctest.RandString(10)
 
-	resourceName := "codefresh_service_account.test"
-	teamResourceName := "codefresh_team.test"
+	resourceName := "codefresh_service_account.test_serviceaccount"
+	teamResourceName := "codefresh_team.test_serviceaccount"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,11 +25,12 @@ func TestAccCodefreshServiceUser_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCodefreshServiceUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshServiceUserTeamToken(name, name),
+				Config: testAccCodefreshServiceUserTeam(name, name, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshServiceUserExists(resourceName),
 					testAccCheckCodefreshServiceUserAssignedToTeam(resourceName, teamResourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "assign_admin_role", "false"),
 				),
 			},
 			{
@@ -137,52 +138,17 @@ func testAccCheckCodefreshServiceUserDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCodefreshServiceUserTeamToken(serviceUserName string, teamName string) string {
+func testAccCodefreshServiceUserTeam(serviceUserName string, teamName string, assignAdminRole bool) string {
 	return fmt.Sprintf(`
-resource "codefresh_team" "test" {
+resource "codefresh_team" "test_serviceaccount" {
   name = "%s"
 }
 
-resource "codefresh_service_account" "test" {
+resource "codefresh_service_account" "test_serviceaccount" {
   name = "%s"
-  assigned_teams = [codefresh_team.test.id]
-}
-`, serviceUserName, teamName)
-}
+  assigned_teams = [codefresh_team.test_serviceaccount.id]
+  assign_admin_role = %t
 
-// CONFIGS
-func testAccCodefreshServiceUserBasicConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "codefresh_service_account" "test" {
-  name = "%s"
 }
-`, rName)
-}
-
-func testAccCodefreshServiceUserBasicConfigTags(rName, tag1, tag2 string) string {
-	return fmt.Sprintf(`
-resource "codefresh_service_user" "test" {
-  name = "%s"
-  tags = [
-	%q,
-    %q,
-  ]
-}
-`, rName, tag1, tag2)
-}
-
-func testAccCodefreshServiceUserBasicConfigVariables(rName, var1Name, var1Value, var2Name, var2Value, encrytedVar1Name, encrytedVar1Value string) string {
-	return fmt.Sprintf(`
-resource "codefresh_serviceUser" "test" {
-  name = "%s"
-  variables = {
-	%q = %q
-	%q = %q
-  }
-
-  encrypted_variables = {
-	%q = %q
-  }
-}
-`, rName, var1Name, var1Value, var2Name, var2Value, encrytedVar1Name, encrytedVar1Value)
+`, serviceUserName, teamName, assignAdminRole)
 }
