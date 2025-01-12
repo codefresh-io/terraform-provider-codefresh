@@ -53,6 +53,7 @@ func Provider() *schema.Provider {
 			"codefresh_account_idp":             dataSourceAccountIdp(),
 			"codefresh_project":                 dataSourceProject(),
 			"codefresh_account_gitops_settings": dataSourceAccountGitopsSettings(),
+			"codefresh_service_account":         dataSourceServiceAccount(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"codefresh_account":                  resourceAccount(),
@@ -73,6 +74,7 @@ func Provider() *schema.Provider {
 			"codefresh_idp":                      resourceIdp(),
 			"codefresh_account_idp":              resourceAccountIdp(),
 			"codefresh_account_gitops_settings":  resourceAccountGitopsSettings(),
+			"codefresh_service_account":          resourceServiceAccount(),
 		},
 		ConfigureFunc: configureProvider,
 	}

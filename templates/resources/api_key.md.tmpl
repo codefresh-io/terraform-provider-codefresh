@@ -9,12 +9,49 @@ description: |-
 
 {{ .Description | trimspace }}
 
-{{ .ProviderName }} itself uses an API key, passed as provider's attribute, but it's possible to use that API Key to generate a new one. 
-This resource requires Codefresh system admin permissions, hence is relevant for on-prem deployments of Codefresh only.
-
+{{ .ProviderName }} itself uses an API key, passed as provider's attribute, but it's possible to use that API Key to generate a new one.
 
 ## Example usage
 
+### With service accounts
+
+```hcl
+provider "codefresh" {
+  api_url = "my API URL"
+  token = "my init API token"
+}
+
+resource "codefresh_service_account" "example" {
+    name = "example-service-account"
+}
+
+resource "codefresh_api_key" "example" {
+  service_account_id = codefresh_service_account.example.id
+  name = "example-token"
+  scopes = [
+    "project"
+  ]
+}
+
+provider "codefresh" {
+  alias = "project_creator_sa"
+  api_url = "my API URL"
+  token = codefresh_api_key.example.token
+}
+
+resource "codefresh_project" "example" {
+
+  provider = codefresh.project_creator_sa
+
+  name = "myproject"
+
+  tags = [
+    "team_1"
+  ]
+}
+```
+
+### With user and account combination (on-premise only)
 ```hcl
 provider "codefresh" {
   api_url = "my API URL"
