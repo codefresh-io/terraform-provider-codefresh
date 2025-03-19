@@ -90,7 +90,7 @@ func TestAccCodefreshPipeline_PremitRestartFromFailedSteps(t *testing.T) {
 		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshPipelineBasicConfigPermitRestartFromFailedSteps(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", true),
+				Config: testAccCodefreshPipelineBasicConfigPermitRestartFromFailedSteps(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", ptrBool(true)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.permit_restart_from_failed_steps", "true"),
@@ -102,7 +102,7 @@ func TestAccCodefreshPipeline_PremitRestartFromFailedSteps(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCodefreshPipelineBasicConfigPermitRestartFromFailedSteps(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", false),
+				Config: testAccCodefreshPipelineBasicConfigPermitRestartFromFailedSteps(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", ptrBool(false)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.permit_restart_from_failed_steps", "false"),
@@ -1070,7 +1070,7 @@ resource "codefresh_pipeline" "test" {
 `, rName, repo, path, revision, context, concurrency, concurrencyBranch, concurrencyTrigger)
 }
 
-func testAccCodefreshPipelineBasicConfigPermitRestartFromFailedSteps(rName string, repo string, path string, revision string, context string, permitRestartFromFailedSteps bool) string {
+func testAccCodefreshPipelineBasicConfigPermitRestartFromFailedSteps(rName string, repo string, path string, revision string, context string, permitRestartFromFailedSteps *bool) string {
 	return fmt.Sprintf(`
 resource "codefresh_pipeline" "test" {
 
@@ -1094,7 +1094,7 @@ resource "codefresh_pipeline" "test" {
 
   }
 }
-`, rName, repo, path, revision, context, permitRestartFromFailedSteps)
+`, rName, repo, path, revision, context, *permitRestartFromFailedSteps)
 }
 
 func testAccCodefreshPipelineBasicConfigTriggers(

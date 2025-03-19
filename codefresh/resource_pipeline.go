@@ -17,6 +17,10 @@ import (
 
 var terminationPolicyOnCreateBranchAttributes = []string{"branchName", "ignoreTrigger", "ignoreBranch"}
 
+func ptrBool(b bool) *bool {
+	return &b
+}
+
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		Description: "The central component of the Codefresh Platform. Pipelines are workflows that contain individual steps. Each step is responsible for a specific action in the process.",
@@ -1090,7 +1094,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 			Concurrency:                  d.Get("spec.0.concurrency").(int),
 			BranchConcurrency:            d.Get("spec.0.branch_concurrency").(int),
 			TriggerConcurrency:           d.Get("spec.0.trigger_concurrency").(int),
-			PermitRestartFromFailedSteps: d.Get("spec.0.permit_restart_from_failed_steps").(bool),
+			PermitRestartFromFailedSteps: ptrBool(d.Get("spec.0.permit_restart_from_failed_steps").(bool)),
 		},
 	}
 

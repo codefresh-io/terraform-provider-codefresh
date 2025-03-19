@@ -68,7 +68,6 @@ func mapDataCurrentAccountUserToResource(currentAccount *cfclient.CurrentAccount
 
 	isFound := false
 
-
 	for _, user := range currentAccount.Users {
 		if (userAttributeName == "name" && user.UserName == userAttributeValue) || (userAttributeName == "email" && user.Email == userAttributeValue) {
 			isFound = true
