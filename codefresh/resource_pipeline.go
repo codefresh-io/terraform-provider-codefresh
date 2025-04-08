@@ -17,12 +17,6 @@ import (
 
 var terminationPolicyOnCreateBranchAttributes = []string{"branchName", "ignoreTrigger", "ignoreBranch"}
 
-const (
-	PermitRestartPermit             = "permit"
-	PermitRestartForbid             = "forbid"
-	PermitRestartUseAccountSettings = "use-account-settings"
-)
-
 func ptrBool(b bool) *bool {
 	return &b
 }
@@ -112,11 +106,20 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 							Default:     0,
 						},
 						"permit_restart_from_failed_steps": {
-							Description:  "Defines whether it is permitted to restart builds in this pipeline from failed step. Allowed values: 'permit'|'forbid'|'use-account-settings' (default: `use-account-settings`).",
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{PermitRestartPermit, PermitRestartForbid, PermitRestartUseAccountSettings}, false),
-							Default:      PermitRestartUseAccountSettings,
+							Description: "Defines whether it is permitted to restart builds in this pipeline from failed step (default: `true`).",
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// If the user set the pipeline to use account settings, ignore the diff
+								return d.Get("spec.0.permit_restart_from_failed_steps_use_account_settings").(bool)
+							},
+						},
+						"permit_restart_from_failed_steps_use_account_settings": {
+							Description: "Defines whether `permit_restart_from_failed_steps` should be set to “Use account settings” (default: `false`). If set, `permit_restart_from_failed_steps` will be ignored.",
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
 						},
 						"spec_template": {
 							Description: "The pipeline's spec template.",
@@ -928,11 +931,14 @@ func flattenSpec(spec cfclient.Spec) []map[string]interface{} {
 	m["trigger_concurrency"] = spec.TriggerConcurrency
 
 	if spec.PermitRestartFromFailedSteps == nil {
-		m["permit_restart_from_failed_steps"] = PermitRestartUseAccountSettings
+		m["permit_restart_from_failed_steps"] = true // default value
+		m["permit_restart_from_failed_steps_use_account_settings"] = true
 	} else if *spec.PermitRestartFromFailedSteps {
-		m["permit_restart_from_failed_steps"] = PermitRestartPermit
+		m["permit_restart_from_failed_steps"] = true
+		m["permit_restart_from_failed_steps_use_account_settings"] = false
 	} else {
-		m["permit_restart_from_failed_steps"] = PermitRestartForbid
+		m["permit_restart_from_failed_steps"] = false
+		m["permit_restart_from_failed_steps_use_account_settings"] = false
 	}
 
 	m["priority"] = spec.Priority
@@ -1111,15 +1117,23 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 		},
 	}
 
-	if hasPermitRestartChanged := d.HasChange("spec.0.permit_restart_from_failed_steps"); hasPermitRestartChanged {
-		permitRestart := d.Get("spec.0.permit_restart_from_failed_steps").(string)
-		switch permitRestart {
-		case PermitRestartPermit:
-			pipeline.Spec.PermitRestartFromFailedSteps = ptrBool(true)
-		case PermitRestartForbid:
-			pipeline.Spec.PermitRestartFromFailedSteps = ptrBool(false)
-		default:
+	hasPermitRestartChanged := d.HasChange("spec.0.permit_restart_from_failed_steps")
+	hasPermitRestartUseAccountChanged := d.HasChange("spec.0.permit_restart_from_failed_steps_use_account_settings")
+	if hasPermitRestartChanged || hasPermitRestartUseAccountChanged {
+		shouldPermitRestart := d.Get("spec.0.permit_restart_from_failed_steps").(bool)
+		shouldUseAccountSettings := d.Get("spec.0.permit_restart_from_failed_steps_use_account_settings").(bool)
+		switch shouldUseAccountSettings {
+		case true:
 			pipeline.Spec.PermitRestartFromFailedSteps = nil
+		default:
+			switch shouldPermitRestart {
+			case true:
+				pipeline.Spec.PermitRestartFromFailedSteps = ptrBool(true)
+			case false:
+				pipeline.Spec.PermitRestartFromFailedSteps = ptrBool(false)
+			default:
+				pipeline.Spec.PermitRestartFromFailedSteps = nil
+			}
 		}
 	}
 
