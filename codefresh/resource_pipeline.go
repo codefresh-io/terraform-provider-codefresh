@@ -1117,23 +1117,19 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 		},
 	}
 
-	hasPermitRestartChanged := d.HasChange("spec.0.permit_restart_from_failed_steps")
-	hasPermitRestartUseAccountChanged := d.HasChange("spec.0.permit_restart_from_failed_steps_use_account_settings")
-	if hasPermitRestartChanged || hasPermitRestartUseAccountChanged {
-		shouldPermitRestart := d.Get("spec.0.permit_restart_from_failed_steps").(bool)
-		shouldUseAccountSettings := d.Get("spec.0.permit_restart_from_failed_steps_use_account_settings").(bool)
-		switch shouldUseAccountSettings {
+	shouldPermitRestart := d.Get("spec.0.permit_restart_from_failed_steps").(bool)
+	shouldUseAccountSettings := d.Get("spec.0.permit_restart_from_failed_steps_use_account_settings").(bool)
+	switch shouldUseAccountSettings {
+	case true:
+		pipeline.Spec.PermitRestartFromFailedSteps = nil
+	default:
+		switch shouldPermitRestart {
 		case true:
-			pipeline.Spec.PermitRestartFromFailedSteps = nil
+			pipeline.Spec.PermitRestartFromFailedSteps = ptrBool(true)
+		case false:
+			pipeline.Spec.PermitRestartFromFailedSteps = ptrBool(false)
 		default:
-			switch shouldPermitRestart {
-			case true:
-				pipeline.Spec.PermitRestartFromFailedSteps = ptrBool(true)
-			case false:
-				pipeline.Spec.PermitRestartFromFailedSteps = ptrBool(false)
-			default:
-				pipeline.Spec.PermitRestartFromFailedSteps = nil
-			}
+			pipeline.Spec.PermitRestartFromFailedSteps = nil
 		}
 	}
 
