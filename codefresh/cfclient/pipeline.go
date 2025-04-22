@@ -133,7 +133,7 @@ type Spec struct {
 	RequiredAvailableStorage     string                   `json:"requiredAvailableStorage,omitempty"`
 	Hooks                        *Hooks                   `json:"hooks,omitempty"`
 	Options                      map[string]bool          `json:"options,omitempty"`
-	PermitRestartFromFailedSteps bool                     `json:"permitRestartFromFailedSteps,omitempty"`
+	PermitRestartFromFailedSteps *bool                    `json:"permitRestartFromFailedSteps,omitempty"`
 	ExternalResources            []ExternalResource       `json:"externalResources,omitempty"`
 }
 

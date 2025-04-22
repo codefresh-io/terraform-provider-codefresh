@@ -17,6 +17,10 @@ import (
 
 var terminationPolicyOnCreateBranchAttributes = []string{"branchName", "ignoreTrigger", "ignoreBranch"}
 
+func ptrBool(b bool) *bool {
+	return &b
+}
+
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		Description: "The central component of the Codefresh Platform. Pipelines are workflows that contain individual steps. Each step is responsible for a specific action in the process.",
@@ -102,10 +106,20 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 							Default:     0,
 						},
 						"permit_restart_from_failed_steps": {
-							Description: "Defines whether it is permitted to restart builds in this pipeline from failed step. Defaults to true",
+							Description: "Defines whether it is permitted to restart builds in this pipeline from failed step (default: `true`).",
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// If the user set the pipeline to use account settings, ignore the diff
+								return d.Get("spec.0.permit_restart_from_failed_steps_use_account_settings").(bool)
+							},
+						},
+						"permit_restart_from_failed_steps_use_account_settings": {
+							Description: "Defines whether `permit_restart_from_failed_steps` should be set to “Use account settings” (default: `false`). If set, `permit_restart_from_failed_steps` will be ignored.",
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
 						},
 						"spec_template": {
 							Description: "The pipeline's spec template.",
@@ -915,7 +929,17 @@ func flattenSpec(spec cfclient.Spec) []map[string]interface{} {
 	m["concurrency"] = spec.Concurrency
 	m["branch_concurrency"] = spec.BranchConcurrency
 	m["trigger_concurrency"] = spec.TriggerConcurrency
-	m["permit_restart_from_failed_steps"] = spec.PermitRestartFromFailedSteps
+
+	if spec.PermitRestartFromFailedSteps == nil {
+		m["permit_restart_from_failed_steps"] = true // default value
+		m["permit_restart_from_failed_steps_use_account_settings"] = true
+	} else if *spec.PermitRestartFromFailedSteps {
+		m["permit_restart_from_failed_steps"] = true
+		m["permit_restart_from_failed_steps_use_account_settings"] = false
+	} else {
+		m["permit_restart_from_failed_steps"] = false
+		m["permit_restart_from_failed_steps_use_account_settings"] = false
+	}
 
 	m["priority"] = spec.Priority
 
@@ -1084,14 +1108,29 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 			OriginalYamlString: originalYamlString,
 		},
 		Spec: cfclient.Spec{
-			PackId:                       d.Get("spec.0.pack_id").(string),
-			RequiredAvailableStorage:     d.Get("spec.0.required_available_storage").(string),
-			Priority:                     d.Get("spec.0.priority").(int),
-			Concurrency:                  d.Get("spec.0.concurrency").(int),
-			BranchConcurrency:            d.Get("spec.0.branch_concurrency").(int),
-			TriggerConcurrency:           d.Get("spec.0.trigger_concurrency").(int),
-			PermitRestartFromFailedSteps: d.Get("spec.0.permit_restart_from_failed_steps").(bool),
+			PackId:                   d.Get("spec.0.pack_id").(string),
+			RequiredAvailableStorage: d.Get("spec.0.required_available_storage").(string),
+			Priority:                 d.Get("spec.0.priority").(int),
+			Concurrency:              d.Get("spec.0.concurrency").(int),
+			BranchConcurrency:        d.Get("spec.0.branch_concurrency").(int),
+			TriggerConcurrency:       d.Get("spec.0.trigger_concurrency").(int),
 		},
+	}
+
+	shouldPermitRestart := d.Get("spec.0.permit_restart_from_failed_steps").(bool)
+	shouldUseAccountSettings := d.Get("spec.0.permit_restart_from_failed_steps_use_account_settings").(bool)
+	switch shouldUseAccountSettings {
+	case true:
+		pipeline.Spec.PermitRestartFromFailedSteps = nil
+	default:
+		switch shouldPermitRestart {
+		case true:
+			pipeline.Spec.PermitRestartFromFailedSteps = ptrBool(true)
+		case false:
+			pipeline.Spec.PermitRestartFromFailedSteps = ptrBool(false)
+		default:
+			pipeline.Spec.PermitRestartFromFailedSteps = nil
+		}
 	}
 
 	if _, ok := d.GetOk("spec.0.spec_template"); ok {
