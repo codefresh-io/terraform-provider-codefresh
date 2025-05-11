@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 var encryptedContextTypes = []string{
