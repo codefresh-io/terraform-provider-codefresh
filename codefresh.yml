@@ -22,7 +22,7 @@ steps:
   go_test:
     title: "Run tests"
     stage: test
-    image: golang:1.23-alpine3.21
+    image: golang:1.24.3-alpine3.21
     environment:
       - TF_ACC="test"
       - CGO_ENABLED=0
