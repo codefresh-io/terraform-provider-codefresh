@@ -15,10 +15,10 @@ const (
 
 // Yq gets a value from a YAML string using yq
 func Yq(yamlString string, expression string, outputformat string) (string, error) {
-	yqEncoder := yqlib.NewYamlEncoder(0, false, yqlib.NewDefaultYamlPreferences())
+	yqEncoder := yqlib.NewYamlEncoder(yqlib.YamlPreferences{Indent: 0, ColorsEnabled: false})
 
 	if outputformat == YQ_OUTPUT_FORMAT_JSON {
-		yqEncoder = yqlib.NewJSONEncoder(0, false, false)
+		yqEncoder = yqlib.NewJSONEncoder(yqlib.JsonPreferences{Indent: 0, ColorsEnabled: false, UnwrapScalar: false})
 	}
 	yqDecoder := yqlib.NewYamlDecoder(yqlib.NewDefaultYamlPreferences())
 	yqEvaluator := yqlib.NewStringEvaluator()
