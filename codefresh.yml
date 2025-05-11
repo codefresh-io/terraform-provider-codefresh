@@ -15,7 +15,7 @@ steps:
   go_fmt:
     title: "Formatting"
     stage: test
-    image: goreleaser/goreleaser:v1.17.0
+    image: golang:1.24.3-alpine3.21
     commands:
       - go fmt
 
