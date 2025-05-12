@@ -2,12 +2,13 @@
 page_title: "codefresh_idp_accounts Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  This resource adds the list of provided account IDs to the IDP.Because of the current Codefresh API limitation it's impossible to remove account from IDP, thus deletion is not supported.
+  This resource adds the list of provided account IDs to the IDP.
+  Because of the current Codefresh API limitation it's impossible to remove account from IDP, thus deletion is not supported.
 ---
 
 # codefresh_idp_accounts (Resource)
 
-This resource adds the list of provided account IDs to the IDP.  
+This resource adds the list of provided account IDs to the IDP.
 Because of the current Codefresh API limitation it's impossible to remove account from IDP, thus deletion is not supported.
 
 ## Example usage
