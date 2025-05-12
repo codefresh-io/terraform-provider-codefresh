@@ -30,10 +30,10 @@ func resourceAccountIdp() *schema.Resource {
 				attributesForIdpTypeInState := d.Get(clientTypeInState)
 				// If there is a different type of idp in the state, the idp needs to be recreated
 				if attributesForIdpTypeInState == nil {
-					d.SetNewComputed("client_type")
+					_ = d.SetNewComputed("client_type")
 					return true
 				} else if len(attributesForIdpTypeInState.([]interface{})) < 1 {
-					d.SetNewComputed("client_type")
+					_ = d.SetNewComputed("client_type")
 					return true
 				} else {
 					return false
@@ -122,12 +122,41 @@ func resourceAccountIDPUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 	d.SetId(cfClientIDP.ID)
-	d.Set("display_name", cfClientIDP.DisplayName)
-	d.Set("name", cfClientIDP.ClientName)
-	d.Set("redirect_url", cfClientIDP.RedirectUrl)
-	d.Set("redirect_ui_url", cfClientIDP.RedirectUiUrl)
-	d.Set("login_url", cfClientIDP.LoginUrl)
-	d.Set("client_type", cfClientIDP.ClientType)
+	err := d.Set("display_name", cfClientIDP.DisplayName)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("name", cfClientIDP.ClientName)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("redirect_url", cfClientIDP.RedirectUrl)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("redirect_ui_url", cfClientIDP.RedirectUiUrl)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("login_url", cfClientIDP.LoginUrl)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("client_type", cfClientIDP.ClientType)
+
+	if err != nil {
+		return err
+	}
 
 	if cfClientIDP.ClientType == idp.GitHub {
 		attributes := []map[string]interface{}{{
@@ -143,7 +172,11 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 			"api_path_prefix":    cfClientIDP.ApiPathPrefix,
 		}}
 
-		d.Set(idp.GitHub, attributes)
+		err = d.Set(idp.GitHub, attributes)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if cfClientIDP.ClientType == idp.GitLab {
@@ -155,7 +188,11 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 			"api_url":            cfClientIDP.ApiURL,
 		}}
 
-		d.Set(idp.GitLab, attributes)
+		err = d.Set(idp.GitLab, attributes)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if cfClientIDP.ClientType == idp.Okta {
@@ -168,7 +205,11 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 			"access_token":         d.Get("okta.0.access_token"),
 		}}
 
-		d.Set("okta", attributes)
+		err = d.Set("okta", attributes)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if cfClientIDP.ClientType == idp.Google {
@@ -181,7 +222,11 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 			"sync_field":              cfClientIDP.SyncField,
 		}}
 
-		d.Set(idp.Google, attributes)
+		err = d.Set(idp.Google, attributes)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if cfClientIDP.ClientType == idp.Auth0 {
@@ -191,7 +236,11 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 			"domain":        cfClientIDP.ClientHost,
 		}}
 
-		d.Set(idp.Auth0, attributes)
+		err = d.Set(idp.Auth0, attributes)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if cfClientIDP.ClientType == idp.Azure {
@@ -210,7 +259,11 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 			"tenant":                   cfClientIDP.Tenant,
 		}}
 
-		d.Set(idp.Azure, attributes)
+		err = d.Set(idp.Azure, attributes)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if cfClientIDP.ClientType == idp.OneLogin {
@@ -226,7 +279,11 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 			"app_id":            cfClientIDP.AppId,
 		}}
 
-		d.Set(idp.OneLogin, attributes)
+		err = d.Set(idp.OneLogin, attributes)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if cfClientIDP.ClientType == idp.Keycloak {
@@ -237,7 +294,11 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 			"realm":         cfClientIDP.Realm,
 		}}
 
-		d.Set(idp.Keycloak, attributes)
+		err = d.Set(idp.Keycloak, attributes)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if cfClientIDP.ClientType == idp.SAML {
@@ -260,7 +321,11 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 			"access_token":              d.Get("saml.0.access_token"),
 		}}
 
-		d.Set(idp.SAML, attributes)
+		err = d.Set(idp.SAML, attributes)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if cfClientIDP.ClientType == idp.LDAP {
@@ -275,7 +340,11 @@ func mapAccountIDPToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) e
 			"search_base_for_sync":    cfClientIDP.SearchBaseForSync,
 		}}
 
-		d.Set(idp.LDAP, attributes)
+		err = d.Set(idp.LDAP, attributes)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

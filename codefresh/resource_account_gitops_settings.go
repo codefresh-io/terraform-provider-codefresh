@@ -124,10 +124,29 @@ func mapAccountGitopsSettingsToResource(account *cfclient.GitopsActiveAccountInf
 	}
 
 	d.SetId(account.ID)
-	d.Set("name", account.AccountName)
-	d.Set("git_provider", account.GitProvider)
-	d.Set("git_provider_api_url", account.GitApiUrl)
-	d.Set("shared_config_repository", account.SharedConfigRepo)
+	err := d.Set("name", account.AccountName)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("git_provider", account.GitProvider)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("git_provider_api_url", account.GitApiUrl)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("shared_config_repository", account.SharedConfigRepo)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -817,7 +817,11 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 
 	if ok {
 		if len(encryptedVariables) > 0 {
-			setEncryptedVariablesValuesFromResource(d, encryptedVariables, "spec.0.encrypted_variables")
+			err := setEncryptedVariablesValuesFromResource(d, encryptedVariables, "spec.0.encrypted_variables")
+
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -831,7 +835,11 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 
 			if ok {
 				if len(triggerEncryptedVariables) > 0 {
-					setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.trigger.%d.encrypted_variables", triggerIndex))
+					err := setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.trigger.%d.encrypted_variables", triggerIndex))
+
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -847,7 +855,11 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 
 			if ok {
 				if len(triggerEncryptedVariables) > 0 {
-					setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.cron_trigger.%d.encrypted_variables", triggerIndex))
+					err := setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.cron_trigger.%d.encrypted_variables", triggerIndex))
+
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -953,8 +965,8 @@ func flattenSpecTerminationPolicy(terminationPolicy []map[string]interface{}) []
 	var res []map[string]interface{}
 	attribute := make(map[string]interface{})
 	for _, policy := range terminationPolicy {
-		eventName, _ := policy["event"]
-		typeName, _ := policy["type"]
+		eventName := policy["event"]
+		typeName := policy["type"]
 		attributeName := convertOnCreateBranchAttributeToPipelineFormat(eventName.(string) + "_" + typeName.(string))
 		switch attributeName {
 		case "on_create_branch":
@@ -1280,8 +1292,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 	var codefreshTerminationPolicy []map[string]interface{}
 
 	if _, ok := d.GetOk("spec.0.termination_policy.0.on_create_branch"); ok {
-		var onCreatBranchPolicy = make(map[string]interface{})
-		onCreatBranchPolicy = getSupportedTerminationPolicyAttributes("on_create_branch")
+		onCreatBranchPolicy := getSupportedTerminationPolicyAttributes("on_create_branch")
 		for _, attribute := range terminationPolicyOnCreateBranchAttributes {
 			if attributeValue, ok := d.GetOk(fmt.Sprintf("spec.0.termination_policy.0.on_create_branch.0.%s", convertOnCreateBranchAttributeToPipelineFormat(attribute))); ok {
 				onCreatBranchPolicy[attribute] = attributeValue
@@ -1290,8 +1301,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 		codefreshTerminationPolicy = append(codefreshTerminationPolicy, onCreatBranchPolicy)
 	}
 	if _, ok := d.GetOk("spec.0.termination_policy.0.on_terminate_annotation"); ok {
-		var onTerminateAnnotationPolicy = make(map[string]interface{})
-		onTerminateAnnotationPolicy = getSupportedTerminationPolicyAttributes("on_terminate_annotation")
+		onTerminateAnnotationPolicy := getSupportedTerminationPolicyAttributes("on_terminate_annotation")
 		onTerminateAnnotationPolicy["key"] = "cf_predecessor"
 		codefreshTerminationPolicy = append(codefreshTerminationPolicy, onTerminateAnnotationPolicy)
 	}

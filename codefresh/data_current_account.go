@@ -69,8 +69,17 @@ func mapDataCurrentAccountToResource(currentAccount *cfclient.CurrentAccount, d 
 	}
 	d.SetId(currentAccount.ID)
 
-	d.Set("_id", currentAccount.ID)
-	d.Set("name", currentAccount.Name)
+	err := d.Set("_id", currentAccount.ID)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("name", currentAccount.Name)
+
+	if err != nil {
+		return err
+	}
 
 	// users := make(map[string](map[string]interface{}))
 	// for n, user := range currentAccount.Users {
@@ -89,6 +98,11 @@ func mapDataCurrentAccountToResource(currentAccount *cfclient.CurrentAccount, d 
 		users[n]["id"] = user.ID
 	}
 
-	d.Set("users", users)
+	err = d.Set("users", users)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

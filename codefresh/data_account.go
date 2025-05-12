@@ -62,9 +62,23 @@ func mapDataAccountToResource(account *cfclient.Account, d *schema.ResourceData)
 	}
 	d.SetId(account.ID)
 
-	d.Set("_id", account.ID)
-	d.Set("name", account.Name)
-	d.Set("admins", account.Admins)
+	err := d.Set("_id", account.ID)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("name", account.Name)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("admins", account.Admins)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

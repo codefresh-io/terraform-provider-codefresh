@@ -454,70 +454,122 @@ func mapResourceToRegistry(d *schema.ResourceData) *cfclient.Registry {
 
 func mapRegistryToResource(registry cfclient.Registry, d *schema.ResourceData) error {
 	d.SetId(registry.Id)
-	d.Set("name", registry.Name)
-	d.Set("kind", registry.Kind)
-	d.Set("default", registry.Default)
-	d.Set("primary", registry.Primary)
-	d.Set("fallback_registry", registry.FallbackRegistry)
+	err := d.Set("name", registry.Name)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("kind", registry.Kind)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("default", registry.Default)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("primary", registry.Primary)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("fallback_registry", registry.FallbackRegistry)
+
+	if err != nil {
+		return err
+	}
 
 	if registry.Provider == providerAcr {
-		d.Set(fmt.Sprintf("spec.0.%v.0", providerAcr), map[string]interface{}{
+		err = d.Set(fmt.Sprintf("spec.0.%v.0", providerAcr), map[string]interface{}{
 			"domain":            registry.Domain,
 			"client_id":         registry.ClientId,
 			"client_secret":     registry.ClientSecret,
 			"repository_prefix": registry.RepositoryPrefix,
 		})
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if registry.Provider == providerEcr {
-		d.Set(fmt.Sprintf("spec.0.%v.0", providerEcr), map[string]interface{}{
+		err = d.Set(fmt.Sprintf("spec.0.%v.0", providerEcr), map[string]interface{}{
 			"region":            registry.Domain,
 			"access_key_id":     registry.AccessKeyId,
 			"secret_access_key": registry.SecretAccessKey,
 			"repository_prefix": registry.RepositoryPrefix,
 		})
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if registry.Provider == providerGcr {
-		d.Set(fmt.Sprintf("spec.0.%v.0", providerGcr), map[string]interface{}{
+		err = d.Set(fmt.Sprintf("spec.0.%v.0", providerGcr), map[string]interface{}{
 			"domain":            registry.Domain,
 			"keyfile":           registry.Keyfile,
 			"repository_prefix": registry.RepositoryPrefix,
 		})
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if registry.Provider == providerGar {
-		d.Set(fmt.Sprintf("spec.0.%v.0", providerGcr), map[string]interface{}{
+		err = d.Set(fmt.Sprintf("spec.0.%v.0", providerGcr), map[string]interface{}{
 			"location":          registry.Domain,
 			"keyfile":           registry.Keyfile,
 			"repository_prefix": registry.RepositoryPrefix,
 		})
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if registry.Provider == providerBintray {
-		d.Set(fmt.Sprintf("spec.0.%v.0", providerBintray), map[string]interface{}{
+		err = d.Set(fmt.Sprintf("spec.0.%v.0", providerBintray), map[string]interface{}{
 			"domain":            registry.Domain,
 			"username":          registry.Username,
 			"token":             registry.Token,
 			"repository_prefix": registry.RepositoryPrefix,
 		})
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if registry.Provider == providerDockerhub {
-		d.Set(fmt.Sprintf("spec.0.%v.0", providerDockerhub), map[string]interface{}{
+		err = d.Set(fmt.Sprintf("spec.0.%v.0", providerDockerhub), map[string]interface{}{
 			"username": registry.Username,
 			"password": registry.Password,
 		})
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if registry.Provider == providerOther {
-		d.Set(fmt.Sprintf("spec.0.%v.0", providerOther), map[string]interface{}{
+		err = d.Set(fmt.Sprintf("spec.0.%v.0", providerOther), map[string]interface{}{
 			"domain":            registry.Domain,
 			"username":          registry.Username,
 			"password":          registry.Password,
 			"behind_firewall":   registry.BehindFirewall,
 			"repository_prefix": registry.RepositoryPrefix,
 		})
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
