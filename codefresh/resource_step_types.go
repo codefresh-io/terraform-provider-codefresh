@@ -11,8 +11,8 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/schemautil"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	ghodss "github.com/ghodss/yaml"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/iancoleman/orderedmap"
@@ -333,7 +333,7 @@ func resourceStepTypesVersionsConfigHash(v interface{}) int {
 	cleanUpStepFromTransientValues(&stepTypes, "", "")
 	stepTypesYamlByteArray, _ := ghodss.Marshal(stepTypes)
 	buf.WriteString(string(stepTypesYamlByteArray))
-	hash := hashcode.String(buf.String())
+	hash := datautil.Hashcode(buf.String())
 	return hash
 }
 
