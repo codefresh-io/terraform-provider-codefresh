@@ -1486,36 +1486,6 @@ resource "codefresh_pipeline" "test" {
 `, rName, repo, path, revision, context, ignoreTrigger)
 }
 
-func testAccCodefreshPipelineOnCreateBranchIgnoreTriggerWithBranchName(rName, repo, path, revision, context, branchName string, ignoreTrigger bool) string {
-	return fmt.Sprintf(`
-resource "codefresh_pipeline" "test" {
-
-  lifecycle {
-    ignore_changes = [
-      revision
-    ]
-  }
-
-  name = "%s"
-
-  spec {
-	spec_template {
-    	repo        = %q
-    	path        = %q
-    	revision    = %q
-    	context     = %q
-	}
-	termination_policy {
-		on_create_branch {
-			branch_nane = %q
-			ignore_trigger = %t
-		}
-	}
-  }
-}
-`, rName, repo, path, revision, context, branchName, ignoreTrigger)
-}
-
 func testAccCodefreshPipelineIsPublic(rName, repo, path, revision, context string, isPublic bool) string {
 	return fmt.Sprintf(`
 resource "codefresh_pipeline" "test" {

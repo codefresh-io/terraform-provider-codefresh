@@ -18,7 +18,7 @@ func resourceAccountGitopsSettings() *schema.Resource {
 		Create:      resourceAccountGitopsSettingsUpdate,
 		Update:      resourceAccountGitopsSettingsUpdate,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		// Delete not implemenented as gitops settings cannot be removed, only updated
 		Delete: resourceAccountGitopsSettingsDelete,

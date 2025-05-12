@@ -22,7 +22,7 @@ func resourceIdp() *schema.Resource {
 		Update:      resourceIDPUpdate,
 		Delete:      resourceIDPDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		CustomizeDiff: customdiff.All(
 			// Recreate idp if the type has changed - we cannot simply do ForceNew on client_type as it is computed

@@ -19,7 +19,7 @@ func resourceAccountUserAssociation() *schema.Resource {
 		Update: resourceAccountUserAssociationUpdate,
 		Delete: resourceAccountUserAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"email": {

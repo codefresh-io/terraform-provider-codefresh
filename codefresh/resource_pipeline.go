@@ -29,7 +29,7 @@ func resourcePipeline() *schema.Resource {
 		Update:      resourcePipelineUpdate,
 		Delete:      resourcePipelineDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -1390,13 +1390,6 @@ func getSupportedTerminationPolicyAttributes(policy string) map[string]interface
 		log.Fatal("Invalid termination policy selected: ", policy)
 	}
 	return nil
-}
-
-func convertOnCreateBranchAttributeToResourceFormat(src string) string {
-	var re = regexp.MustCompile(`_[a-z]`)
-	return re.ReplaceAllStringFunc(src, func(w string) string {
-		return strings.ToUpper(strings.ReplaceAll(w, "_", ""))
-	})
 }
 
 func convertOnCreateBranchAttributeToPipelineFormat(src string) string {

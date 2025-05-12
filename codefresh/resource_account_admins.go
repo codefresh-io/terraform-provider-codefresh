@@ -16,7 +16,7 @@ func resourceAccountAdmins() *schema.Resource {
 		Update: resourceAccountAdminsUpdate,
 		Delete: resourceAccountAdminsDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"account_id": {

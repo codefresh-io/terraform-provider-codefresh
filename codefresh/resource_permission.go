@@ -21,7 +21,7 @@ func resourcePermission() *schema.Resource {
 		Update:      resourcePermissionUpdate,
 		Delete:      resourcePermissionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"_id": {

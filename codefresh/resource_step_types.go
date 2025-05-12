@@ -30,7 +30,7 @@ The resource allows to handle the life-cycle of the version by allowing specifyi
 		UpdateContext: resourceStepTypesUpdate,
 		DeleteContext: resourceStepTypesDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

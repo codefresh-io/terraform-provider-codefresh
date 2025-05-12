@@ -73,11 +73,11 @@ func dataSourceStepTypesRead(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func mapDataSetTypesToResource(stepTypesVersions cfclient.StepTypesVersions, d *schema.ResourceData) error {
-	err := d.Set("name", stepTypesVersions.Name)
-	if err != nil {
-		return err
-	}
-	err = d.Set("version", flattenVersions(stepTypesVersions.Name, stepTypesVersions.Versions))
-	return err
-}
+// func mapDataSetTypesToResource(stepTypesVersions cfclient.StepTypesVersions, d *schema.ResourceData) error {
+// 	err := d.Set("name", stepTypesVersions.Name)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = d.Set("version", flattenVersions(stepTypesVersions.Name, stepTypesVersions.Versions))
+// 	return err
+// }

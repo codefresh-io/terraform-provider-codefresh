@@ -17,7 +17,7 @@ Because of the current Codefresh API limitation it's impossible to remove accoun
 		Update: resourceIDPAccountsUpdate,
 		Delete: resourceIDPAccountsDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"idp_id": {
