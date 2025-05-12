@@ -3,8 +3,8 @@ page_title: "codefresh_api_key Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
   Manages an API Key tied to a user within an account or a service account within the current account.
-      On the Codefresh SaaS platfrom this resource is only usable for service accounts.
-      Management of API keys for users in other accounts requires admin priveleges and hence can only be done on Codefresh on-premises installations.
+  	On the Codefresh SaaS platfrom this resource is only usable for service accounts.
+  	Management of API keys for users in other accounts requires admin priveleges and hence can only be done on Codefresh on-premises installations.
 ---
 
 # codefresh_api_key (Resource)

@@ -1,9 +1,8 @@
 package datautil
 
 import (
-	"io/ioutil"
+	"io"
 	"strings"
-
 	"github.com/mikefarah/yq/v4/pkg/yqlib"
 	"gopkg.in/op/go-logging.v1"
 )
@@ -24,7 +23,7 @@ func Yq(yamlString string, expression string, outputformat string) (string, erro
 	yqEvaluator := yqlib.NewStringEvaluator()
 
 	// Disable yq logging
-	yqLogBackend := logging.AddModuleLevel(logging.NewLogBackend(ioutil.Discard, "", 0))
+	yqLogBackend := logging.AddModuleLevel(logging.NewLogBackend(io.Discard, "", 0))
 	yqlib.GetLogger().SetBackend(yqLogBackend)
 
 	yamlString, err := yqEvaluator.Evaluate(yamlString, expression, yqEncoder, yqDecoder)

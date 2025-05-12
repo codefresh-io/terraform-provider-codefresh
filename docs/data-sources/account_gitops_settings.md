@@ -23,5 +23,3 @@ This data source retrieves gitops settings for the active account
 - `id` (String) Account Id
 - `name` (String) Account name for active account
 - `shared_config_repository` (String) Shared config repository url
-
-
