@@ -23,7 +23,7 @@ You are free to use projects as you see fit. For example, you could create a pro
 		Update: resourceProjectUpdate,
 		Delete: resourceProjectDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

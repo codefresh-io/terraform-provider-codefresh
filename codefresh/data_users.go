@@ -62,7 +62,11 @@ func mapDataUsersToResource(users []cfclient.User, d *schema.ResourceData) error
 		res[i] = m
 	}
 
-	d.Set("users", res)
+	err := d.Set("users", res)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

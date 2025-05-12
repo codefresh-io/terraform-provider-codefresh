@@ -2,6 +2,7 @@ package datautil
 
 import (
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"hash/crc32"
 )
 
 // ConvertStringArr converts an array of interfaces to an array of strings.
@@ -54,4 +55,20 @@ func FlattenStringArr(sArr []string) []interface{} {
 		iArr = append(iArr, s)
 	}
 	return iArr
+}
+
+// String hashes a string to a unique hashcode.
+//
+// Copied from github.com/hashicorp/terraform-plugin-sdk/helper/hashcode as it is removed in v2 and used within the provider.
+// By copying the implementation we can avoid a dependency on the terraform-plugin-sdk which is no longer maintained.
+func Hashcode(s string) int {
+	v := int(crc32.ChecksumIEEE([]byte(s)))
+	if v >= 0 {
+		return v
+	}
+	if -v >= 0 {
+		return -v
+	}
+	// v == MinInt
+	return 0
 }

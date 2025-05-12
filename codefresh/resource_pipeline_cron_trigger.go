@@ -33,7 +33,12 @@ func resourcePipelineCronTrigger() *schema.Resource {
 				event := idParts[0]
 				pipelineID := idParts[1]
 				d.SetId(event)
-				d.Set("pipeline_id", pipelineID)
+
+				err := d.Set("pipeline_id", pipelineID)
+
+				if err != nil {
+					return nil, err
+				}
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -146,7 +151,11 @@ func resourcePipelineCronTriggerDelete(d *schema.ResourceData, meta interface{})
 func mapPipelineCronTriggerToResource(hermesTrigger *cfclient.HermesTrigger, d *schema.ResourceData) error {
 
 	d.SetId(hermesTrigger.Event)
-	d.Set("pipeline_id", hermesTrigger.PipelineID)
+	err := d.Set("pipeline_id", hermesTrigger.PipelineID)
+
+	if err != nil {
+		return err
+	}
 
 	if hermesTrigger.Event != "" {
 		r := regexp.MustCompile("[^:]+:[^:]+:[^:]+:[^:]+")
@@ -154,8 +163,17 @@ func mapPipelineCronTriggerToResource(hermesTrigger *cfclient.HermesTrigger, d *
 		if !r.MatchString(hermesTrigger.Event) {
 			return fmt.Errorf("event string must be in format 'cron:codefresh:[expression]:[message]:[uid]': %s", hermesTrigger.Event)
 		}
-		d.Set("expression", eventStringAttributes[2])
-		d.Set("message", eventStringAttributes[3])
+		err = d.Set("expression", eventStringAttributes[2])
+
+		if err != nil {
+			return err
+		}
+
+		err = d.Set("message", eventStringAttributes[3])
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

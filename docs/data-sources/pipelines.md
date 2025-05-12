@@ -35,5 +35,3 @@ Read-Only:
 - `project` (String)
 - `spec` (String)
 - `tags` (List of String)
-
-

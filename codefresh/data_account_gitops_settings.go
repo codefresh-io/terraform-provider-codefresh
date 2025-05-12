@@ -68,11 +68,36 @@ func mapDataAccountGitopsSettingsToResource(account *cfclient.GitopsActiveAccoun
 		return fmt.Errorf("cannot get gitops settings as account wasn't properly retrived")
 	}
 	d.SetId(account.ID)
-	d.Set("name", account.AccountName)
-	d.Set("admins", account.Admins)
-	d.Set("git_provider", account.GitProvider)
-	d.Set("git_provider_api_url", account.GitApiUrl)
-	d.Set("shared_config_repository", account.SharedConfigRepo)
+
+	err := d.Set("name", account.AccountName)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("admins", account.Admins)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("git_provider", account.GitProvider)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("git_provider_api_url", account.GitApiUrl)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("shared_config_repository", account.SharedConfigRepo)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

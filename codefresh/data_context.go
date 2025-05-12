@@ -58,13 +58,28 @@ func mapDataContextToResource(context *cfclient.Context, d *schema.ResourceData)
 	}
 	d.SetId(context.Metadata.Name)
 
-	d.Set("name", context.Metadata.Name)
-	d.Set("type", context.Spec.Type)
+	err := d.Set("name", context.Metadata.Name)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("type", context.Spec.Type)
+
+	if err != nil {
+		return err
+	}
+
 	data, err := yaml.Marshal(context.Spec.Data)
 	if err != nil {
 		return err
 	}
-	d.Set("data", string(data))
+
+	err = d.Set("data", string(data))
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

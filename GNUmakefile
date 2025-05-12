@@ -6,14 +6,8 @@ PKG_NAME=codefresh
 NAMESPACE=app
 BINARY=terraform-provider-${PKG_NAME}
 OS_ARCH=darwin_amd64
-TFPLUGINDOCS_VERSION=v0.14.1
 
 default: build
-
-tools:
-	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
-	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	GO111MODULE=on go install github.com/bflad/tfproviderlint/cmd/tfproviderlint
 
 build: fmtcheck
 	go install
@@ -31,7 +25,7 @@ fmtcheck:
 
 lint:
 	@echo "==> Checking source code against linters..."
-	golangci-lint run ./...
+	go tool golangci-lint run ./...
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1
@@ -58,13 +52,8 @@ vet:
 		exit 1; \
 	fi
 
-docs-prepare:
-	@echo "==> Setting up tfplugindocs..."
-	go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@${TFPLUGINDOCS_VERSION}
-
-docs: docs-prepare
+docs:
 	@echo "==> Generating Provider Documentation..."
-	tfplugindocs generate
+	go tool tfplugindocs generate
 
-.PHONY: build test testacc vet fmt fmtcheck lint tools test-compile docs docs-prepare
-
+.PHONY: build test testacc vet fmt fmtcheck lint test-compile docs docs-prepare

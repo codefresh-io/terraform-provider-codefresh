@@ -23,5 +23,3 @@ Returns a user the current Codefresh account by name or email.
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-

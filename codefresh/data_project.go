@@ -62,8 +62,17 @@ func mapDataProjectToResource(project *cfClient.Project, d *schema.ResourceData)
 	}
 	d.SetId(project.ID)
 
-	d.Set("_id", project.ID)
-	d.Set("tags", project.Tags)
+	err := d.Set("_id", project.ID)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("tags", project.Tags)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

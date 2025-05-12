@@ -28,5 +28,3 @@ This data source retrieves an account level identity provider
 - `login_url` (String) Login url using the IDP to Codefresh
 - `redirect_ui_url` (String) UI Callback url for the identity provider
 - `redirect_url` (String) API Callback url for the identity provider
-
-

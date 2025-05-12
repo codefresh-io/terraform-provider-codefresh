@@ -22,7 +22,7 @@ func resourceApiKey() *schema.Resource {
 		Update: resourceApiKeyUpdate,
 		Delete: resourceApiKeyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

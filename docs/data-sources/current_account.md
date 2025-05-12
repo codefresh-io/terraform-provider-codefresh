@@ -69,8 +69,5 @@ current_ac = {
 Required:
 
 - `email` (String)
+- `id` (String)
 - `name` (String)
-
-Read-Only:
-
-- `id` (String) The ID of this resource.

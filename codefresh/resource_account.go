@@ -15,7 +15,7 @@ func resourceAccount() *schema.Resource {
 		Update: resourceAccountUpdate,
 		Delete: resourceAccountDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {

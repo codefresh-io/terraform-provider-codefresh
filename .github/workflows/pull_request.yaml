@@ -13,8 +13,7 @@ jobs:
       - name: Generate Docs
         run: |
           export PATH=$PATH:/home/runner/go/bin
-          make docs-prepare
-          tfplugindocs generate
+          make docs
       - name: Validate No Changes
         run: |
           git diff --exit-code

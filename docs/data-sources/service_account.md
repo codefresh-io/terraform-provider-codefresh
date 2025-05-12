@@ -25,5 +25,3 @@ This data source retrieves a Codefresh service account by its ID or name.
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-

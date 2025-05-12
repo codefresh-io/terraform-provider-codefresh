@@ -16,7 +16,7 @@ func resourceAccountAdmins() *schema.Resource {
 		Update: resourceAccountAdminsUpdate,
 		Delete: resourceAccountAdminsDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"account_id": {
@@ -81,7 +81,11 @@ func resourceAccountAdminsRead(d *schema.ResourceData, meta interface{}) error {
 
 	accountId := d.Id()
 
-	d.Set("account_id", accountId)
+	err := d.Set("account_id", accountId)
+
+	if err != nil {
+		return err
+	}
 
 	account, err := client.GetAccountByID(accountId)
 	if err != nil {
