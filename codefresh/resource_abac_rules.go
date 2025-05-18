@@ -21,7 +21,7 @@ func resourceGitopsAbacRule() *schema.Resource {
 		Update:      resourceGitopsAbacRuleUpdate,
 		Delete:      resourceGitopsAbacRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"id": {

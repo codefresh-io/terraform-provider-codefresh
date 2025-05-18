@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -71,7 +71,7 @@ func (client *Client) RequestAPI(opt *RequestOptions) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to read body %v %v", resp.StatusCode, resp.Status)
 	}
@@ -103,7 +103,7 @@ func (client *Client) RequestApiXAccessToken(opt *RequestOptions) ([]byte, error
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to read body %v %v", resp.StatusCode, resp.Status)
 	}

@@ -17,7 +17,7 @@ func resourceUser() *schema.Resource {
 		Update:      resourceUsersUpdate,
 		Delete:      resourceUsersDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"user_name": {
@@ -157,11 +157,19 @@ func resourceUsersCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("activate").(bool) {
-		client.ActivateUser(d.Id())
+		_, err := client.ActivateUser(d.Id())
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if d.Get("password") != "" {
-		client.UpdateLocalUserPassword(d.Get("user_name").(string), d.Get("password").(string))
+		err := client.UpdateLocalUserPassword(d.Get("user_name").(string), d.Get("password").(string))
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return resourceUsersRead(d, meta)
@@ -244,20 +252,63 @@ func resourceUsersDelete(d *schema.ResourceData, meta interface{}) error {
 
 func mapUserToResource(user cfclient.User, d *schema.ResourceData) error {
 
-	d.Set("user_name", user.UserName)
-	d.Set("email", user.Email)
-	d.Set("accounts", flattenUserAccounts(user.Account))
-	d.Set("status", user.Status)
-	if user.Personal != nil {
-		d.Set("personal", flattenPersonal(user.Personal))
+	err := d.Set("user_name", user.UserName)
+
+	if err != nil {
+		return err
 	}
-	d.Set("short_profile",
+
+	err = d.Set("email", user.Email)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("accounts", flattenUserAccounts(user.Account))
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("status", user.Status)
+
+	if err != nil {
+		return err
+	}
+
+	if user.Personal != nil {
+		err = d.Set("personal", flattenPersonal(user.Personal))
+
+		if err != nil {
+			return err
+		}
+	}
+
+	err = d.Set("short_profile",
 		[]map[string]interface{}{
 			{"user_name": user.ShortProfile.UserName},
 		})
-	d.Set("has_password", user.PublicProfile.HasPassword)
-	d.Set("roles", user.Roles)
-	d.Set("login", flattenUserLogins(&user.Logins))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("has_password", user.PublicProfile.HasPassword)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("roles", user.Roles)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("login", flattenUserLogins(&user.Logins))
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

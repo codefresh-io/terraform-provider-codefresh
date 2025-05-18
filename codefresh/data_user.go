@@ -1,7 +1,6 @@
 package codefresh
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
@@ -37,7 +36,7 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Id() == "" {
-		return errors.New(fmt.Sprintf("[EROOR] User %s wasn't found", email))
+		return fmt.Errorf("[EROOR] User %s wasn't found", email)
 	}
 
 	return nil
@@ -46,19 +45,57 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 func mapDataUserToResource(user cfclient.User, d *schema.ResourceData) error {
 
 	d.SetId(user.ID)
-	d.Set("user_id", user.ID)
-	d.Set("user_name", user.UserName)
-	d.Set("email", user.Email)
-	d.Set("status", user.Status)
-	if user.Personal != nil {
-		d.Set("personal", flattenPersonal(user.Personal))
+	err := d.Set("user_id", user.ID)
+
+	if err != nil {
+		return err
 	}
-	d.Set("short_profile",
+
+	err = d.Set("user_name", user.UserName)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("email", user.Email)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("status", user.Status)
+
+	if err != nil {
+		return err
+	}
+
+	if user.Personal != nil {
+		err = d.Set("personal", flattenPersonal(user.Personal))
+
+		if err != nil {
+			return err
+		}
+	}
+	err = d.Set("short_profile",
 		[]map[string]interface{}{
 			{"user_name": user.ShortProfile.UserName},
 		})
-	d.Set("roles", user.Roles)
-	d.Set("logins", flattenLogins(&user.Logins))
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("roles", user.Roles)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("logins", flattenLogins(&user.Logins))
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

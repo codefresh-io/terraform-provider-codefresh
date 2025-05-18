@@ -70,8 +70,17 @@ func mapDataServiceAccountToResource(serviceAccount *cfClient.ServiceUser, d *sc
 	}
 
 	d.SetId(serviceAccount.ID)
-	d.Set("name", serviceAccount.Name)
-	d.Set("assign_admin_role", serviceAccount.HasAdminRole())
+	err := d.Set("name", serviceAccount.Name)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("assign_admin_role", serviceAccount.HasAdminRole())
+
+	if err != nil {
+		return err
+	}
 
 	teamIds := []string{}
 
@@ -79,7 +88,11 @@ func mapDataServiceAccountToResource(serviceAccount *cfClient.ServiceUser, d *sc
 		teamIds = append(teamIds, team.ID)
 	}
 
-	d.Set("assigned_teams", teamIds)
+	err = d.Set("assigned_teams", teamIds)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -77,14 +77,53 @@ func mapDataRegistryToResource(registry *cfclient.Registry, d *schema.ResourceDa
 	}
 	d.SetId(registry.Id)
 
-	d.Set("name", registry.Name)
-	d.Set("registry_provider", registry.Provider)
-	d.Set("kind", registry.Kind)
-	d.Set("domain", registry.Domain)
-	d.Set("primary", registry.Primary)
-	d.Set("default", registry.Default)
-	d.Set("fallback_registry", registry.FallbackRegistry)
-	d.Set("repository_prefix", registry.RepositoryPrefix)
+	err := d.Set("name", registry.Name)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("registry_provider", registry.Provider)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("kind", registry.Kind)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("domain", registry.Domain)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("primary", registry.Primary)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("default", registry.Default)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("fallback_registry", registry.FallbackRegistry)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("repository_prefix", registry.RepositoryPrefix)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

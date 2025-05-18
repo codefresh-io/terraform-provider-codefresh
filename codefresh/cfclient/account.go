@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 )
 
 type DockerRegistry struct {

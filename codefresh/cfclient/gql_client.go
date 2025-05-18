@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -38,7 +38,7 @@ func (client *Client) SendGqlRequest(request GraphQLRequest) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode >= 400 {
-		bodyBytes, _ := ioutil.ReadAll(resp.Body)
+		bodyBytes, _ := io.ReadAll(resp.Body)
 		return nil, errors.New(resp.Status + " " + string(bodyBytes))
 	}
 	defer resp.Body.Close()

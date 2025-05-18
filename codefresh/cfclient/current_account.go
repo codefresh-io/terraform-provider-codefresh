@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/stretchr/objx"
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 // CurrentAccountUser spec

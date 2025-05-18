@@ -72,8 +72,19 @@ func mapDataCurrentAccountUserToResource(currentAccount *cfclient.CurrentAccount
 		if (userAttributeName == "name" && user.UserName == userAttributeValue) || (userAttributeName == "email" && user.Email == userAttributeValue) {
 			isFound = true
 			d.SetId(user.ID)
-			d.Set("name", user.UserName)
-			d.Set("email", user.Email)
+			err := d.Set("name", user.UserName)
+
+			if err != nil {
+				return err
+			}
+
+
+			err = d.Set("email", user.Email)
+
+			if err != nil {
+				return err
+			}
+
 			break
 		}
 	}

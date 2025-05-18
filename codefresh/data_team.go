@@ -78,16 +78,40 @@ func mapDataTeamToResource(team *cfclient.Team, d *schema.ResourceData) error {
 	}
 	d.SetId(team.ID)
 
-	d.Set("_id", team.ID)
-	d.Set("account_id", team.Account)
-	d.Set("type", team.Type)
+	err := d.Set("_id", team.ID)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("account_id", team.Account)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("type", team.Type)
+
+	if err != nil {
+		return err
+	}
 
 	var users []string
 	for _, user := range team.Users {
 		users = append(users, user.ID)
 	}
-	d.Set("users", users)
-	d.Set("tags", team.Tags)
+
+	err = d.Set("users", users)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("tags", team.Tags)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

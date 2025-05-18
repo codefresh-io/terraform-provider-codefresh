@@ -2,7 +2,7 @@ package cfclient
 
 import (
 	"fmt"
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 type ServiceUserTeam struct {
