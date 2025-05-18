@@ -41,6 +41,7 @@ The type of resources the permission applies to. Possible values:
 	* pipeline
 	* cluster
 	* project
+	* runtime-environment
 				`,
 				Type:     schema.TypeString,
 				Required: true,
@@ -48,6 +49,7 @@ The type of resources the permission applies to. Possible values:
 					"pipeline",
 					"cluster",
 					"project",
+					"runtime-environment",
 				}, false),
 			},
 			"related_resource": {
@@ -65,7 +67,7 @@ Specifies the resource to use when evaluating the tags. Possible values:
 				Description: `
 Action to be allowed. Possible values:
 	* create
-	* read
+	* read (For runtime-environment resource, 'read' means 'assign')
 	* update
 	* delete
 	* run (Only valid for pipeline resource)
