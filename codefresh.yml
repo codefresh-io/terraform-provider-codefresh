@@ -48,7 +48,7 @@ steps:
   prepare_env_vars:
     title: "Preparing environment variables..."
     stage: release
-    image: quay.io/codefresh/codefresh-shell:0.0.13
+    image: quay.io/codefresh/codefresh-shell:0.0.14
     shell: bash
     environment:
       - GPG_FINGERPRINT=${{GPG_FINGERPRINT}}
@@ -66,7 +66,7 @@ steps:
 
   release_binaries:
     title: Create release in Github
-    image: goreleaser/goreleaser:v1.17.0
+    image: goreleaser/goreleaser:v2.9.0
     stage: release
     environment:
       - GPG_FINGERPRINT=${{GPG_FINGERPRINT}}
@@ -80,7 +80,7 @@ steps:
       - gpg --import /tmp/private.key
       - git config user.signingkey ${GPG_FINGERPRINT}
       - git clean -fdx
-      - goreleaser release --rm-dist
+      - goreleaser release
     when:
       condition:
         all:

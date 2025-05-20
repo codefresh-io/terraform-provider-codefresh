@@ -13,6 +13,9 @@ See the [documentation](https://codefresh.io/docs/docs/configure-ci-cd-pipeline/
 
 ~> **NOTE:** `cron_trigger` conflicts with the deprecated [codefresh_pipeline_cron_trigger](https://registry.terraform.io/providers/codefresh-io/codefresh/latest/docs/resources/pipeline_cron_trigger) resource.
 
+~> **v1.0 Changed behavior:** Previously, `permit_restart_from_failed_steps = false` resulted in “Permit restart from failed step: Use account settings”.
+From now on, setting `permit_restart_from_failed_steps = false` will result in “Permit restart from failed step: Forbid”. To keep previous behavior, set `permit_restart_from_failed_steps_use_account_settings = true`.
+
 ## Example Usage
 
 ```hcl
