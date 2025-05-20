@@ -42,7 +42,7 @@ resource "codefresh_permission" "developers" {
 
 - `action` (String) Action to be allowed. Possible values:
 	* create
-	* read
+	* read (For runtime-environment resource, 'read' means 'assign')
 	* update
 	* delete
 	* run (Only valid for pipeline resource)
@@ -52,6 +52,7 @@ resource "codefresh_permission" "developers" {
 	* pipeline
 	* cluster
 	* project
+	* runtime-environment
 - `team` (String) The Id of the team the permissions apply to.
 
 ### Optional

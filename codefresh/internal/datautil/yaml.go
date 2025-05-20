@@ -1,10 +1,10 @@
 package datautil
 
 import (
-	"io"
-	"strings"
 	"github.com/mikefarah/yq/v4/pkg/yqlib"
 	"gopkg.in/op/go-logging.v1"
+	"io"
+	"strings"
 )
 
 const (

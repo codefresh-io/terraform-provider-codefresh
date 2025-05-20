@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	funk "github.com/thoas/go-funk"
 )
 
 func resourcePermission() *schema.Resource {
@@ -112,7 +111,7 @@ func resourcePermissionCustomDiff(ctx context.Context, diff *schema.ResourceDiff
 		}
 	}
 	if diff.HasChanges("resource", "action") {
-		if funk.Contains([]string{"run", "approve", "debug"}, diff.Get("action").(string)) && diff.Get("resource").(string) != "pipeline" {
+		if contains([]string{"run", "approve", "debug"}, diff.Get("action").(string)) && diff.Get("resource").(string) != "pipeline" {
 			return fmt.Errorf("action %v is only valid when resource is 'pipeline'", diff.Get("action").(string))
 		}
 	}

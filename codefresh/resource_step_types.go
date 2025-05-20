@@ -10,8 +10,8 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
-	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/schemautil"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/schemautil"
 	ghodss "github.com/ghodss/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"

@@ -98,7 +98,6 @@ func resourceAccountUserAssociationRead(d *schema.ResourceData, meta interface{}
 	if userID == "" {
 		d.SetId("")
 
-
 		return nil
 	}
 

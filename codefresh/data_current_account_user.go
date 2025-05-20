@@ -78,7 +78,6 @@ func mapDataCurrentAccountUserToResource(currentAccount *cfclient.CurrentAccount
 				return err
 			}
 
-
 			err = d.Set("email", user.Email)
 
 			if err != nil {

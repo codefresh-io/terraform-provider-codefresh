@@ -147,19 +147,19 @@ func mapDataIdpToResource(idp cfclient.IDP, d *schema.ResourceData) error {
 	//d.Set("apiURL", idp.ApiURL) //          string   `json:"apiURL,omitempty"`
 	//d.Set("appId", idp.AppId) //          string   `json:"appId,omitempty"`
 	//d.Set("authURL", idp.AuthURL) //        string   `json:"authURL,omitempty"`
-	err = d.Set("client_host", idp.ClientHost)     //     string   `json:"clientHost,omitempty"`
+	err = d.Set("client_host", idp.ClientHost) //     string   `json:"clientHost,omitempty"`
 
 	if err != nil {
 		return err
 	}
 
-	err = d.Set("client_id", idp.ClientId)         //       string   `json:"clientId,omitempty"`
+	err = d.Set("client_id", idp.ClientId) //       string   `json:"clientId,omitempty"`
 
 	if err != nil {
 		return err
 	}
 
-	err = d.Set("client_name", idp.ClientName)     //     string   `json:"clientName,omitempty"`
+	err = d.Set("client_name", idp.ClientName) //     string   `json:"clientName,omitempty"`
 
 	if err != nil {
 		return err
@@ -171,32 +171,31 @@ func mapDataIdpToResource(idp cfclient.IDP, d *schema.ResourceData) error {
 		return err
 	}
 
-	err = d.Set("client_type", idp.ClientType)     //      string   `json:"clientType,omitempty"`
+	err = d.Set("client_type", idp.ClientType) //      string   `json:"clientType,omitempty"`
 
 	if err != nil {
 		return err
 	}
 
-
-	err = d.Set("cookie_iv", idp.CookieIv)         //        string   `json:"cookieIv,omitempty"`
-
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("cookie_key", idp.CookieKey)       //       string   `json:"cookieKey,omitempty"`
+	err = d.Set("cookie_iv", idp.CookieIv) //        string   `json:"cookieIv,omitempty"`
 
 	if err != nil {
 		return err
 	}
 
-	err = d.Set("display_name", idp.DisplayName)   //     string   `json:"displayName,omitempty"`
+	err = d.Set("cookie_key", idp.CookieKey) //       string   `json:"cookieKey,omitempty"`
 
 	if err != nil {
 		return err
 	}
 
-	err = d.Set("_id", idp.ID)                     //              string   `json:"_id,omitempty"`
+	err = d.Set("display_name", idp.DisplayName) //     string   `json:"displayName,omitempty"`
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("_id", idp.ID) //              string   `json:"_id,omitempty"`
 
 	if err != nil {
 		return err
@@ -212,7 +211,7 @@ func mapDataIdpToResource(idp cfclient.IDP, d *schema.ResourceData) error {
 		return err
 	}
 
-	err = d.Set("tenant", idp.Tenant)                            //          string   `json:"tenant,omitempty"`
+	err = d.Set("tenant", idp.Tenant) //          string   `json:"tenant,omitempty"`
 
 	if err != nil {
 		return err
