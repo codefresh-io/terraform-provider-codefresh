@@ -80,7 +80,7 @@ steps:
       - gpg --import /tmp/private.key
       - git config user.signingkey ${GPG_FINGERPRINT}
       - git clean -fdx
-      - goreleaser release --rm-dist
+      - goreleaser release
     when:
       condition:
         all:
