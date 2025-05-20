@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	funk "github.com/thoas/go-funk"
 )
 
 func resourcePermission() *schema.Resource {
@@ -41,6 +40,7 @@ The type of resources the permission applies to. Possible values:
 	* pipeline
 	* cluster
 	* project
+	* runtime-environment
 				`,
 				Type:     schema.TypeString,
 				Required: true,
@@ -48,6 +48,7 @@ The type of resources the permission applies to. Possible values:
 					"pipeline",
 					"cluster",
 					"project",
+					"runtime-environment",
 				}, false),
 			},
 			"related_resource": {
@@ -65,7 +66,7 @@ Specifies the resource to use when evaluating the tags. Possible values:
 				Description: `
 Action to be allowed. Possible values:
 	* create
-	* read
+	* read (For runtime-environment resource, 'read' means 'assign')
 	* update
 	* delete
 	* run (Only valid for pipeline resource)
@@ -110,7 +111,7 @@ func resourcePermissionCustomDiff(ctx context.Context, diff *schema.ResourceDiff
 		}
 	}
 	if diff.HasChanges("resource", "action") {
-		if funk.Contains([]string{"run", "approve", "debug"}, diff.Get("action").(string)) && diff.Get("resource").(string) != "pipeline" {
+		if contains([]string{"run", "approve", "debug"}, diff.Get("action").(string)) && diff.Get("resource").(string) != "pipeline" {
 			return fmt.Errorf("action %v is only valid when resource is 'pipeline'", diff.Get("action").(string))
 		}
 	}
