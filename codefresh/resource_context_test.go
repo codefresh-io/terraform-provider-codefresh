@@ -204,7 +204,7 @@ resource "codefresh_context" "test" {
 
   spec {
 	config {
-		data = { 
+		data = {
 			%q = %q
 			%q = %q
 		}
@@ -223,7 +223,7 @@ resource "codefresh_context" "test" {
 
   spec {
 	secret {
-		data = { 
+		data = {
 			%q = %q
 			%q = %q
 		}

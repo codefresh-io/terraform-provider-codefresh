@@ -16,7 +16,7 @@ func resourceTeam() *schema.Resource {
 		Update:      resourceTeamUpdate,
 		Delete:      resourceTeamDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -70,7 +70,12 @@ func resourceTeamCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(resp.ID)
-	d.Set("account_id", resp.Account)
+
+	err = d.Set("account_id", resp.Account)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

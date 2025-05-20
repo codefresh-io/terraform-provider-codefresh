@@ -2,19 +2,60 @@
 page_title: "codefresh_api_key Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  Manages an API Key tied to an Account and a User.
+  Manages an API Key tied to a user within an account or a service account within the current account.
+  	On the Codefresh SaaS platfrom this resource is only usable for service accounts.
+  	Management of API keys for users in other accounts requires admin priveleges and hence can only be done on Codefresh on-premises installations.
 ---
 
 # codefresh_api_key (Resource)
 
-Manages an API Key tied to an Account and a User.
+Manages an API Key tied to a user within an account or a service account within the current account.
+		On the Codefresh SaaS platfrom this resource is only usable for service accounts.
+		Management of API keys for users in other accounts requires admin priveleges and hence can only be done on Codefresh on-premises installations.
 
-terraform-provider-codefresh itself uses an API key, passed as provider's attribute, but it's possible to use that API Key to generate a new one. 
-This resource requires Codefresh system admin permissions, hence is relevant for on-prem deployments of Codefresh only.
-
+terraform-provider-codefresh itself uses an API key, passed as provider's attribute, but it's possible to use that API Key to generate a new one.
 
 ## Example usage
 
+### With service accounts
+
+```hcl
+provider "codefresh" {
+  api_url = "my API URL"
+  token = "my init API token"
+}
+
+resource "codefresh_service_account" "example" {
+    name = "example-service-account"
+}
+
+resource "codefresh_api_key" "example" {
+  service_account_id = codefresh_service_account.example.id
+  name = "example-token"
+  scopes = [
+    "project"
+  ]
+}
+
+provider "codefresh" {
+  alias = "project_creator_sa"
+  api_url = "my API URL"
+  token = codefresh_api_key.example.token
+}
+
+resource "codefresh_project" "example" {
+
+  provider = codefresh.project_creator_sa
+
+  name = "myproject"
+
+  tags = [
+    "team_1"
+  ]
+}
+```
+
+### With user and account combination (on-premise only)
 ```hcl
 provider "codefresh" {
   api_url = "my API URL"
@@ -77,12 +118,11 @@ resource "codefresh_team" "team_1" {
 
 ### Required
 
-- `account_id` (String) The ID of account in which the API key will be created.
 - `name` (String) The display name for the API key.
-- `user_id` (String) The ID of a user within the referenced `account_id` that will own the API key.
 
 ### Optional
 
+- `account_id` (String) The ID of account in which the API key will be created. Required if user_id is set.
 - `scopes` (Set of String) A list of access scopes for the API key. The possible values:
 	* agent
 	* agents
@@ -102,6 +142,8 @@ resource "codefresh_team" "team_1" {
 	* step-types
 	* view
 	* workflow
+- `service_account_id` (String) The ID of the service account to create the API key for.
+- `user_id` (String) The ID of a user within the referenced `account_id` that will own the API key. Requires a Codefresh admin token and can be used only in Codefresh on-premises installations.
 
 ### Read-Only
 

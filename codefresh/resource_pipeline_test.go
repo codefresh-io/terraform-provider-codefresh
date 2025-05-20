@@ -263,10 +263,16 @@ func TestAccCodefreshPipeline_OriginalYamlString_All(t *testing.T) {
 	resourceName := "codefresh_pipeline.test"
 	originalYamlString := `version: 1.0
 fail_fast: false
+indicators:
+- environment: &my_common_envs
+    - MYSQL_HOST=mysql
+    - MYSQL_USER=user
+    - MYSQL_PASS=password
+    - MYSQL_PORT=3351
 stages:
   - test
 mode: parallel
-hooks: 
+hooks:
   on_finish:
     steps:
       secondmycleanup:
@@ -282,6 +288,7 @@ hooks:
       commands:
        - echo 'Creating an adhoc test environment'
       image: alpine:3.9
+      environment: *my_common_envs
     annotations:
       set:
         - annotations:
@@ -292,23 +299,25 @@ steps:
   zz_firstStep:
     stage: test
     image: alpine
+    environment: *my_common_envs
     commands:
       - echo Hello World First Step
   aa_secondStep:
     stage: test
     image: alpine
     commands:
-      - echo Hello World Second Step`
+    - echo Hello World Second Step
+`
 
 	expectedSpecAttributes := &cfclient.Spec{
 		Steps: &cfclient.Steps{
-			Steps: `{"zz_firstStep":{"stage":"test","image":"alpine","commands":["echo Hello World First Step"]},"aa_secondStep":{"stage":"test","image":"alpine","commands":["echo Hello World Second Step"]}}`,
+			Steps: `{"zz_firstStep":{"stage":"test","image":"alpine","environment":["MYSQL_HOST=mysql","MYSQL_USER=user","MYSQL_PASS=password","MYSQL_PORT=3351"],"commands":["echo Hello World First Step"]},"aa_secondStep":{"stage":"test","image":"alpine","commands":["echo Hello World Second Step"]}}`,
 		},
 		Stages: &cfclient.Stages{
 			Stages: `["test"]`,
 		},
 		Hooks: &cfclient.Hooks{
-			Hooks: `{"on_finish":{"steps":{"secondmycleanup":{"commands":["echo echo cleanup step"],"image":"alpine:3.9"},"firstmynotification":{"commands":["echo Notify slack"],"image":"cloudposse/slack-notifier"}}},"on_elected":{"exec":{"commands":["echo 'Creating an adhoc test environment'"],"image":"alpine:3.9"},"annotations":{"set":[{"annotations":[{"my_annotation_example1":10.45},{"my_string_annotation":"Hello World"}],"entity_type":"build"}]}}}`,
+			Hooks: `{"on_finish":{"steps":{"secondmycleanup":{"commands":["echo echo cleanup step"],"image":"alpine:3.9"},"firstmynotification":{"commands":["echo Notify slack"],"image":"cloudposse/slack-notifier"}}},"on_elected":{"exec":{"commands":["echo 'Creating an adhoc test environment'"],"image":"alpine:3.9","environment":["MYSQL_HOST=mysql","MYSQL_USER=user","MYSQL_PASS=password","MYSQL_PORT=3351"]},"annotations":{"set":[{"annotations":[{"my_annotation_example1":10.45},{"my_string_annotation":"Hello World"}],"entity_type":"build"}]}}}`,
 		},
 	}
 
@@ -327,6 +336,7 @@ steps:
 					resource.TestCheckResourceAttr(resourceName, "original_yaml_string", originalYamlString),
 					testAccCheckCodefreshPipelineOriginalYamlStringAttributePropagation(resourceName, expectedSpecAttributes),
 				),
+				Destroy: false,
 			},
 			{
 				ResourceName:      resourceName,
@@ -711,9 +721,9 @@ func TestAccCodefreshPipeline_ExternalResources(t *testing.T) {
 		CheckDestroy: testAccCheckCodefreshPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodefreshPipelineExternalResources(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git", 
-																  "github", "codefresh-io/external-resources1", "master", "test.py", "/codefresh/volume/test.py",
-																  "github2", "codefresh-io/external-resources2", "main", "test2.py", "/codefresh/volume/test2.py"),
+				Config: testAccCodefreshPipelineExternalResources(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git",
+					"github", "codefresh-io/external-resources1", "master", "test.py", "/codefresh/volume/test.py",
+					"github2", "codefresh-io/external-resources2", "main", "test2.py", "/codefresh/volume/test2.py"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.0.context", "github"),
@@ -735,8 +745,8 @@ func TestAccCodefreshPipeline_ExternalResources(t *testing.T) {
 			},
 			{
 				Config: testAccCodefreshPipelineExternalResources(name, "codefresh-contrib/react-sample-app", "./codefresh.yml", "master", "git",
-																  "github2", "codefresh-io/external-resources2", "main", "test2.py", "/codefresh/volume/test2.py", 
-																  "github", "codefresh-io/external-resources1", "master", "test.py", "/codefresh/volume/test.py"),
+					"github2", "codefresh-io/external-resources2", "main", "test2.py", "/codefresh/volume/test2.py",
+					"github", "codefresh-io/external-resources1", "master", "test.py", "/codefresh/volume/test.py"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodefreshPipelineExists(resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.external_resource.1.context", "github"),
@@ -1476,36 +1486,6 @@ resource "codefresh_pipeline" "test" {
 `, rName, repo, path, revision, context, ignoreTrigger)
 }
 
-func testAccCodefreshPipelineOnCreateBranchIgnoreTriggerWithBranchName(rName, repo, path, revision, context, branchName string, ignoreTrigger bool) string {
-	return fmt.Sprintf(`
-resource "codefresh_pipeline" "test" {
-
-  lifecycle {
-    ignore_changes = [
-      revision
-    ]
-  }
-
-  name = "%s"
-
-  spec {
-	spec_template {
-    	repo        = %q
-    	path        = %q
-    	revision    = %q
-    	context     = %q
-	}
-	termination_policy {
-		on_create_branch {
-			branch_nane = %q
-			ignore_trigger = %t
-		}
-	}
-  }
-}
-`, rName, repo, path, revision, context, branchName, ignoreTrigger)
-}
-
 func testAccCodefreshPipelineIsPublic(rName, repo, path, revision, context string, isPublic bool) string {
 	return fmt.Sprintf(`
 resource "codefresh_pipeline" "test" {
@@ -1571,7 +1551,7 @@ resource "codefresh_pipeline" "test" {
   }
 }
 `,
-rName, repo, path, revision, context, 
-extResource1Context, extResource1Repo ,extResource1Revision, extResourse1SourcePath, extResource1DestPath, 
-extResource2Context, extResource2Repo ,extResource2Revision, extResourse2SourcePath, extResource2DestPath)
+		rName, repo, path, revision, context,
+		extResource1Context, extResource1Repo, extResource1Revision, extResourse1SourcePath, extResource1DestPath,
+		extResource2Context, extResource2Repo, extResource2Revision, extResourse2SourcePath, extResource2DestPath)
 }

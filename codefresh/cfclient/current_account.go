@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/stretchr/objx"
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 // CurrentAccountUser spec
@@ -18,10 +18,11 @@ type CurrentAccountUser struct {
 
 // CurrentAccount spec
 type CurrentAccount struct {
-	ID     string
-	Name   string
-	Users  []CurrentAccountUser
-	Admins []CurrentAccountUser
+	ID           string
+	Name         string
+	Users        []CurrentAccountUser
+	Admins       []CurrentAccountUser
+	FeatureFlags map[string]bool
 }
 
 // GetCurrentAccount -
@@ -46,9 +47,10 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 		return nil, fmt.Errorf("GetCurrentAccount - cannot get activeAccountName")
 	}
 	currentAccount := &CurrentAccount{
-		Name:   activeAccountName,
-		Users:  make([]CurrentAccountUser, 0),
-		Admins: make([]CurrentAccountUser, 0),
+		Name:         activeAccountName,
+		Users:        make([]CurrentAccountUser, 0),
+		Admins:       make([]CurrentAccountUser, 0),
+		FeatureFlags: make(map[string]bool),
 	}
 
 	accountAdminsIDs := make([]string, 0)
@@ -60,7 +62,12 @@ func (client *Client) GetCurrentAccount() (*CurrentAccount, error) {
 			currentAccount.ID = accX.Get("id").String()
 			admins := accX.Get("admins").InterSlice()
 			for _, adminI := range admins {
-				accountAdminsIDs = append(accountAdminsIDs ,adminI.(string))
+				accountAdminsIDs = append(accountAdminsIDs, adminI.(string))
+			}
+			featureFlags := accX.Get("features").ObjxMap()
+
+			for k, v := range featureFlags {
+				currentAccount.FeatureFlags[k] = v.(bool)
 			}
 			break
 		}

@@ -245,6 +245,95 @@ func (client *Client) GetApiKeysList() ([]ApiKey, error) {
 	return apiKeys, nil
 }
 
+func (client *Client) GetAPIKeyServiceUser(keyID string, serviceUserId string) (*ApiKey, error) {
+
+	opts := RequestOptions{
+		Path:   fmt.Sprintf("/auth/key/service-user/%s/%s", serviceUserId, keyID),
+		Method: "GET",
+	}
+
+	resp, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var apiKey ApiKey
+
+	err = DecodeResponseInto(resp, &apiKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &apiKey, nil
+}
+
+func (client *Client) DeleteAPIKeyServiceUser(keyID string, serviceUserId string) error {
+
+	opts := RequestOptions{
+		Path:   fmt.Sprintf("/auth/key/service-user/%s/%s", serviceUserId, keyID),
+		Method: "DELETE",
+	}
+
+	resp, err := client.RequestAPI(&opts)
+	if err != nil {
+		fmt.Println(string(resp))
+		return err
+	}
+
+	return nil
+}
+
+func (client *Client) UpdateAPIKeyServiceUser(key *ApiKey, serviceUserId string) error {
+
+	keyID := key.ID
+	if keyID == "" {
+		return errors.New("[ERROR] Key ID is empty")
+	}
+
+	body, err := EncodeToJSON(key)
+	if err != nil {
+		return err
+	}
+
+	opts := RequestOptions{
+		Path:   fmt.Sprintf("/auth/key/service-user/%s/%s", serviceUserId, keyID),
+		Method: "PATCH",
+		Body:   body,
+	}
+
+	resp, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		fmt.Println(string(resp))
+		return err
+	}
+
+	return nil
+}
+
+func (client *Client) CreateApiKeyServiceUser(serviceUserId string, apiKey *ApiKey) (string, error) {
+
+	body, err := EncodeToJSON(apiKey)
+	if err != nil {
+		return "", err
+	}
+
+	opts := RequestOptions{
+		Path:   fmt.Sprintf("/auth/key/service-user/%s", serviceUserId),
+		Method: "POST",
+		Body:   body,
+	}
+
+	resp, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(resp), nil
+}
+
 func (client *Client) createRandomUser(accountId string) (string, error) {
 	// add user
 	userPrefix := acctest.RandString(10)

@@ -90,12 +90,41 @@ func dataSourceAccountIdpRead(d *schema.ResourceData, meta interface{}) error {
 func mapDataAccountIdpToResource(cfClientIDP cfclient.IDP, d *schema.ResourceData) error {
 
 	d.SetId(cfClientIDP.ID)
-	d.Set("client_name", cfClientIDP.ClientName)
-	d.Set("client_type", cfClientIDP.ClientType)
-	d.Set("display_name", cfClientIDP.DisplayName)
-	d.Set("redirect_url", cfClientIDP.RedirectUrl)
-	d.Set("redirect_ui_url", cfClientIDP.RedirectUiUrl)
-	d.Set("login_url", cfClientIDP.LoginUrl)
+	err := d.Set("client_name", cfClientIDP.ClientName)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("client_type", cfClientIDP.ClientType)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("display_name", cfClientIDP.DisplayName)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("redirect_url", cfClientIDP.RedirectUrl)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("redirect_ui_url", cfClientIDP.RedirectUiUrl)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("login_url", cfClientIDP.LoginUrl)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

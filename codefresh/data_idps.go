@@ -10,7 +10,7 @@ import (
 
 func dataSourceIdps() *schema.Resource {
 	return &schema.Resource{
-		Description: "This data source retrieves all Identity Providers (IdPs) in the system.",
+		Description: "This data source retrieves all Identity Providers (IdPs) in the system. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.",
 		Read:        dataSourceIdpRead,
 		Schema:      IdpSchema(),
 	}
@@ -131,30 +131,91 @@ func mapDataIdpToResource(idp cfclient.IDP, d *schema.ResourceData) error {
 
 	d.SetId(idp.ID)
 
-	d.Set("access_token", idp.Access_token) //    string   `json:"access_token,omitempty"`
+	err := d.Set("access_token", idp.Access_token) //    string   `json:"access_token,omitempty"`
 
-	d.Set("accounts", datautil.FlattenStringArr(idp.Accounts)) //
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("accounts", datautil.FlattenStringArr(idp.Accounts)) //
+
+	if err != nil {
+		return err
+	}
 	//d.Set("apiHost", idp.ApiHost) //         string   `json:"apiHost,omitempty"`
 	//d.Set("apiPathPrefix", idp.ApiPathPrefix) //   string   `json:"apiPathPrefix,omitempty"`
 	//d.Set("apiURL", idp.ApiURL) //          string   `json:"apiURL,omitempty"`
 	//d.Set("appId", idp.AppId) //          string   `json:"appId,omitempty"`
 	//d.Set("authURL", idp.AuthURL) //        string   `json:"authURL,omitempty"`
-	d.Set("client_host", idp.ClientHost)     //     string   `json:"clientHost,omitempty"`
-	d.Set("client_id", idp.ClientId)         //       string   `json:"clientId,omitempty"`
-	d.Set("client_name", idp.ClientName)     //     string   `json:"clientName,omitempty"`
-	d.Set("client_secret", idp.ClientSecret) //    string   `json:"clientSecret,omitempty"`
-	d.Set("client_type", idp.ClientType)     //      string   `json:"clientType,omitempty"`
-	d.Set("cookie_iv", idp.CookieIv)         //        string   `json:"cookieIv,omitempty"`
-	d.Set("cookie_key", idp.CookieKey)       //       string   `json:"cookieKey,omitempty"`
-	d.Set("display_name", idp.DisplayName)   //     string   `json:"displayName,omitempty"`
-	d.Set("_id", idp.ID)                     //              string   `json:"_id,omitempty"`
+	err = d.Set("client_host", idp.ClientHost) //     string   `json:"clientHost,omitempty"`
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("client_id", idp.ClientId) //       string   `json:"clientId,omitempty"`
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("client_name", idp.ClientName) //     string   `json:"clientName,omitempty"`
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("client_secret", idp.ClientSecret) //    string   `json:"clientSecret,omitempty"`
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("client_type", idp.ClientType) //      string   `json:"clientType,omitempty"`
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("cookie_iv", idp.CookieIv) //        string   `json:"cookieIv,omitempty"`
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("cookie_key", idp.CookieKey) //       string   `json:"cookieKey,omitempty"`
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("display_name", idp.DisplayName) //     string   `json:"displayName,omitempty"`
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("_id", idp.ID) //              string   `json:"_id,omitempty"`
+
+	if err != nil {
+		return err
+	}
 	//d.Set("IDPLoginUrl", idp.IDPLoginUrl) //     string   `json:"IDPLoginUrl,omitempty"`
 	//d.Set("loginUrl", idp.LoginUrl) //        string   `json:"loginUrl,omitempty"`
 	//d.Set("redirectUiUrl", idp.RedirectUiUrl) //   string   `json:"redirectUiUrl,omitempty"`
 	//d.Set("redirectUrl", idp.RedirectUrl) //     string   `json:"redirectUrl,omitempty"`
 	//d.Set("refreshTokenURL", idp.RefreshTokenURL) // string   `json:"refreshTokenURL,omitempty"`
-	d.Set("scopes", datautil.FlattenStringArr(idp.Scopes)) //          []string `json:"scopes,omitempty"`
-	d.Set("tenant", idp.Tenant)                            //          string   `json:"tenant,omitempty"`
+	err = d.Set("scopes", datautil.FlattenStringArr(idp.Scopes)) //          []string `json:"scopes,omitempty"`
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("tenant", idp.Tenant) //          string   `json:"tenant,omitempty"`
+
+	if err != nil {
+		return err
+	}
 	//d.Set("tokenSecret", idp.TokenSecret) //     string   `json:"tokenSecret,omitempty"`
 	//d.Set("tokenURL", idp.TokenURL) //        string   `json:"tokenURL,omitempty"`
 	//d.Set("userProfileURL", idp.UserProfileURL) //  string   `json:"userProfileURL,omitempty"`

@@ -19,7 +19,7 @@ func resourceAccountUserAssociation() *schema.Resource {
 		Update: resourceAccountUserAssociationUpdate,
 		Delete: resourceAccountUserAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"email": {
@@ -78,7 +78,11 @@ func resourceAccountUserAssociationCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	d.Set("status", user.Status)
+	err = d.Set("status", user.Status)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -93,18 +97,43 @@ func resourceAccountUserAssociationRead(d *schema.ResourceData, meta interface{}
 	userID := d.Id()
 	if userID == "" {
 		d.SetId("")
+
 		return nil
 	}
 
 	for _, user := range currentAccount.Users {
 		if user.ID == userID {
-			d.Set("email", user.Email)
-			d.Set("username", user.UserName)
-			d.Set("status", user.Status)
-			d.Set("admin", false) // avoid missing attributes after import
+			err = d.Set("email", user.Email)
+
+			if err != nil {
+				return err
+			}
+
+			err = d.Set("username", user.UserName)
+
+			if err != nil {
+				return err
+			}
+
+			err = d.Set("status", user.Status)
+
+			if err != nil {
+				return err
+			}
+
+			err = d.Set("admin", false) // avoid missing attributes after import
+
+			if err != nil {
+				return err
+			}
+
 			for _, admin := range currentAccount.Admins {
 				if admin.ID == userID {
-					d.Set("admin", true)
+					err = d.Set("admin", true)
+
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}

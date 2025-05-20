@@ -1,23 +1,29 @@
 package datautil
 
 import (
-	"bytes"
-	"io/ioutil"
-	"strings"
-
 	"github.com/mikefarah/yq/v4/pkg/yqlib"
-	"github.com/sclevine/yj/convert"
 	"gopkg.in/op/go-logging.v1"
+	"io"
+	"strings"
+)
+
+const (
+	YQ_OUTPUT_FORMAT_JSON = "json"
+	YQ_OUTPUT_FORMAT_YAML = "yaml"
 )
 
 // Yq gets a value from a YAML string using yq
-func Yq(yamlString string, expression string) (string, error) {
-	yqEncoder := yqlib.NewYamlEncoder(0, false, yqlib.NewDefaultYamlPreferences())
+func Yq(yamlString string, expression string, outputformat string) (string, error) {
+	yqEncoder := yqlib.NewYamlEncoder(yqlib.YamlPreferences{Indent: 0, ColorsEnabled: false})
+
+	if outputformat == YQ_OUTPUT_FORMAT_JSON {
+		yqEncoder = yqlib.NewJSONEncoder(yqlib.JsonPreferences{Indent: 0, ColorsEnabled: false, UnwrapScalar: false})
+	}
 	yqDecoder := yqlib.NewYamlDecoder(yqlib.NewDefaultYamlPreferences())
 	yqEvaluator := yqlib.NewStringEvaluator()
 
 	// Disable yq logging
-	yqLogBackend := logging.AddModuleLevel(logging.NewLogBackend(ioutil.Discard, "", 0))
+	yqLogBackend := logging.AddModuleLevel(logging.NewLogBackend(io.Discard, "", 0))
 	yqlib.GetLogger().SetBackend(yqLogBackend)
 
 	yamlString, err := yqEvaluator.Evaluate(yamlString, expression, yqEncoder, yqDecoder)
@@ -27,26 +33,4 @@ func Yq(yamlString string, expression string) (string, error) {
 		return "", err
 	}
 	return yamlString, err
-}
-
-// YamlToJson converts a YAML string to JSON
-//
-// This function preserves the order of map keys (courtesy of yj package).
-// If this were to use yaml.Unmarshal() and json.Marshal() instead, the order of map keys would be lost.
-func YamlToJson(yamlString string) (string, error) {
-	yamlConverter := convert.YAML{}
-	jsonConverter := convert.JSON{}
-
-	yamlDecoded, err := yamlConverter.Decode(strings.NewReader(yamlString))
-	if err != nil {
-		return "", err
-	}
-
-	jsonBuffer := new(bytes.Buffer)
-	err = jsonConverter.Encode(jsonBuffer, yamlDecoded)
-	if err != nil {
-		return "", err
-	}
-
-	return jsonBuffer.String(), nil
 }

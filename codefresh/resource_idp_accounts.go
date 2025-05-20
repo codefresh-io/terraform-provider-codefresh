@@ -9,7 +9,7 @@ import (
 func resourceIDPAccounts() *schema.Resource {
 	return &schema.Resource{
 		Description: `
-This resource adds the list of provided account IDs to the IDP.  
+This resource adds the list of provided account IDs to the IDP.
 Because of the current Codefresh API limitation it's impossible to remove account from IDP, thus deletion is not supported.
 		`,
 		Create: resourceIDPAccountsCreate,
@@ -17,7 +17,7 @@ Because of the current Codefresh API limitation it's impossible to remove accoun
 		Update: resourceIDPAccountsUpdate,
 		Delete: resourceIDPAccountsDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"idp_id": {
@@ -50,7 +50,11 @@ func resourceIDPAccountsCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	for _, accountID := range accountIds {
-		client.AddAccountToIDP(accountID, idp.ID)
+		err = client.AddAccountToIDP(accountID, idp.ID)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	d.SetId(idp.ID)
@@ -107,7 +111,11 @@ func resourceIDPAccountsUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	for _, account := range desiredAccounts {
 		if ok := cfclient.FindInSlice(existingAccounts, account); !ok {
-			client.AddAccountToIDP(account, idp.ID)
+			err := client.AddAccountToIDP(account, idp.ID)
+
+			if err != nil {
+				return err
+			}
 		}
 	}
 

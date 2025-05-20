@@ -17,6 +17,10 @@ import (
 
 var terminationPolicyOnCreateBranchAttributes = []string{"branchName", "ignoreTrigger", "ignoreBranch"}
 
+func ptrBool(b bool) *bool {
+	return &b
+}
+
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		Description: "The central component of the Codefresh Platform. Pipelines are workflows that contain individual steps. Each step is responsible for a specific action in the process.",
@@ -25,7 +29,7 @@ func resourcePipeline() *schema.Resource {
 		Update:      resourcePipelineUpdate,
 		Delete:      resourcePipelineDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -102,10 +106,20 @@ Or: <code>original_yaml_string = file("/path/to/my/codefresh.yml")</code>
 							Default:     0,
 						},
 						"permit_restart_from_failed_steps": {
-							Description: "Defines whether it is permitted to restart builds in this pipeline from failed step. Defaults to true",
+							Description: "Defines whether it is permitted to restart builds in this pipeline from failed step (default: `true`).",
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// If the user set the pipeline to use account settings, ignore the diff
+								return d.Get("spec.0.permit_restart_from_failed_steps_use_account_settings").(bool)
+							},
+						},
+						"permit_restart_from_failed_steps_use_account_settings": {
+							Description: "Defines whether `permit_restart_from_failed_steps` should be set to “Use account settings” (default: `false`). If set, `permit_restart_from_failed_steps` will be ignored.",
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
 						},
 						"spec_template": {
 							Description: "The pipeline's spec template.",
@@ -642,53 +656,53 @@ Pipeline concurrency policy: Builds on 'Pending Approval' state should be:
 							},
 						},
 						"external_resource": {
-							Type:	schema.TypeList,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"id" : {
-										Type: schema.TypeString,
+									"id": {
+										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"type" : {
-										Type: schema.TypeString,
-										Optional: true,
+									"type": {
+										Type:        schema.TypeString,
+										Optional:    true,
 										Description: "Type of the external resource. Currently only 'git' is supported",
 										ValidateFunc: validation.StringInSlice([]string{
 											"git",
 										}, false),
 										Default: "git",
 									},
-									"repo" : {
-										Type: schema.TypeString,
-										Required: true,
+									"repo": {
+										Type:        schema.TypeString,
+										Required:    true,
 										Description: "git repository url",
 									},
-									"context" : {
-										Type: schema.TypeString,
-										Required: true,
+									"context": {
+										Type:        schema.TypeString,
+										Required:    true,
 										Description: "Context name for the git repository",
 									},
 									"revision": {
-										Type: schema.TypeString,
-										Required: true,
+										Type:        schema.TypeString,
+										Required:    true,
 										Description: "Revision/branch in the git repository",
 									},
 									"is_folder": {
-										Type: schema.TypeBool,
+										Type:        schema.TypeBool,
 										Description: "Whether or not the resource specified in source_path is a folder",
-										Optional: true,
-										Default: false,
+										Optional:    true,
+										Default:     false,
 									},
 									"source_path": {
-										Type: schema.TypeString,
+										Type:        schema.TypeString,
 										Description: "The source folder in the repository (use relative path)",
-										Required: true,
+										Required:    true,
 									},
 									"target_path": {
-										Type: schema.TypeString,
+										Type:        schema.TypeString,
 										Description: "The target folder in the pipeline workspace where the file/folder will be copied to (use absolute path)",
-										Required: true,
+										Required:    true,
 									},
 								},
 							},
@@ -803,7 +817,11 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 
 	if ok {
 		if len(encryptedVariables) > 0 {
-			setEncryptedVariablesValuesFromResource(d, encryptedVariables, "spec.0.encrypted_variables")
+			err := setEncryptedVariablesValuesFromResource(d, encryptedVariables, "spec.0.encrypted_variables")
+
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -817,7 +835,11 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 
 			if ok {
 				if len(triggerEncryptedVariables) > 0 {
-					setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.trigger.%d.encrypted_variables", triggerIndex))
+					err := setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.trigger.%d.encrypted_variables", triggerIndex))
+
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -833,7 +855,11 @@ func mapPipelineToResource(pipeline cfclient.Pipeline, d *schema.ResourceData) e
 
 			if ok {
 				if len(triggerEncryptedVariables) > 0 {
-					setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.cron_trigger.%d.encrypted_variables", triggerIndex))
+					err := setEncryptedVariablesValuesFromResource(d, triggerEncryptedVariables, fmt.Sprintf("spec.0.cron_trigger.%d.encrypted_variables", triggerIndex))
+
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -915,7 +941,17 @@ func flattenSpec(spec cfclient.Spec) []map[string]interface{} {
 	m["concurrency"] = spec.Concurrency
 	m["branch_concurrency"] = spec.BranchConcurrency
 	m["trigger_concurrency"] = spec.TriggerConcurrency
-	m["permit_restart_from_failed_steps"] = spec.PermitRestartFromFailedSteps
+
+	if spec.PermitRestartFromFailedSteps == nil {
+		m["permit_restart_from_failed_steps"] = true // default value
+		m["permit_restart_from_failed_steps_use_account_settings"] = true
+	} else if *spec.PermitRestartFromFailedSteps {
+		m["permit_restart_from_failed_steps"] = true
+		m["permit_restart_from_failed_steps_use_account_settings"] = false
+	} else {
+		m["permit_restart_from_failed_steps"] = false
+		m["permit_restart_from_failed_steps_use_account_settings"] = false
+	}
 
 	m["priority"] = spec.Priority
 
@@ -929,8 +965,8 @@ func flattenSpecTerminationPolicy(terminationPolicy []map[string]interface{}) []
 	var res []map[string]interface{}
 	attribute := make(map[string]interface{})
 	for _, policy := range terminationPolicy {
-		eventName, _ := policy["event"]
-		typeName, _ := policy["type"]
+		eventName := policy["event"]
+		typeName := policy["type"]
 		attributeName := convertOnCreateBranchAttributeToPipelineFormat(eventName.(string) + "_" + typeName.(string))
 		switch attributeName {
 		case "on_create_branch":
@@ -1084,14 +1120,29 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 			OriginalYamlString: originalYamlString,
 		},
 		Spec: cfclient.Spec{
-			PackId:                       d.Get("spec.0.pack_id").(string),
-			RequiredAvailableStorage:     d.Get("spec.0.required_available_storage").(string),
-			Priority:                     d.Get("spec.0.priority").(int),
-			Concurrency:                  d.Get("spec.0.concurrency").(int),
-			BranchConcurrency:            d.Get("spec.0.branch_concurrency").(int),
-			TriggerConcurrency:           d.Get("spec.0.trigger_concurrency").(int),
-			PermitRestartFromFailedSteps: d.Get("spec.0.permit_restart_from_failed_steps").(bool),
+			PackId:                   d.Get("spec.0.pack_id").(string),
+			RequiredAvailableStorage: d.Get("spec.0.required_available_storage").(string),
+			Priority:                 d.Get("spec.0.priority").(int),
+			Concurrency:              d.Get("spec.0.concurrency").(int),
+			BranchConcurrency:        d.Get("spec.0.branch_concurrency").(int),
+			TriggerConcurrency:       d.Get("spec.0.trigger_concurrency").(int),
 		},
+	}
+
+	shouldPermitRestart := d.Get("spec.0.permit_restart_from_failed_steps").(bool)
+	shouldUseAccountSettings := d.Get("spec.0.permit_restart_from_failed_steps_use_account_settings").(bool)
+	switch shouldUseAccountSettings {
+	case true:
+		pipeline.Spec.PermitRestartFromFailedSteps = nil
+	default:
+		switch shouldPermitRestart {
+		case true:
+			pipeline.Spec.PermitRestartFromFailedSteps = ptrBool(true)
+		case false:
+			pipeline.Spec.PermitRestartFromFailedSteps = ptrBool(false)
+		default:
+			pipeline.Spec.PermitRestartFromFailedSteps = nil
+		}
 	}
 
 	if _, ok := d.GetOk("spec.0.spec_template"); ok {
@@ -1224,14 +1275,14 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 	if externalResources, ok := d.GetOk("spec.0.external_resource"); ok {
 		for idx := range externalResources.([]interface{}) {
 			codefreshExternalResource := cfclient.ExternalResource{
-				Type: d.Get(fmt.Sprintf("spec.0.external_resource.%v.type", idx)).(string),
-				Repo: d.Get(fmt.Sprintf("spec.0.external_resource.%v.repo", idx)).(string),
-				Revision: d.Get(fmt.Sprintf("spec.0.external_resource.%v.revision", idx)).(string),
-				Context: d.Get(fmt.Sprintf("spec.0.external_resource.%v.context", idx)).(string),
-				Source: d.Get(fmt.Sprintf("spec.0.external_resource.%v.source_path", idx)).(string),
+				Type:        d.Get(fmt.Sprintf("spec.0.external_resource.%v.type", idx)).(string),
+				Repo:        d.Get(fmt.Sprintf("spec.0.external_resource.%v.repo", idx)).(string),
+				Revision:    d.Get(fmt.Sprintf("spec.0.external_resource.%v.revision", idx)).(string),
+				Context:     d.Get(fmt.Sprintf("spec.0.external_resource.%v.context", idx)).(string),
+				Source:      d.Get(fmt.Sprintf("spec.0.external_resource.%v.source_path", idx)).(string),
 				Destination: d.Get(fmt.Sprintf("spec.0.external_resource.%v.target_path", idx)).(string),
-				IsFolder: d.Get(fmt.Sprintf("spec.0.external_resource.%v.is_folder", idx)).(bool),
-				ID: d.Get(fmt.Sprintf("spec.0.external_resource.%v.id", idx)).(string),
+				IsFolder:    d.Get(fmt.Sprintf("spec.0.external_resource.%v.is_folder", idx)).(bool),
+				ID:          d.Get(fmt.Sprintf("spec.0.external_resource.%v.id", idx)).(string),
 			}
 
 			pipeline.Spec.ExternalResources = append(pipeline.Spec.ExternalResources, codefreshExternalResource)
@@ -1241,8 +1292,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 	var codefreshTerminationPolicy []map[string]interface{}
 
 	if _, ok := d.GetOk("spec.0.termination_policy.0.on_create_branch"); ok {
-		var onCreatBranchPolicy = make(map[string]interface{})
-		onCreatBranchPolicy = getSupportedTerminationPolicyAttributes("on_create_branch")
+		onCreatBranchPolicy := getSupportedTerminationPolicyAttributes("on_create_branch")
 		for _, attribute := range terminationPolicyOnCreateBranchAttributes {
 			if attributeValue, ok := d.GetOk(fmt.Sprintf("spec.0.termination_policy.0.on_create_branch.0.%s", convertOnCreateBranchAttributeToPipelineFormat(attribute))); ok {
 				onCreatBranchPolicy[attribute] = attributeValue
@@ -1251,8 +1301,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 		codefreshTerminationPolicy = append(codefreshTerminationPolicy, onCreatBranchPolicy)
 	}
 	if _, ok := d.GetOk("spec.0.termination_policy.0.on_terminate_annotation"); ok {
-		var onTerminateAnnotationPolicy = make(map[string]interface{})
-		onTerminateAnnotationPolicy = getSupportedTerminationPolicyAttributes("on_terminate_annotation")
+		onTerminateAnnotationPolicy := getSupportedTerminationPolicyAttributes("on_terminate_annotation")
 		onTerminateAnnotationPolicy["key"] = "cf_predecessor"
 		codefreshTerminationPolicy = append(codefreshTerminationPolicy, onTerminateAnnotationPolicy)
 	}
@@ -1280,17 +1329,17 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 // This function is used to extract the spec attributes from the original_yaml_string attribute.
 // Typically, unmarshalling the YAML string is problematic because the order of the attributes is not preserved.
 // Namely, we care a lot about the order of the steps and stages attributes.
-// Luckily, the yj package introduces a MapSlice type that preserves the order Map items (see utils.go).
+// For this purpose we use yq that preserves the order of attributes when converting to json.
 func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfclient.Pipeline) error {
+
 	for _, attribute := range []string{"stages", "steps", "hooks"} {
-		yamlString, err := datautil.Yq(fmt.Sprintf(".%s", attribute), originalYamlString)
+		attributeJson, err := datautil.Yq(fmt.Sprintf(".%s", attribute), originalYamlString, "json")
 		if err != nil {
 			return fmt.Errorf("error while extracting '%s' from original YAML string: %v", attribute, err)
-		} else if yamlString == "" {
+		} else if attributeJson == "" {
 			continue
 		}
 
-		attributeJson, err := datautil.YamlToJson(yamlString)
 		if err != nil {
 			return fmt.Errorf("error while converting '%s' YAML to JSON: %v", attribute, err)
 		}
@@ -1311,14 +1360,14 @@ func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipe
 		}
 	}
 
-	mode, err := datautil.Yq(".mode", originalYamlString)
+	mode, err := datautil.Yq(".mode", originalYamlString, "yaml")
 	if err != nil {
 		return fmt.Errorf("error while extracting 'mode' from original YAML string: %v", err)
 	} else if mode != "" {
 		pipeline.Spec.Mode = mode
 	}
 
-	ff, err := datautil.Yq(".fail_fast", originalYamlString)
+	ff, err := datautil.Yq(".fail_fast", originalYamlString, "yaml")
 	if err != nil {
 		return fmt.Errorf("error while extracting 'mode' from original YAML string: %v", err)
 	} else if ff != "" {
@@ -1341,13 +1390,6 @@ func getSupportedTerminationPolicyAttributes(policy string) map[string]interface
 		log.Fatal("Invalid termination policy selected: ", policy)
 	}
 	return nil
-}
-
-func convertOnCreateBranchAttributeToResourceFormat(src string) string {
-	var re = regexp.MustCompile(`_[a-z]`)
-	return re.ReplaceAllStringFunc(src, func(w string) string {
-		return strings.ToUpper(strings.ReplaceAll(w, "_", ""))
-	})
 }
 
 func convertOnCreateBranchAttributeToPipelineFormat(src string) string {

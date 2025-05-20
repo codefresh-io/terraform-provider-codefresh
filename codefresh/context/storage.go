@@ -54,7 +54,7 @@ func flattenStorageContextConfig(spec cfclient.ContextSpec, auth map[string]inte
 func FlattenJsonConfigStorageContextConfig(spec cfclient.ContextSpec) []interface{} {
 	auth := make(map[string]interface{})
 	auth["json_config"] = spec.Data["auth"].(map[string]interface{})["jsonConfig"]
-	auth["type"] = spec.Data["type"]
+	auth["type"] = spec.Data["auth"].(map[string]interface{})["type"]
 	return flattenStorageContextConfig(spec, auth)
 }
 

@@ -4,16 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"sort"
 	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/schemautil"
 	ghodss "github.com/ghodss/yaml"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/iancoleman/orderedmap"
@@ -31,7 +30,7 @@ The resource allows to handle the life-cycle of the version by allowing specifyi
 		UpdateContext: resourceStepTypesUpdate,
 		DeleteContext: resourceStepTypesDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -269,9 +268,7 @@ func cleanUpStepFromTransientValues(stepTypes *cfclient.StepTypes, name, version
 	if stepTypes != nil {
 		// Remove transient attributes from metadata
 		for _, attribute := range []string{"created_at", "accountId", "id", "updated_at"} {
-			if _, ok := stepTypes.Metadata[attribute]; ok {
-				delete(stepTypes.Metadata, attribute)
-			}
+			delete(stepTypes.Metadata, attribute)
 		}
 		// Forcing latest to false
 		// This is needed because in some cases (e.g. adding an old version) the latest attribute is set to `null` by Codefresh
@@ -328,15 +325,15 @@ func resourceStepTypesVersionsConfigHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
-	buf.WriteString(fmt.Sprintf("%s", m["version_number"].(string)))
+	buf.WriteString(m["version_number"].(string))
 	var stepTypes cfclient.StepTypes
 	stepTypesYaml := m["step_types_yaml"].(string)
-	ghodss.Unmarshal([]byte(stepTypesYaml), &stepTypes)
+	_ = ghodss.Unmarshal([]byte(stepTypesYaml), &stepTypes)
 	// Remove runtime attributes, name and version to avoid discrepancies when comparing hashes
 	cleanUpStepFromTransientValues(&stepTypes, "", "")
 	stepTypesYamlByteArray, _ := ghodss.Marshal(stepTypes)
-	buf.WriteString(fmt.Sprintf("%s", string(stepTypesYamlByteArray)))
-	hash := hashcode.String(buf.String())
+	buf.WriteString(string(stepTypesYamlByteArray))
+	hash := datautil.Hashcode(buf.String())
 	return hash
 }
 

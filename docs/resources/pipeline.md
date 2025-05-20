@@ -132,7 +132,8 @@ Optional:
 - `external_resource` (Block List) (see [below for nested schema](#nestedblock--spec--external_resource))
 - `options` (Block List, Max: 1) The options for the pipeline. (see [below for nested schema](#nestedblock--spec--options))
 - `pack_id` (String) SAAS pack (`5cd1746617313f468d669013` for Small; `5cd1746717313f468d669014` for Medium; `5cd1746817313f468d669015` for Large; `5cd1746817313f468d669017` for XL; `5cd1746817313f468d669018` for XXL); `5cd1746817313f468d669020` for 4XL).
-- `permit_restart_from_failed_steps` (Boolean) Defines whether it is permitted to restart builds in this pipeline from failed step. Defaults to true
+- `permit_restart_from_failed_steps` (Boolean) Defines whether it is permitted to restart builds in this pipeline from failed step (default: `true`).
+- `permit_restart_from_failed_steps_use_account_settings` (Boolean) Defines whether `permit_restart_from_failed_steps` should be set to “Use account settings” (default: `false`). If set, `permit_restart_from_failed_steps` will be ignored.
 - `priority` (Number) Helps to organize the order of builds execution in case of reaching the concurrency limit (default: `0`).
 - `required_available_storage` (String) Minimum disk space required for build filesystem ( unit Gi is required).
 - `runtime_environment` (Block List) The runtime environment for the pipeline. (see [below for nested schema](#nestedblock--spec--runtime_environment))
@@ -204,7 +205,7 @@ Optional:
 
 Read-Only:
 
-- `id` (String) The ID of this resource.
+- `id` (String)
 
 
 <a id="nestedblock--spec--options"></a>

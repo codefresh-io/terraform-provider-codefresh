@@ -91,14 +91,14 @@ type RuntimeEnvironment struct {
 }
 
 type ExternalResource struct {
-	ID			string `json:"id,omitempty"`
-	Type		string `json:"type"`
-	Source  	string `json:"source"`
-	Context 	string `json:"context"`
+	ID          string `json:"id,omitempty"`
+	Type        string `json:"type"`
+	Source      string `json:"source"`
+	Context     string `json:"context"`
 	Destination string `json:"destination"`
-	IsFolder 	bool   `json:"isFolder"`
-	Repo		string `json:"repo"`
-	Revision 	string `json:"revision"`
+	IsFolder    bool   `json:"isFolder"`
+	Repo        string `json:"repo"`
+	Revision    string `json:"revision"`
 }
 
 func (t *Trigger) SetVariables(variables map[string]interface{}, encrypted bool) {
@@ -133,8 +133,8 @@ type Spec struct {
 	RequiredAvailableStorage     string                   `json:"requiredAvailableStorage,omitempty"`
 	Hooks                        *Hooks                   `json:"hooks,omitempty"`
 	Options                      map[string]bool          `json:"options,omitempty"`
-	PermitRestartFromFailedSteps bool                     `json:"permitRestartFromFailedSteps,omitempty"`
-	ExternalResources			 []ExternalResource		  `json:"externalResources,omitempty"`
+	PermitRestartFromFailedSteps *bool                    `json:"permitRestartFromFailedSteps,omitempty"`
+	ExternalResources            []ExternalResource       `json:"externalResources,omitempty"`
 }
 
 type Steps struct {

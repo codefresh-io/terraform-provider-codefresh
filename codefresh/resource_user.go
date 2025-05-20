@@ -1,6 +1,7 @@
 package codefresh
 
 import (
+	"errors"
 	"log"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
@@ -10,19 +11,30 @@ import (
 
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
-		Description: "This resource is used to manage a Codefresh user.",
+		Description: "This resource is used to manage a Codefresh user. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.",
 		Create:      resourceUsersCreate,
 		Read:        resourceUsersRead,
 		Update:      resourceUsersUpdate,
 		Delete:      resourceUsersDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"user_name": {
 				Description: "The username of the user.",
 				Type:        schema.TypeString,
 				Required:    true,
+			},
+			"password": {
+				Description: "Password - for users without SSO.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+			},
+			"has_password": {
+				Description: "Whether the user has a local password.",
+				Type:        schema.TypeBool,
+				Computed:    true,
 			},
 			"email": {
 				Description: "The email of the user.",
@@ -145,10 +157,22 @@ func resourceUsersCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("activate").(bool) {
-		client.ActivateUser(d.Id())
+		_, err := client.ActivateUser(d.Id())
+
+		if err != nil {
+			return err
+		}
 	}
 
-	return nil
+	if d.Get("password") != "" {
+		err := client.UpdateLocalUserPassword(d.Get("user_name").(string), d.Get("password").(string))
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return resourceUsersRead(d, meta)
 }
 
 func resourceUsersRead(d *schema.ResourceData, meta interface{}) error {
@@ -198,7 +222,15 @@ func resourceUsersUpdate(d *schema.ResourceData, meta interface{}) error {
 	for _, account := range *accounts {
 		_ = client.AddUserToTeamByAdmin(userId, account.ID, "users")
 	}
-	return nil
+
+	// Update local password
+	err = updateUserLocalPassword(d, client)
+
+	if err != nil {
+		return err
+	}
+
+	return resourceUsersRead(d, meta)
 }
 
 func resourceUsersDelete(d *schema.ResourceData, meta interface{}) error {
@@ -220,19 +252,63 @@ func resourceUsersDelete(d *schema.ResourceData, meta interface{}) error {
 
 func mapUserToResource(user cfclient.User, d *schema.ResourceData) error {
 
-	d.Set("user_name", user.UserName)
-	d.Set("email", user.Email)
-	d.Set("accounts", flattenUserAccounts(user.Account))
-	d.Set("status", user.Status)
-	if user.Personal != nil {
-		d.Set("personal", flattenPersonal(user.Personal))
+	err := d.Set("user_name", user.UserName)
+
+	if err != nil {
+		return err
 	}
-	d.Set("short_profile",
+
+	err = d.Set("email", user.Email)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("accounts", flattenUserAccounts(user.Account))
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("status", user.Status)
+
+	if err != nil {
+		return err
+	}
+
+	if user.Personal != nil {
+		err = d.Set("personal", flattenPersonal(user.Personal))
+
+		if err != nil {
+			return err
+		}
+	}
+
+	err = d.Set("short_profile",
 		[]map[string]interface{}{
 			{"user_name": user.ShortProfile.UserName},
 		})
-	d.Set("roles", user.Roles)
-	d.Set("login", flattenUserLogins(&user.Logins))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("has_password", user.PublicProfile.HasPassword)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("roles", user.Roles)
+
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("login", flattenUserLogins(&user.Logins))
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -324,4 +400,34 @@ func mapResourceToNewUser(d *schema.ResourceData) *cfclient.NewUser {
 	// }
 
 	return user
+}
+
+func updateUserLocalPassword(d *schema.ResourceData, client *cfclient.Client) error {
+
+	if d.HasChange("password") {
+		hasPassword := d.Get("has_password").(bool)
+
+		if _, ok := d.GetOk("user_name"); !ok {
+			return errors.New("cannot update password as username attribute is not set")
+		}
+
+		userName := d.Get("user_name").(string)
+
+		if password := d.Get("password"); password != "" {
+			err := client.UpdateLocalUserPassword(userName, password.(string))
+
+			if err != nil {
+				return err
+			}
+			// If password is not set but has_password returns true, it means that it was removed
+		} else if hasPassword {
+			err := client.DeleteLocalUserPassword(userName)
+
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

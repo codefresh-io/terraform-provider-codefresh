@@ -9,14 +9,14 @@ import (
 func resourceAccountAdmins() *schema.Resource {
 	return &schema.Resource{
 		Description: `
-		Use this resource to set a list of admins for any account.
+		Use this resource to set a list of admins for any account. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 		`,
 		Create: resourceAccountAdminsCreate,
 		Read:   resourceAccountAdminsRead,
 		Update: resourceAccountAdminsUpdate,
 		Delete: resourceAccountAdminsDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"account_id": {
@@ -81,7 +81,11 @@ func resourceAccountAdminsRead(d *schema.ResourceData, meta interface{}) error {
 
 	accountId := d.Id()
 
-	d.Set("account_id", accountId)
+	err := d.Set("account_id", accountId)
+
+	if err != nil {
+		return err
+	}
 
 	account, err := client.GetAccountByID(accountId)
 	if err != nil {

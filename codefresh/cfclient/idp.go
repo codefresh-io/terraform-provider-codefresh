@@ -1,7 +1,6 @@
 package cfclient
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -237,7 +236,7 @@ func (client *Client) GetIdpByName(idpName string) (*IDP, error) {
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("[ERROR] IDP with name %s isn't found.", idpName))
+	return nil, fmt.Errorf("[ERROR] IDP with name %s isn't found.", idpName)
 }
 
 func (client *Client) GetIdpByID(idpID string) (*IDP, error) {
@@ -253,7 +252,7 @@ func (client *Client) GetIdpByID(idpID string) (*IDP, error) {
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("[ERROR] IDP with ID %s isn't found.", idpID))
+	return nil, fmt.Errorf("[ERROR] IDP with ID %s isn't found.", idpID)
 }
 
 // get account idps
@@ -293,7 +292,7 @@ func (client *Client) GetAccountIdpByID(idpID string) (*IDP, error) {
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("[ERROR] IDP with ID %s isn't found.", idpID))
+	return nil, fmt.Errorf("[ERROR] IDP with ID %s isn't found.", idpID)
 }
 
 // add account to idp

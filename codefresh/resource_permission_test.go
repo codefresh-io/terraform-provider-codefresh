@@ -27,6 +27,28 @@ func TestAccCodefreshPermissionConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action", "create"),
 					resource.TestCheckResourceAttr(resourceName, "resource", "pipeline"),
 					resource.TestCheckResourceAttr(resourceName, "tags.0", "*"),
+					resource.TestCheckResourceAttr(resourceName, "related_resource", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.1", "production"),
+				),
+			},
+			{
+				Config: testAccCodefreshPermissionConfig("create", "pipeline", "project", []string{"production", "*"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPermissionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "action", "create"),
+					resource.TestCheckResourceAttr(resourceName, "resource", "pipeline"),
+					resource.TestCheckResourceAttr(resourceName, "related_resource", "project"),
+					resource.TestCheckResourceAttr(resourceName, "tags.0", "*"),
+					resource.TestCheckResourceAttr(resourceName, "tags.1", "production"),
+				),
+			},
+			{
+				Config: testAccCodefreshNoRelatedResourcePermissionConfig("create", "runtime-environment", []string{"production", "*"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshPermissionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "action", "create"),
+					resource.TestCheckResourceAttr(resourceName, "resource", "runtime-environment"),
+					resource.TestCheckResourceAttr(resourceName, "tags.0", "*"),
 					resource.TestCheckResourceAttr(resourceName, "tags.1", "production"),
 				),
 			},
@@ -83,4 +105,27 @@ func testAccCodefreshPermissionConfig(action, resource, relatedResource string, 
 		tags             = [%s]
 	}
 `, escapeString(action), escapeString(resource), escapeString(relatedResource), strings.Join(tagsEscaped[:], ","))
+}
+
+func testAccCodefreshNoRelatedResourcePermissionConfig(action, resource string, tags []string) string {
+	escapeString := func(str string) string {
+		if str == "null" {
+			return str // null means Terraform should ignore this field
+		}
+		return fmt.Sprintf(`"%s"`, str)
+	}
+	tagsEscaped := funk.Map(tags, escapeString).([]string)
+
+	return fmt.Sprintf(`
+	data "codefresh_team" "users" {
+		name = "users"
+	}
+
+	resource "codefresh_permission" "test" {
+		team             = data.codefresh_team.users.id
+		action           = %s
+		resource         = %s
+		tags             = [%s]
+	}
+`, escapeString(action), escapeString(resource), strings.Join(tagsEscaped[:], ","))
 }

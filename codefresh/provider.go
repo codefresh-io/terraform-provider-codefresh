@@ -5,7 +5,6 @@ import (
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"os"
 )
 
@@ -41,18 +40,21 @@ func Provider() *schema.Provider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"codefresh_account":         dataSourceAccount(),
-			"codefresh_context":         dataSourceContext(),
-			"codefresh_current_account": dataSourceCurrentAccount(),
-			"codefresh_idps":            dataSourceIdps(),
-			"codefresh_step_types":      dataSourceStepTypes(),
-			"codefresh_team":            dataSourceTeam(),
-			"codefresh_user":            dataSourceUser(),
-			"codefresh_users":           dataSourceUsers(),
-			"codefresh_registry":        dataSourceRegistry(),
-			"codefresh_pipelines":       dataSourcePipelines(),
-			"codefresh_account_idp":     dataSourceAccountIdp(),
-			"codefresh_project":         dataSourceProject(),
+			"codefresh_account":                 dataSourceAccount(),
+			"codefresh_context":                 dataSourceContext(),
+			"codefresh_current_account":         dataSourceCurrentAccount(),
+			"codefresh_idps":                    dataSourceIdps(),
+			"codefresh_step_types":              dataSourceStepTypes(),
+			"codefresh_team":                    dataSourceTeam(),
+			"codefresh_user":                    dataSourceUser(),
+			"codefresh_users":                   dataSourceUsers(),
+			"codefresh_registry":                dataSourceRegistry(),
+			"codefresh_pipelines":               dataSourcePipelines(),
+			"codefresh_account_idp":             dataSourceAccountIdp(),
+			"codefresh_project":                 dataSourceProject(),
+			"codefresh_account_gitops_settings": dataSourceAccountGitopsSettings(),
+			"codefresh_current_account_user":    dataSourceCurrentAccountUser(),
+			"codefresh_service_account":         dataSourceServiceAccount(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"codefresh_account":                  resourceAccount(),
@@ -72,6 +74,8 @@ func Provider() *schema.Provider {
 			"codefresh_abac_rules":               resourceGitopsAbacRule(),
 			"codefresh_idp":                      resourceIdp(),
 			"codefresh_account_idp":              resourceAccountIdp(),
+			"codefresh_account_gitops_settings":  resourceAccountGitopsSettings(),
+			"codefresh_service_account":          resourceServiceAccount(),
 		},
 		ConfigureFunc: configureProvider,
 	}
@@ -85,5 +89,6 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	if token == "" {
 		token = os.Getenv(ENV_CODEFRESH_API_KEY)
 	}
+
 	return cfclient.NewClient(apiURL, apiURLV2, token, ""), nil
 }

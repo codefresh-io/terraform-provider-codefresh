@@ -2,12 +2,12 @@
 page_title: "codefresh_user Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-  This resource is used to manage a Codefresh user.
+  This resource is used to manage a Codefresh user. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 ---
 
 # codefresh_user (Resource)
 
-This resource is used to manage a Codefresh user.
+This resource is used to manage a Codefresh user. Requires a Codefresh admin token and applies only to Codefresh on-premises installations.
 
 
 
@@ -75,11 +75,13 @@ resource "codefresh_user" "new" {
 
 - `activate` (Boolean) Whether to activate the user or to leave it as `pending`.
 - `login` (Block Set) Login settings for the user. (see [below for nested schema](#nestedblock--login))
+- `password` (String, Sensitive) Password - for users without SSO.
 - `personal` (Block List, Max: 1) Personal information about the user. (see [below for nested schema](#nestedblock--personal))
 - `roles` (Set of String) The roles of the user.
 
 ### Read-Only
 
+- `has_password` (Boolean) Whether the user has a local password.
 - `id` (String) The ID of this resource.
 - `short_profile` (List of Object) The computed short profile of the user. (see [below for nested schema](#nestedatt--short_profile))
 - `status` (String) The status of the user (e.g. `new`, `pending`).

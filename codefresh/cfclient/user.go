@@ -2,7 +2,6 @@ package cfclient
 
 import (
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -21,6 +20,10 @@ type Login struct {
 
 type ShortProfile struct {
 	UserName string `json:"userName,omitempty"`
+}
+
+type PublicProfile struct {
+	HasPassword bool `json:"hasPassword,omitempty"`
 }
 
 type Personal struct {
@@ -44,6 +47,7 @@ type User struct {
 	HasPassword    bool                `json:"hasPassword,omitempty"`
 	Notifications  []NotificationEvent `json:"notifications,omitempty"`
 	ShortProfile   ShortProfile        `json:"shortProfile,omitempty"`
+	PublicProfile  PublicProfile       `json:"publicProfile,omitempty"`
 	Logins         []Login             `json:"logins,omitempty"`
 	InviteURL      string              `json:"inviteUrl,omitempty"`
 }
@@ -217,25 +221,43 @@ func (client *Client) DeleteUserAsAccountAdmin(accountId, userId string) error {
 
 func (client *Client) GetAllUsers() (*[]User, error) {
 
-	opts := RequestOptions{
-		Path:   "/admin/user",
-		Method: "GET",
+	limitPerQuery := 100
+	bIsDone := false
+	nPageIndex := 1
+
+	var allUsers []User
+
+	for !bIsDone {
+		var userPaginatedResp struct {
+			Docs []User `json:"docs"`
+		}
+
+		opts := RequestOptions{
+			Path:   fmt.Sprintf("/admin/user?limit=%d&page=%d", limitPerQuery, nPageIndex),
+			Method: "GET",
+		}
+
+		resp, err := client.RequestAPI(&opts)
+
+		if err != nil {
+			return nil, err
+		}
+
+		err = DecodeResponseInto(resp, &userPaginatedResp)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(userPaginatedResp.Docs) > 0 {
+			allUsers = append(allUsers, userPaginatedResp.Docs...)
+			nPageIndex++
+		} else {
+			bIsDone = true
+		}
 	}
 
-	resp, err := client.RequestAPI(&opts)
-	if err != nil {
-		return nil, err
-	}
-
-	var users []User
-	respStr := string(resp)
-	log.Printf("[INFO] GetAllUsers resp: %s", respStr)
-	err = DecodeResponseInto(resp, &users)
-	if err != nil {
-		return nil, err
-	}
-
-	return &users, nil
+	return &allUsers, nil
 }
 
 func (client *Client) GetUserByID(userId string) (*User, error) {
@@ -367,4 +389,43 @@ func (client *Client) UpdateUserDetails(accountId, userId, userName, userEmail s
 	}
 
 	return &respUser, nil
+}
+
+func (client *Client) UpdateLocalUserPassword(userName, password string) error {
+
+	fullPath := "/admin/user/localProvider"
+
+	requestBody := fmt.Sprintf(`{"userName": "%s","password": "%s"}`, userName, password)
+
+	opts := RequestOptions{
+		Path:   fullPath,
+		Method: "POST",
+		Body:   []byte(requestBody),
+	}
+
+	_, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (client *Client) DeleteLocalUserPassword(userName string) error {
+
+	fullPath := fmt.Sprintf("/admin/user/localProvider?userName=%s", userName)
+
+	opts := RequestOptions{
+		Path:   fullPath,
+		Method: "DELETE",
+	}
+
+	_, err := client.RequestAPI(&opts)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -1,0 +1,36 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example usage
+```hcl
+resource "codefresh_account_gitops_settings" "gitops-settings" {
+  git_provider = "GITHUB"
+  shared_config_repository = "https://github.com/example-org/codefresh-internal-shared-config.git?ref=main"
+}
+```
+```hcl
+resource "codefresh_account_gitops_settings" "gitops-settings" {
+  git_provider = "BITBUCKET_SERVER"
+  git_provider_api_url = https://bitbucket.example.com/rest/api/1.0
+  shared_config_repository = "http://example-bitbucket.com/scm/proj/codefresh-internal-shared-config.git"
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+~>
+Once internal config repository is cloned successfully by one or more runtimes it can no longer be changed and all attempted updates will fail.
+If you need to change the repository please contact Codefresh support.
+
+## Import
+```sh
+terraform import codefresh_account_idp.test <id>
+```

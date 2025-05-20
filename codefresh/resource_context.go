@@ -48,7 +48,7 @@ func resourceContext() *schema.Resource {
 		Update:      resourceContextUpdate,
 		Delete:      resourceContextDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -180,12 +180,14 @@ func resourceContextRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	context, err := client.GetContext(contextName)
+
 	if err != nil {
 		log.Printf("[DEBUG] Error while getting context. Error = %v", contextName)
 		return err
 	}
 
 	err = mapContextToResource(*context, d)
+
 	if err != nil {
 		log.Printf("[DEBUG] Error while mapping context to resource. Error = %v", err)
 		return err
@@ -225,14 +227,20 @@ func resourceContextDelete(d *schema.ResourceData, meta interface{}) error {
 func mapContextToResource(context cfclient.Context, d *schema.ResourceData) error {
 
 	err := d.Set("name", context.Metadata.Name)
+
 	if err != nil {
 		return err
 	}
 
-	err = d.Set("spec", flattenContextSpec(context.Spec))
-	if err != nil {
-		log.Printf("[DEBUG] Failed to flatten Context spec = %v", context.Spec)
-		return err
+	// Read spec from API if context is not encrypted or forbitDecrypt is not set
+	if !context.IsEncrypred {
+
+		err = d.Set("spec", flattenContextSpec(context.Spec))
+
+		if err != nil {
+			log.Printf("[DEBUG] Failed to flatten Context spec = %v", context.Spec)
+			return err
+		}
 	}
 
 	return nil
@@ -253,7 +261,6 @@ func flattenContextSpec(spec cfclient.ContextSpec) []interface{} {
 	case contextAzureStorage:
 		m[schemautil.MustNormalizeFieldName(currentContextType)] = storageContext.FlattenAzureStorageContextConfig(spec)
 	default:
-		log.Printf("[DEBUG] Invalid context type = %v", currentContextType)
 		return nil
 	}
 
