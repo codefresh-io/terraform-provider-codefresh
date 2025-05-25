@@ -157,7 +157,7 @@ func resourceUsersCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("activate").(bool) {
-		_, err := client.ActivateUser(d.Id())
+		err := client.ActivateUser(d.Id())
 
 		if err != nil {
 			return err

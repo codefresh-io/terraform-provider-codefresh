@@ -347,7 +347,8 @@ func (client *Client) createRandomUser(accountId string) (string, error) {
 	userID := user.ID
 
 	// activate
-	_, err = client.ActivateUser(userID)
+	err = client.ActivateUser(userID)
+
 	if err != nil {
 		return "", err
 	}

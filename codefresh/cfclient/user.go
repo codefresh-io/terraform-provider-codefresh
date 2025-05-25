@@ -166,27 +166,20 @@ func (client *Client) AddUserToTeamByAdmin(userID string, accountID string, team
 	return err
 }
 
-func (client *Client) ActivateUser(userId string) (*User, error) {
+func (client *Client) ActivateUser(userId string) error {
 
 	opts := RequestOptions{
 		Path:   fmt.Sprintf("/admin/user/%s/activate", userId),
 		Method: "POST",
 	}
 
-	resp, err := client.RequestAPI(&opts)
+	_, err := client.RequestAPI(&opts)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var user User
-
-	err = DecodeResponseInto(resp, &user)
-	if err != nil {
-		return nil, err
-	}
-
-	return &user, nil
+	return nil
 }
 
 func (client *Client) SetUserAsAccountAdmin(accountId, userId string) error {

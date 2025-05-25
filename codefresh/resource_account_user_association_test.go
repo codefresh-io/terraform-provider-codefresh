@@ -24,7 +24,8 @@ func testAccCodefreshActivateUser(s *terraform.State, email string) error {
 	}
 	for _, user := range currentAccount.Users {
 		if user.Email == email {
-			_, err = c.ActivateUser(user.ID)
+			err = c.ActivateUser(user.ID)
+
 			if err != nil {
 				return fmt.Errorf("failed to activate user: %s", err)
 			}
