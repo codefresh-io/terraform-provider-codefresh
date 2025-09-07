@@ -76,6 +76,7 @@ func Provider() *schema.Provider {
 			"codefresh_account_idp":              resourceAccountIdp(),
 			"codefresh_account_gitops_settings":  resourceAccountGitopsSettings(),
 			"codefresh_service_account":          resourceServiceAccount(),
+			"codefresh_gitops_environment":       resourceGitopsEnvironment(),
 		},
 		ConfigureFunc: configureProvider,
 	}
