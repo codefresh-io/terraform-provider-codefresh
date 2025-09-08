@@ -45,9 +45,9 @@ func (client *Client) GetAPIKey(userID string, accountId string, keyID string) (
 	}
 
 	opts := RequestOptions{
-		Path:   fmt.Sprintf("/auth/key/%s", keyID),
+		Path:         fmt.Sprintf("/auth/key/%s", keyID),
 		XAccessToken: xAccessToken,
-		Method: "GET",
+		Method:       "GET",
 	}
 
 	resp, err := client.RequestApiXAccessToken(&opts)
@@ -75,8 +75,8 @@ func (client *Client) DeleteAPIKey(userID string, accountId string, keyID string
 		return err
 	}
 	opts := RequestOptions{
-		Path:   fmt.Sprintf("/auth/key/%s", keyID),
-		Method: "DELETE",
+		Path:         fmt.Sprintf("/auth/key/%s", keyID),
+		Method:       "DELETE",
 		XAccessToken: xAccessToken,
 	}
 
@@ -89,7 +89,7 @@ func (client *Client) DeleteAPIKey(userID string, accountId string, keyID string
 	return nil
 }
 
-func (client *Client) UpdateAPIKey(userID string, accountId string,key *ApiKey) error {
+func (client *Client) UpdateAPIKey(userID string, accountId string, key *ApiKey) error {
 
 	keyID := key.ID
 	if keyID == "" {
@@ -111,10 +111,10 @@ func (client *Client) UpdateAPIKey(userID string, accountId string,key *ApiKey) 
 	}
 
 	opts := RequestOptions{
-		Path:   fmt.Sprintf("/auth/key/%s", keyID),
-		Method: "PATCH",
+		Path:         fmt.Sprintf("/auth/key/%s", keyID),
+		Method:       "PATCH",
 		XAccessToken: xAccessToken,
-		Body:   body,
+		Body:         body,
 	}
 
 	resp, err := client.RequestApiXAccessToken(&opts)
