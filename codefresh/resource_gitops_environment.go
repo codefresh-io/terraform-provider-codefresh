@@ -9,7 +9,7 @@ import (
 
 func resourceGitopsEnvironment() *schema.Resource {
 	return &schema.Resource{
-		Description: "Codefresh GitOps environment resource. See [official documentation](https://codefresh.io/docs/gitops/environments/environments-overview/).",
+		Description: "An environment in Codefresh GitOps is a logical grouping of one or more Kubernetes clusters and namespaces, representing a deployment context for your Argo CD applications. See [official documentation](https://codefresh.io/docs/gitops/environments/environments-overview/) for more information.",
 		Create:      resourceGitopsEnvironmentCreate,
 		Read:        resourceGitopsEnvironmentRead,
 		Update:      resourceGitopsEnvironmentUpdate,
@@ -48,7 +48,7 @@ func resourceGitopsEnvironment() *schema.Resource {
 						"server": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "Target cluster server url. Defaults to https://kubernetes.default.svc which is the default in-cluster url",
+							Description: "Target cluster server url. Defaults to `https://kubernetes.default.svc` which is the default in-cluster url",
 							Default:     "https://kubernetes.default.svc",
 						},
 						"runtime_name": {

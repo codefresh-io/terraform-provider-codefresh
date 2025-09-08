@@ -2,12 +2,12 @@
 page_title: "codefresh_gitops_environment Resource - terraform-provider-codefresh"
 subcategory: ""
 description: |-
-    Codefresh GitOps environment resource. See official documentation https://codefresh.io/docs/gitops/environments/environments-overview/.
+    An environment in Codefresh GitOps is a logical grouping of one or more Kubernetes clusters and namespaces, representing a deployment context for your Argo CD applications. See official documentation https://codefresh.io/docs/gitops/environments/environments-overview/ for more information.
 ---
 
 # codefresh_gitops_environment (Resource)
 
-Codefresh GitOps environment resource. See [official documentation](https://codefresh.io/docs/gitops/environments/environments-overview/).
+An environment in Codefresh GitOps is a logical grouping of one or more Kubernetes clusters and namespaces, representing a deployment context for your Argo CD applications. See [official documentation](https://codefresh.io/docs/gitops/environments/environments-overview/) for more information.
 
 ## Example Usage
 
@@ -55,7 +55,7 @@ Required:
 
 Optional:
 
-- `server` (String) Target cluster server url. Defaults to https://kubernetes.default.svc which is the default in-cluster url
+- `server` (String) Target cluster server url. Defaults to `https://kubernetes.default.svc` which is the default in-cluster url
 
 ## Import
 
