@@ -21,11 +21,11 @@ const (
 
 // GitopsEnvironment represents a GitOps environment configuration.
 type GitopsEnvironment struct {
-	ID         string                   `json:"id,omitempty"`
-	Name       string                   `json:"name"`
-	Kind       string                   `json:"kind"`
+	ID         string                     `json:"id,omitempty"`
+	Name       string                     `json:"name"`
+	Kind       string                     `json:"kind"`
 	Clusters   []GitopsEnvironmentCluster `json:"clusters"`
-	LabelPairs []string                 `json:"labelPairs"`
+	LabelPairs []string                   `json:"labelPairs"`
 }
 
 // GitopsCluster represents a cluster within a GitOps environment.

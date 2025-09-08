@@ -25,14 +25,14 @@ func resourceGitopsEnvironment() *schema.Resource {
 				Computed:    true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 				Description: "The name of the environment. Must be unique per account",
 			},
 			"kind": {
-				Type:     schema.TypeString,
-				Required: true,
-				Description: "The type of environment. Possible values: NON_PROD, PROD",
+				Type:         schema.TypeString,
+				Required:     true,
+				Description:  "The type of environment. Possible values: NON_PROD, PROD",
 				ValidateFunc: validation.StringInSlice([]string{"NON_PROD", "PROD"}, false),
 			},
 			"cluster": {
@@ -41,65 +41,67 @@ func resourceGitopsEnvironment() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
 							Description: "Target cluster name",
 						},
 						"server": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
 							Description: "Target cluster server url. Defaults to https://kubernetes.default.svc which is the default in-cluster url",
-							Default: "https://kubernetes.default.svc",
+							Default:     "https://kubernetes.default.svc",
 						},
 						"runtime_name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
 							Description: "Runtime name where the target cluster is registered",
 						},
 						"namespaces": {
-							Type:     schema.TypeList,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Required: true,
+							Type:        schema.TypeList,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Required:    true,
 							Description: "List of namespaces in the target cluster",
 						},
 					},
 				},
 			},
 			"label_pairs": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
 				Description: "List of labels and values in the format label=value that can be used to assign applications to the environment. Example: ['codefresh.io/environment=prod']",
 			},
 		},
 	}
 }
 
-//func resourceGitopsEnvironmentCreate(d *schema.ResourceData, m interface{}) error {
+// func resourceGitopsEnvironmentCreate(d *schema.ResourceData, m interface{}) error {
 func resourceGitopsEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfclient.Client)
 
 	environment := mapResourceToGitopsEnvironment(d)
 	newEnvironment, err := client.CreateGitopsEnvironment(environment)
+
 	if err != nil {
 		return err
 	}
 
 	d.SetId(newEnvironment.ID)
 
-	return mapGitopsEnvironmentToResource(d, newEnvironment)
+	return resourceGitopsEnvironmentRead(d, meta)
 }
 
 func resourceGitopsEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cfclient.Client)
 
 	environment := mapResourceToGitopsEnvironment(d)
-	updatedEnvironment, err := client.UpdateGitopsEnvironment(environment)
+	_, err := client.UpdateGitopsEnvironment(environment)
+
 	if err != nil {
 		return err
 	}
 
-	return mapGitopsEnvironmentToResource(d, updatedEnvironment)
+	return resourceGitopsEnvironmentRead(d, meta)
 }
 
 func resourceGitopsEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
@@ -147,7 +149,6 @@ func resourceGitopsEnvironmentRead(d *schema.ResourceData, meta interface{}) err
 
 func mapResourceToGitopsEnvironment(d *schema.ResourceData) *cfclient.GitopsEnvironment {
 
-
 	clusters := expandClusters(d.Get("cluster").([]interface{}))
 
 	labelPairs := []string{}
@@ -159,8 +160,8 @@ func mapResourceToGitopsEnvironment(d *schema.ResourceData) *cfclient.GitopsEnvi
 	return &cfclient.GitopsEnvironment{
 		ID:         d.Get("id").(string),
 		Name:       d.Get("name").(string),
-		Kind:      d.Get("kind").(string),
-		Clusters:  clusters,
+		Kind:       d.Get("kind").(string),
+		Clusters:   clusters,
 		LabelPairs: labelPairs,
 	}
 }
@@ -190,7 +191,7 @@ func mapGitopsEnvironmentToResource(d *schema.ResourceData, environment *cfclien
 
 func flattenClusters(clusters []cfclient.GitopsEnvironmentCluster) []map[string]interface{} {
 
-	var res = make([]map[string]interface{}, len(clusters))
+	var res = make([]map[string]interface{}, 0)
 
 	for _, cluster := range clusters {
 		m := make(map[string]interface{})
@@ -210,10 +211,10 @@ func expandClusters(list []interface{}) []cfclient.GitopsEnvironmentCluster {
 	for _, item := range list {
 		clusterMap := item.(map[string]interface{})
 		cluster := cfclient.GitopsEnvironmentCluster{
-			Name:       clusterMap["name"].(string),
-			Server:    clusterMap["server"].(string),
+			Name:        clusterMap["name"].(string),
+			Server:      clusterMap["server"].(string),
 			RuntimeName: clusterMap["runtime_name"].(string),
-			Namespaces: datautil.ConvertStringArr(clusterMap["namespaces"].([]interface{})),
+			Namespaces:  datautil.ConvertStringArr(clusterMap["namespaces"].([]interface{})),
 		}
 		clusters = append(clusters, cluster)
 	}

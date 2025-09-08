@@ -1,0 +1,39 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+subcategory: ""
+description: |-
+  {{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+```hcl
+resource "codefresh_gitops_environment" "example" {
+  name        = "test-gitops-env"
+  kind        = "NON_PROD"
+
+  cluster {
+    name         = "test-cluster"
+    server       = "https://kubernetes.default.svc"
+    runtime_name = "test-runtime"
+    namespaces   = ["test-ns-1", "test-ns-2"]
+  }
+
+  label_pairs = [
+    "codefresh.io/environment=test-gitops-env",
+    "codefresh.io/environment-1=test-gitops-env1"
+  ]
+}
+```
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+```sh
+terraform import codefresh_gitops_environment.example <environment_id>
+```
