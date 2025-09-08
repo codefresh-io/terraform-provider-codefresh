@@ -148,7 +148,9 @@ func resourceApiKeyRead(d *schema.ResourceData, meta interface{}) error {
 	if serviceAccountId := d.Get("service_account_id").(string); serviceAccountId != "" {
 		apiKey, err = client.GetAPIKeyServiceUser(keyID, serviceAccountId)
 	} else {
-		apiKey, err = client.GetAPIKey(keyID)
+		accountID := d.Get("account_id").(string)
+		userID := d.Get("user_id").(string)
+		apiKey, err = client.GetAPIKey(userID, accountID, keyID)
 	}
 
 	if err != nil {
@@ -178,8 +180,9 @@ func resourceApiKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	if serviceAccountId := d.Get("service_account_id").(string); serviceAccountId != "" {
 		err = client.UpdateAPIKeyServiceUser(&apiKey, serviceAccountId)
 	} else {
-		err = client.UpdateAPIKey(&apiKey)
-
+		accountID := d.Get("account_id").(string)
+		userID := d.Get("user_id").(string)
+		err = client.UpdateAPIKey(userID, accountID, &apiKey)
 	}
 
 	if err != nil {
@@ -201,7 +204,9 @@ func resourceApiKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	if serviceAccountId := d.Get("service_account_id").(string); serviceAccountId != "" {
 		err = client.DeleteAPIKeyServiceUser(d.Id(), serviceAccountId)
 	} else {
-		err = client.DeleteAPIKey(d.Id())
+		accountID := d.Get("account_id").(string)
+		userID := d.Get("user_id").(string)
+		err = client.DeleteAPIKey(userID, accountID, d.Id())
 	}
 
 	if err != nil {

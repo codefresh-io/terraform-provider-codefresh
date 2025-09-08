@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
 type ApiKeySubject struct {
@@ -38,14 +36,21 @@ type TokenResponse struct {
 	} `json:"user"`
 }
 
-func (client *Client) GetAPIKey(keyID string) (*ApiKey, error) {
+func (client *Client) GetAPIKey(userID string, accountId string, keyID string) (*ApiKey, error) {
+
+	xAccessToken, err := client.GetXAccessToken(userID, accountId)
+
+	if err != nil {
+		return nil, err
+	}
 
 	opts := RequestOptions{
 		Path:   fmt.Sprintf("/auth/key/%s", keyID),
+		XAccessToken: xAccessToken,
 		Method: "GET",
 	}
 
-	resp, err := client.RequestAPI(&opts)
+	resp, err := client.RequestApiXAccessToken(&opts)
 
 	if err != nil {
 		return nil, err
@@ -61,14 +66,21 @@ func (client *Client) GetAPIKey(keyID string) (*ApiKey, error) {
 	return &apiKey, nil
 }
 
-func (client *Client) DeleteAPIKey(keyID string) error {
+func (client *Client) DeleteAPIKey(userID string, accountId string, keyID string) error {
+	// login as user
 
+	xAccessToken, err := client.GetXAccessToken(userID, accountId)
+
+	if err != nil {
+		return err
+	}
 	opts := RequestOptions{
 		Path:   fmt.Sprintf("/auth/key/%s", keyID),
 		Method: "DELETE",
+		XAccessToken: xAccessToken,
 	}
 
-	resp, err := client.RequestAPI(&opts)
+	resp, err := client.RequestApiXAccessToken(&opts)
 	if err != nil {
 		fmt.Println(string(resp))
 		return err
@@ -77,7 +89,7 @@ func (client *Client) DeleteAPIKey(keyID string) error {
 	return nil
 }
 
-func (client *Client) UpdateAPIKey(key *ApiKey) error {
+func (client *Client) UpdateAPIKey(userID string, accountId string,key *ApiKey) error {
 
 	keyID := key.ID
 	if keyID == "" {
@@ -89,13 +101,23 @@ func (client *Client) UpdateAPIKey(key *ApiKey) error {
 		return err
 	}
 
+	var xAccessToken string
+
+	// login as user
+	xAccessToken, err = client.GetXAccessToken(userID, accountId)
+
+	if err != nil {
+		return err
+	}
+
 	opts := RequestOptions{
 		Path:   fmt.Sprintf("/auth/key/%s", keyID),
 		Method: "PATCH",
+		XAccessToken: xAccessToken,
 		Body:   body,
 	}
 
-	resp, err := client.RequestAPI(&opts)
+	resp, err := client.RequestApiXAccessToken(&opts)
 
 	if err != nil {
 		fmt.Println(string(resp))
@@ -110,6 +132,7 @@ func (client *Client) CreateApiKey(userID string, accountId string, apiKey *ApiK
 
 	// Check collaborataros
 	account, err := client.GetAccountByID(accountId)
+
 	if err != nil {
 		return "", err
 	}
@@ -118,12 +141,7 @@ func (client *Client) CreateApiKey(userID string, accountId string, apiKey *ApiK
 	}
 
 	var xAccessToken string
-	if userID == "" {
-		userID, err = client.createRandomUser(accountId)
-		if err != nil {
-			return "", err
-		}
-	}
+
 	// login as user
 	xAccessToken, err = client.GetXAccessToken(userID, accountId)
 	if err != nil {
@@ -332,32 +350,4 @@ func (client *Client) CreateApiKeyServiceUser(serviceUserId string, apiKey *ApiK
 	}
 
 	return string(resp), nil
-}
-
-func (client *Client) createRandomUser(accountId string) (string, error) {
-	// add user
-	userPrefix := acctest.RandString(10)
-	userName := "tfuser" + userPrefix
-	userEmail := userName + "@codefresh.io"
-
-	user, err := client.AddNewUserToAccount(accountId, userName, userEmail)
-	if err != nil {
-		return "", err
-	}
-	userID := user.ID
-
-	// activate
-	err = client.ActivateUser(userID)
-
-	if err != nil {
-		return "", err
-	}
-
-	// set user as account admin
-	err = client.SetUserAsAccountAdmin(accountId, userID)
-	if err != nil {
-		return "", nil
-	}
-	return userID, nil
-
 }
