@@ -24,7 +24,6 @@ func TestAccCodefreshGitopsEnvironmentsResource(t *testing.T) {
 					"NON_PROD",
 					[]cfclient.GitopsEnvironmentCluster{{
 						Name:        "in-cluster2",
-						Server:      "https://kubernetes.default.svc",
 						RuntimeName: "test-runtime",
 						Namespaces:  []string{"test-ns-1", "test-ns2"},
 					}},
@@ -50,13 +49,11 @@ func TestAccCodefreshGitopsEnvironmentsResource(t *testing.T) {
 					[]cfclient.GitopsEnvironmentCluster{
 						{
 							Name:        "in-cluster2",
-							Server:      "https://kubernetes.default.svc",
 							RuntimeName: "test-runtime",
 							Namespaces:  []string{"test-ns-1", "test-ns2"},
 						},
 						{
 							Name:        "in-cluster3",
-							Server:      "https://kubernetes2.default.svc",
 							RuntimeName: "test-runtime-2",
 							Namespaces:  []string{"test-ns-3"},
 						},
@@ -115,10 +112,9 @@ func testAccCodefreshGitopsEnvironmentConfig(name, kind string, clusters []cfcli
 		ns := fmt.Sprintf("[\"%s\"]", strings.Join(c.Namespaces, "\", \""))
 		block := fmt.Sprintf(`  cluster {
     name        = "%s"
-    server      = "%s"
     runtime_name = "%s"
     namespaces  = %s
-  }`, c.Name, c.Server, c.RuntimeName, ns)
+  }`, c.Name, c.RuntimeName, ns)
 		clusterBlocks = append(clusterBlocks, block)
 	}
 	labelsStr := fmt.Sprintf("[\"%s\"]", strings.Join(labelPairs, "\", \""))

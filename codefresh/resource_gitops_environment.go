@@ -45,12 +45,6 @@ func resourceGitopsEnvironment() *schema.Resource {
 							Required:    true,
 							Description: "Target cluster name",
 						},
-						"server": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Target cluster server url. Defaults to `https://kubernetes.default.svc` which is the default in-cluster url",
-							Default:     "https://kubernetes.default.svc",
-						},
 						"runtime_name": {
 							Type:        schema.TypeString,
 							Required:    true,
@@ -196,7 +190,6 @@ func flattenClusters(clusters []cfclient.GitopsEnvironmentCluster) []map[string]
 	for _, cluster := range clusters {
 		m := make(map[string]interface{})
 		m["name"] = cluster.Name
-		m["server"] = cluster.Server
 		m["runtime_name"] = cluster.RuntimeName
 		m["namespaces"] = cluster.Namespaces
 		res = append(res, m)
@@ -212,7 +205,6 @@ func expandClusters(list []interface{}) []cfclient.GitopsEnvironmentCluster {
 		clusterMap := item.(map[string]interface{})
 		cluster := cfclient.GitopsEnvironmentCluster{
 			Name:        clusterMap["name"].(string),
-			Server:      clusterMap["server"].(string),
 			RuntimeName: clusterMap["runtime_name"].(string),
 			Namespaces:  datautil.ConvertStringArr(clusterMap["namespaces"].([]interface{})),
 		}

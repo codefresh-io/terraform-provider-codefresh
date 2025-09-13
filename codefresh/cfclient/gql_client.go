@@ -14,6 +14,11 @@ type GraphQLRequest struct {
 	Variables map[string]interface{} `json:"variables,omitempty"`
 }
 
+type GraphQLError struct {
+	Message  string `json:"message,omitempty"`
+	Extensions string `json:"extensions,omitempty"`
+}
+
 func (client *Client) SendGqlRequest(request GraphQLRequest) ([]byte, error) {
 	jsonRequest, err := json.Marshal(request)
 	if err != nil {

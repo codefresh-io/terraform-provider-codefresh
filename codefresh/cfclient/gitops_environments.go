@@ -31,12 +31,12 @@ type GitopsEnvironment struct {
 // GitopsCluster represents a cluster within a GitOps environment.
 type GitopsEnvironmentCluster struct {
 	Name        string   `json:"name"`
-	Server      string   `json:"server"`
 	RuntimeName string   `json:"runtimeName"`
 	Namespaces  []string `json:"namespaces"`
 }
 
 type GitopsEnvironmentResponse struct {
+	Errors            []GraphQLError     `json:"errors,omitempty"`
 	Data struct {
 		Environment       GitopsEnvironment `json:"environment,omitempty"`
 		CreateEnvironment GitopsEnvironment `json:"createEnvironment,omitempty"`
@@ -124,6 +124,10 @@ func (client *Client) CreateGitopsEnvironment(environment *GitopsEnvironment) (*
 		return nil, err
 	}
 
+	if len(gitopsEnvironmentResponse.Errors) > 0 {
+		return nil, fmt.Errorf("CreateGitopsEnvironment - %s", gitopsEnvironmentResponse.Errors)
+	}
+
 	return &gitopsEnvironmentResponse.Data.CreateEnvironment, nil
 }
 
@@ -161,6 +165,10 @@ func (client *Client) DeleteGitopsEnvironment(id string) (*GitopsEnvironment, er
 		return nil, err
 	}
 
+	if len(gitopsEnvironmentResponse.Errors) > 0 {
+		return nil, fmt.Errorf("DeleteGitopsEnvironment - %s", gitopsEnvironmentResponse.Errors)
+	}
+
 	return &gitopsEnvironmentResponse.Data.DeleteEnvironment, nil
 }
 
@@ -188,6 +196,10 @@ func (client *Client) UpdateGitopsEnvironment(environment *GitopsEnvironment) (*
 
 	if err != nil {
 		return nil, err
+	}
+
+	if len(gitopsEnvironmentResponse.Errors) > 0 {
+		return nil, fmt.Errorf("UpdateGitopsEnvironment - %s", gitopsEnvironmentResponse.Errors)
 	}
 
 	return &gitopsEnvironmentResponse.Data.UpdateEnvironment, nil
