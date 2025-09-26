@@ -15,7 +15,7 @@ type GraphQLRequest struct {
 }
 
 type GraphQLError struct {
-	Message  string `json:"message,omitempty"`
+	Message    string `json:"message,omitempty"`
 	Extensions string `json:"extensions,omitempty"`
 }
 

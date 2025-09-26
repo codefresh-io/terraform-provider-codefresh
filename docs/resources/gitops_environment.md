@@ -53,10 +53,6 @@ Required:
 - `namespaces` (List of String) List of namespaces in the target cluster
 - `runtime_name` (String) Runtime name where the target cluster is registered
 
-Optional:
-
-- `server` (String) Target cluster server url. Defaults to `https://kubernetes.default.svc` which is the default in-cluster url
-
 ## Import
 
 ```sh

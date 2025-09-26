@@ -36,8 +36,8 @@ type GitopsEnvironmentCluster struct {
 }
 
 type GitopsEnvironmentResponse struct {
-	Errors            []GraphQLError     `json:"errors,omitempty"`
-	Data struct {
+	Errors []GraphQLError `json:"errors,omitempty"`
+	Data   struct {
 		Environment       GitopsEnvironment `json:"environment,omitempty"`
 		CreateEnvironment GitopsEnvironment `json:"createEnvironment,omitempty"`
 		UpdateEnvironment GitopsEnvironment `json:"updateEnvironment,omitempty"`
