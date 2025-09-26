@@ -16,10 +16,10 @@ Use this resource to set a list of admins for any account. Requires a Codefresh 
 ```hcl
 resource "codefresh_account_admins" "test" {
 
-  account_id = <ACCOUNT ID>
+  account_id = 68d581b34b72625553ef9179
 
   users = [
-    <USER ID>,
+    68d581b64b72625553ef91fe,
   ]
 }
 ```
