@@ -37,8 +37,7 @@ func (client *Client) SendGqlRequest(request GraphQLRequest) ([]byte, error) {
 	req.Header.Set(tokenHeader, client.Token)
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
-	httpClient := &http.Client{}
-	resp, err := httpClient.Do(req)
+	resp, err := client.Client.Do(req)
 	if err != nil {
 		return nil, err
 	}

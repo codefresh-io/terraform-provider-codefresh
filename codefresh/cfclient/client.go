@@ -7,6 +7,9 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
+
+	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/envutil"
 )
 
 // Client token, host, htpp.Client
@@ -28,19 +31,41 @@ type RequestOptions struct {
 	XAccessToken string
 }
 
-// NewClient returns a new client configured to communicate on a server with the
-// given hostname and to send an Authorization Header with the value of
-// token
-func NewClient(hostname string, hostnameV2 string, token string, tokenHeader string) *Client {
+// HttpClient returns a client which can be configured to communicate on a server with custom timeout settings
+func NewHttpClient(hostname string, hostnameV2 string, token string, tokenHeader string) *Client {
 	if tokenHeader == "" {
 		tokenHeader = "Authorization"
 	}
+
+	// Configurable HTTP transport with proper connection pooling and timeouts to prevent "connection reset by peer" errors,
+	// default values are equivalent to default &http.Client{} settings
+	transport := &http.Transport{
+		// Limit maximum idle connections per host to prevent connection exhaustion
+		MaxIdleConnsPerHost: envutil.GetEnvAsInt("CF_HTTP_MAX_IDLE_CONNECTIONS_PER_HOST", 2),
+		// Limit total idle connections
+		MaxIdleConns: envutil.GetEnvAsInt("CF_HTTP_MAX_IDLE_CONNECTIONS", 100),
+		// Close idle connections after specified seconds to prevent server-side timeouts
+		IdleConnTimeout: time.Duration(envutil.GetEnvAsInt("CF_HTTP_IDLE_CONNECTION_TIMEOUT", 90)) * time.Second,
+		// Timeout for TLS handshake in seconds
+		TLSHandshakeTimeout: time.Duration(envutil.GetEnvAsInt("CF_HTTP_TLS_HANDSHAKE_TIMEOUT", 10)) * time.Second,
+		// Timeout for expecting response headers in seconds, 0 - no limits
+		ResponseHeaderTimeout: time.Duration(envutil.GetEnvAsInt("CF_HTTP_RESPONSE_HEADER_TIMEOUT", 0)) * time.Second,
+		// Disable connection reuse for more stable connections
+		DisableKeepAlives: envutil.GetEnvAsBool("CF_HTTP_DISABLE_KEEPALIVES", false),
+	}
+
+	httpClient := &http.Client{
+		Transport: transport,
+		// Overall request timeout in seconds, 0 - no limits
+		Timeout: time.Duration(envutil.GetEnvAsInt("CF_HTTP_GLOBAL_TIMEOUT", 0)) * time.Second,
+	}
+
 	return &Client{
 		Host:         hostname,
 		HostV2:       hostnameV2,
 		Token:        token,
 		TokenHeader:  tokenHeader,
-		Client:       &http.Client{},
+		Client:       httpClient,
 		featureFlags: map[string]bool{},
 	}
 
