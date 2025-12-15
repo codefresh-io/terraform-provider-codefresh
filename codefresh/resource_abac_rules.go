@@ -3,7 +3,6 @@ package codefresh
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/cfclient"
 	"github.com/codefresh-io/terraform-provider-codefresh/codefresh/internal/datautil"
@@ -58,6 +57,10 @@ The effective tags of the resource to apply the permission to. There are two spe
 				`,
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
+				DefaultFunc: func() (interface{}, error) {
+					return []string{"*", "untagged"}, nil
+				},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -102,7 +105,6 @@ Action to be allowed. Possible values:
 		},
 		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
 			actions := diff.Get("actions").(*schema.Set).List()
-
 			for _, action := range actions {
 				actionStr := action.(string)
 				if !contains(validSetValues, actionStr) {
@@ -169,16 +171,10 @@ func resourceGitopsAbacRuleUpdate(d *schema.ResourceData, meta interface{}) erro
 	client := meta.(*cfclient.Client)
 
 	abacRule := *mapResourceToGitopsAbacRule(d)
-	resp, err := client.CreateAbacRule(&abacRule)
+	_, err := client.UpdateAbacRule(&abacRule)
 	if err != nil {
 		return err
 	}
-
-	deleteErr := resourceGitopsAbacRuleDelete(d, meta)
-	if deleteErr != nil {
-		log.Printf("[WARN] failed to delete permission %v: %v", abacRule, deleteErr)
-	}
-	d.SetId(resp.ID)
 
 	return resourceGitopsAbacRuleRead(d, meta)
 }

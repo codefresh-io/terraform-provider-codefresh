@@ -31,6 +31,7 @@ type GitopsAbacRuleResponse struct {
 	Data struct {
 		AbacRule       GitopsAbacRule `json:"abacRule,omitempty"`
 		CreateAbacRule GitopsAbacRule `json:"createAbacRule,omitempty"`
+		UpdateAbacRule GitopsAbacRule `json:"updateAbacRule,omitempty"`
 		RemoveAbacRule GitopsAbacRule `json:"removeAbacRule,omitempty"`
 	} `json:"data"`
 }
@@ -163,6 +164,54 @@ func (client *Client) CreateAbacRule(gitopsAbacRule *GitopsAbacRule) (*GitopsAba
 	}
 
 	return &gitopsAbacRuleResponse.Data.CreateAbacRule, nil
+}
+
+func (client *Client) UpdateAbacRule(gitopsAbacRule *GitopsAbacRule) (*GitopsAbacRule, error) {
+	acc, err := client.GetCurrentAccount()
+	gitopsAbacRule.AccountId = acc.ID
+	if err != nil {
+		return nil, err
+	}
+
+	request := GraphQLRequest{
+		Query: `mutation ($accountId: String!, $updateAbacRuleInput: UpdateAbacRuleInput!) {
+					updateAbacRule(
+						accountId: $accountId
+						updateAbacRuleInput: $updateAbacRuleInput
+					) {
+						id
+						accountId
+						entityType
+						teams
+						tags
+						actions
+						attributes {
+						name
+						key
+						value
+						}
+					}
+				}
+		`,
+		Variables: map[string]interface{}{
+			"accountId":           acc.ID,
+			"updateAbacRuleInput": gitopsAbacRule,
+		},
+	}
+
+	response, err := client.SendGqlRequest(request)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return nil, err
+	}
+
+	var gitopsAbacRuleResponse GitopsAbacRuleResponse
+	err = DecodeGraphQLResponseInto(response, &gitopsAbacRuleResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return &gitopsAbacRuleResponse.Data.UpdateAbacRule, nil
 }
 
 func (client *Client) DeleteAbacRule(id string) (*GitopsAbacRule, error) {
