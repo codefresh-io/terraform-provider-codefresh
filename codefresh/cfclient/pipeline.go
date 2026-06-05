@@ -125,6 +125,7 @@ type Spec struct {
 	Contexts                     []interface{}            `json:"contexts,omitempty"`
 	Steps                        *Steps                   `json:"steps,omitempty"`
 	Stages                       *Stages                  `json:"stages,omitempty"`
+	Services                     *Services                `json:"services,omitempty"`
 	Mode                         string                   `json:"mode,omitempty"`
 	FailFast                     *bool                    `json:"fail_fast,omitempty"`
 	RuntimeEnvironment           RuntimeEnvironment       `json:"runtimeEnvironment,omitempty"`
@@ -146,6 +147,10 @@ type Stages struct {
 
 type Hooks struct {
 	Hooks string
+}
+
+type Services struct {
+	Services string
 }
 
 func (d Steps) MarshalJSON() ([]byte, error) {

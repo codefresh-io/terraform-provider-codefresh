@@ -1332,7 +1332,7 @@ func mapResourceToPipeline(d *schema.ResourceData) (*cfclient.Pipeline, error) {
 // For this purpose we use yq that preserves the order of attributes when converting to json.
 func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipeline *cfclient.Pipeline) error {
 
-	for _, attribute := range []string{"stages", "steps", "hooks"} {
+	for _, attribute := range []string{"stages", "steps", "hooks", "services"} {
 		attributeJson, err := datautil.Yq(fmt.Sprintf(".%s", attribute), originalYamlString, "json")
 		if err != nil {
 			return fmt.Errorf("error while extracting '%s' from original YAML string: %v", attribute, err)
@@ -1358,6 +1358,10 @@ func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipe
 				Hooks: attributeJson,
 			}
 		}
+		case "services":
+			pipeline.Spec.Services = &cfclient.Services{
+				Services: attributeJson,
+			}
 	}
 
 	mode, err := datautil.Yq(".mode", originalYamlString, "yaml")
