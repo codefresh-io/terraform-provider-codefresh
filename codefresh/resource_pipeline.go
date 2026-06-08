@@ -1357,11 +1357,11 @@ func extractSpecAttributesFromOriginalYamlString(originalYamlString string, pipe
 			pipeline.Spec.Hooks = &cfclient.Hooks{
 				Hooks: attributeJson,
 			}
-		}
 		case "services":
 			pipeline.Spec.Services = &cfclient.Services{
 				Services: attributeJson,
 			}
+		}
 	}
 
 	mode, err := datautil.Yq(".mode", originalYamlString, "yaml")
