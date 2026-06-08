@@ -166,6 +166,10 @@ func (d Hooks) MarshalJSON() ([]byte, error) {
 	bytes := []byte(d.Hooks)
 	return bytes, nil
 }
+func (d Services) MarshalJSON() ([]byte, error) {
+	bytes := []byte(d.Services)
+	return bytes, nil
+}
 func (d *Steps) UnmarshalJSON(data []byte) error {
 	d.Steps = string(data)
 	return nil
@@ -176,6 +180,10 @@ func (d *Stages) UnmarshalJSON(data []byte) error {
 }
 func (d *Hooks) UnmarshalJSON(data []byte) error {
 	d.Hooks = string(data)
+	return nil
+}
+func (d *Services) UnmarshalJSON(data []byte) error {
+	d.Services = string(data)
 	return nil
 }
 
