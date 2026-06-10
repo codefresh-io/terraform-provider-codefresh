@@ -125,6 +125,7 @@ type Spec struct {
 	Contexts                     []interface{}            `json:"contexts,omitempty"`
 	Steps                        *Steps                   `json:"steps,omitempty"`
 	Stages                       *Stages                  `json:"stages,omitempty"`
+	Services                     *Services                `json:"services,omitempty"`
 	Mode                         string                   `json:"mode,omitempty"`
 	FailFast                     *bool                    `json:"fail_fast,omitempty"`
 	RuntimeEnvironment           RuntimeEnvironment       `json:"runtimeEnvironment,omitempty"`
@@ -148,6 +149,10 @@ type Hooks struct {
 	Hooks string
 }
 
+type Services struct {
+	Services string
+}
+
 func (d Steps) MarshalJSON() ([]byte, error) {
 	bytes := []byte(d.Steps)
 	return bytes, nil
@@ -161,6 +166,10 @@ func (d Hooks) MarshalJSON() ([]byte, error) {
 	bytes := []byte(d.Hooks)
 	return bytes, nil
 }
+func (d Services) MarshalJSON() ([]byte, error) {
+	bytes := []byte(d.Services)
+	return bytes, nil
+}
 func (d *Steps) UnmarshalJSON(data []byte) error {
 	d.Steps = string(data)
 	return nil
@@ -171,6 +180,10 @@ func (d *Stages) UnmarshalJSON(data []byte) error {
 }
 func (d *Hooks) UnmarshalJSON(data []byte) error {
 	d.Hooks = string(data)
+	return nil
+}
+func (d *Services) UnmarshalJSON(data []byte) error {
+	d.Services = string(data)
 	return nil
 }
 
