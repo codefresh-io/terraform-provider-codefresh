@@ -1,0 +1,14 @@
+docs/resources/team.md
+  h_9fd7d1a18c4091 49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5a5fa87d249b45ee5c0aba6c2aff3ffd978d49fc",
+  "prompts": {},
+  "humans": {
+    "h_9fd7d1a18c4091": {
+      "author": "Alina <alina.shportiuk@codefresh.io>"
+    }
+  }
+}
