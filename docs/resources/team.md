@@ -35,10 +35,13 @@ resource "codefresh_team" "developers" {
 ### Optional
 
 - `account_id` (String) The account id where to create the team.
-- `tags` (Set of String) The tags of the team.
+- `tags` (Set of String) The tags of the team. Tags can only be set when the team is created. To change a tag, the team must be recreated (for example with `terraform apply -replace`).
 - `type` (String) The type of the team. Possible values:
 	* __default__
 	* __admin__
+
+This field is reserved for the built-in teams (__admin__ for the default admin team, __default__ for the default users team) and is not intended to be set on regular teams, which have no type.
+The type can only be set when the team is created. To change it, the team must be recreated (for example with `terraform apply -replace`).
 - `users` (Set of String) A list of user IDs that should be in the team.
 
 ### Read-Only
