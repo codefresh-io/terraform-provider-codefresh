@@ -1,0 +1,28 @@
+codefresh/resource_abac_rules.go
+  s_4ac0d72a04b0c7::t_60c019da3eca6f 14
+templates/resources/abac_rules.md.tmpl
+  s_4ac0d72a04b0c7::t_2b9ce23b0dfbc3 38-53,55-68
+  s_4ac0d72a04b0c7::t_04afd19a7117e5 54
+examples/abac_rules/main.tf
+  s_4ac0d72a04b0c7::t_0172d895688ede 22-24,26-32
+  s_4ac0d72a04b0c7::t_4c2c179489def8 25
+codefresh/resource_abac_rules_test.go
+  s_4ac0d72a04b0c7::t_eeb0d61572310b 45-61
+  s_4ac0d72a04b0c7::t_a2c46a84a858ff 43-44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "af26e940adbcd1cfc446e5ae23a80cac9b8f0962",
+  "prompts": {},
+  "sessions": {
+    "s_4ac0d72a04b0c7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b72ed9d3-ccde-40db-9326-74e24bc68537",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "andrii-codefresh <andrii@codefresh.io>"
+    }
+  }
+}
