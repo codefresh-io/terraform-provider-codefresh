@@ -42,6 +42,25 @@ func TestAccCodefreshAbacRulesConfig(t *testing.T) {
 			},
 			{
 				Config: testAccCodefreshAbacRulesConfig(
+					"gitopsApplications",
+					"RUNTIME",
+					"",
+					"runtime-1",
+					[]string{"VIEW", "SYNC"},
+					[]string{"untagged"},
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCodefreshAbacRulesExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entity_type", "gitopsApplications"),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "VIEW"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "SYNC"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.0.name", "RUNTIME"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.0.value", "runtime-1"),
+				),
+			},
+			{
+				Config: testAccCodefreshAbacRulesConfig(
 					"promotionFlows",
 					"",
 					"",

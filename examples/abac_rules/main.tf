@@ -19,3 +19,14 @@ resource "codefresh_abac_rules" "app_rule" {
 
   tags        = ["dev", "untagged"]
 }
+
+resource "codefresh_abac_rules" "app_view_rule" {
+  entity_type = "gitopsApplications"
+  teams       = [data.codefresh_team.users.id]
+  actions     = ["VIEW"]
+
+  attribute {
+    name  = "RUNTIME"
+    value = "production-runtime"
+  }
+}

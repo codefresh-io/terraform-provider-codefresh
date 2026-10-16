@@ -35,6 +35,63 @@ resource "codefresh_abac_rules" "app_rule" {
   }
 }
 
+# Allow developers to view only the applications of a specific runtime
+resource "codefresh_abac_rules" "app_view_rule" {
+  entity_type = "gitopsApplications"
+  teams       = [codefresh_team.developers.id]
+  actions     = ["VIEW"]
+
+  attribute {
+    name  = "RUNTIME"
+    value = "production-runtime"
+  }
+}
+
 ```
 
+## View permissions
+
+The `VIEW` action controls which GitOps applications users can see in the GitOps Apps, Products, and Environments dashboards.
+
+Each account is created with a default rule that grants `VIEW` on all `gitopsApplications` to the `users` team, so that all users can see all applications initially. Rules are additive: as long as the default rule exists, adding more restrictive `VIEW` rules does not limit visibility. To restrict access, import the default rule and manage it with Terraform (narrow it with attributes or remove it):
+
+```hcl
+import {
+  to = codefresh_abac_rules.default_view
+  id = "<default rule ID>"
+}
+
+resource "codefresh_abac_rules" "default_view" {
+  entity_type = "gitopsApplications"
+  teams       = [data.codefresh_team.users.id]
+  actions     = ["VIEW"]
+}
+```
+
+See [Import](#import) for how to find the ID of the default rule.
+
+To restrict access without leaving users unable to see any applications in between, apply the changes in this order:
+
+1. Create the new `VIEW` rules for your teams and run `terraform apply`.
+2. Narrow or remove the default rule in one of the following ways:
+   * With Terraform: import the default rule and run `terraform apply`. Then narrow it with attributes, or remove it from the configuration, and run `terraform apply` again.
+   * Outside Terraform: remove the default rule in the Codefresh UI or with the `removeAbacRule` GraphQL mutation. The rule is not managed by Terraform, so there is nothing to import.
+
 {{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+```sh
+terraform import codefresh_abac_rules.example <rule ID>
+```
+
+To find the ID of a rule, list the rules of an entity type with the `abacRules` GraphQL query:
+
+```sh
+curl -s https://g.codefresh.io/2.0/api/graphql \
+  -H "Authorization: $CODEFRESH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"query { abacRules(accountId: \"\", entityType: gitopsApplications) { id teams tags actions attributes { name key value } } }"}'
+```
+
+The default `VIEW` rule is the one with `actions` set to `["VIEW"]`, `teams` containing the ID of the `users` team, and empty `attributes`.
