@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var validSetValues = []string{"REFRESH", "SYNC", "TERMINATE_SYNC", "VIEW_POD_LOGS", "APP_ROLLBACK", "TRIGGER_PROMOTION", "RETRY_RELEASE", "PROMOTE_TO"}
+var validSetValues = []string{"REFRESH", "SYNC", "TERMINATE_SYNC", "VIEW", "VIEW_POD_LOGS", "APP_ROLLBACK", "TRIGGER_PROMOTION", "RETRY_RELEASE", "PROMOTE_TO"}
 
 func resourceGitopsAbacRule() *schema.Resource {
 	return &schema.Resource{
@@ -68,6 +68,7 @@ Action to be allowed. Possible values:
 	* REFRESH
 	* SYNC
 	* TERMINATE_SYNC
+	* VIEW
 	* VIEW_POD_LOGS
 	* APP_ROLLBACK
 	* TRIGGER_PROMOTION
