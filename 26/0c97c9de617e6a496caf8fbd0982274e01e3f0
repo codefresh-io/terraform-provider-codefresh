@@ -1,0 +1,21 @@
+codefresh.yml
+  s_a823daaf66a7fb::t_bcadacb6796cb2 18,25
+go.mod
+  s_a823daaf66a7fb::t_bcadacb6796cb2 268,270
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "260c97c9de617e6a496caf8fbd0982274e01e3f0",
+  "prompts": {},
+  "sessions": {
+    "s_a823daaf66a7fb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "95bcc300-0c70-4af7-a0db-a89b7a3d310d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Vadim Kharin <vadim.kharin@codefresh.io>"
+    }
+  }
+}
