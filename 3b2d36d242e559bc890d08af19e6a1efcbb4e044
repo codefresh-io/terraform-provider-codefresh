@@ -1,0 +1,19 @@
+docs/resources/team.md
+  s_71d7c600716b4e::t_69dcac4eb92902 49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3b2d36d242e559bc890d08af19e6a1efcbb4e044",
+  "prompts": {},
+  "sessions": {
+    "s_71d7c600716b4e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d8ce071f-e470-49a2-b350-251a5bf3d04f",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Alina <alina.shportiuk@codefresh.io>"
+    }
+  }
+}

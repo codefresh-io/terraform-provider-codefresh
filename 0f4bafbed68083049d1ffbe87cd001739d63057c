@@ -1,0 +1,21 @@
+codefresh/resource_team.go
+  s_71d7c600716b4e::t_620421f5b34720 33
+  s_71d7c600716b4e::t_047b83b0dfa96b 32
+  s_71d7c600716b4e::t_f7b4958af5bcc3 34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0f4bafbed68083049d1ffbe87cd001739d63057c",
+  "prompts": {},
+  "sessions": {
+    "s_71d7c600716b4e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d8ce071f-e470-49a2-b350-251a5bf3d04f",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Alina <alina.shportiuk@codefresh.io>"
+    }
+  }
+}
