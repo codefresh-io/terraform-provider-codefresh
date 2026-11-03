@@ -15,14 +15,14 @@ steps:
   go_fmt:
     title: "Formatting"
     stage: test
-    image: golang:1.24.3-alpine3.21
+    image: golang:1.26.10-alpine3.24
     commands:
       - go fmt
 
   go_test:
     title: "Run tests"
     stage: test
-    image: golang:1.24.3-alpine3.21
+    image: golang:1.26.10-alpine3.24
     environment:
       - TF_ACC="test"
       - CGO_ENABLED=0
@@ -69,6 +69,7 @@ steps:
     image: goreleaser/goreleaser:v2.9.0
     stage: release
     environment:
+      - GOTOOLCHAIN=go1.26.10
       - GPG_FINGERPRINT=${{GPG_FINGERPRINT}}
       - SIGNINGKEY=${{SIGNINGKEY}}
       - GPG_PRIVATE=${{GPG_PRIVATE}}
