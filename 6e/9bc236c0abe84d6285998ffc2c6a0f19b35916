@@ -1,0 +1,14 @@
+.goreleaser.yml
+  h_9fee6e699064f1 16-17,28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6e9bc236c0abe84d6285998ffc2c6a0f19b35916",
+  "prompts": {},
+  "humans": {
+    "h_9fee6e699064f1": {
+      "author": "Vadim Kharin <vadim.kharin@codefresh.io>"
+    }
+  }
+}
