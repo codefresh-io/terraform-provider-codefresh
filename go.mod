@@ -265,9 +265,9 @@ require (
 	mvdan.cc/unparam v0.0.0-20240528143540-8a5130ca722f // indirect
 )
 
-go 1.24
+go 1.26
 
-toolchain go1.24.2
+toolchain go1.26.10
 
 tool (
 	github.com/bflad/tfproviderlint/cmd/tfproviderlint
